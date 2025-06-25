@@ -1,12 +1,16 @@
 .table-accounts-container {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 	margin: 2%;
-	color: #0173b1;
+}
+
+.table-accounts-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 15px;
 }
 
 .table-heading {
 	color: gray;
-	margin-bottom: 20px;
 	font-weight: 600;
 	font-size: 18px;
 }
@@ -51,6 +55,10 @@
 
 .accounts-table tr:hover {
 	background-color: rgba(16, 93, 141, 0.03);
+}
+
+.table-contragents {
+	font-size: 14px;
 }
 
 /* Responsive adjustments */

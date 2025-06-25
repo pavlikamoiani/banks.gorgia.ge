@@ -1,0 +1,65 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: #fff;
+    padding: 32px;
+    border-radius: 10px;
+    min-width: 320px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    position: relative;
+}
+
+.modalTitle {
+    margin-bottom: 16px;
+}
+
+.modalFormGroup {
+    margin-bottom: 16px;
+}
+
+.modalInput {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.modalError {
+    color: red;
+    margin-bottom: 8px;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.modalButton {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.modalButtonCancel {
+    background: #eee;
+}
+
+.modalButtonSubmit {
+    background: #0173b1;
+    color: #fff;
+}
