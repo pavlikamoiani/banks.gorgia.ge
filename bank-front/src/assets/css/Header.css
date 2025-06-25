@@ -9,7 +9,12 @@
 .header-container {
 	display: flex;
 	align-items: center;
-	padding: 0 20px;
+	padding: 0 2%;
+}
+
+.left-header {
+	display: flex;
+	align-items: center;
 }
 
 .logo-container {
@@ -18,9 +23,62 @@
 }
 
 .logo {
-	height: 55px;
+	height: 35px;
 }
 
+.header-nav {
+	margin-left: 40px;
+}
+
+.nav-menu {
+	display: flex;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.nav-item {
+	margin-right: 30px;
+}
+
+.nav-item:last-child {
+	margin-right: 0;
+}
+
+.nav-link {
+	color: gray;
+	text-decoration: none;
+	font-weight: 500;
+	font-size: 16px;
+	transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+	color: #000;
+}
+
+.right-header {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+}
+
+.profile-icon {
+	font-size: 24px;
+	color: gray;
+	cursor: pointer;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	transition: background-color 0.3s ease;
+}
+
+.profile-icon:hover {
+	background-color: #f0f0f0;
+}
 
 /* Responsive styles */
 @media (max-width: 768px) {
@@ -32,9 +90,24 @@
 		height: 38px;
 		margin-right: 12px;
 	}
-
-	.site-name {
-		font-size: 1.4rem;
+	
+	.nav-menu {
+		flex-wrap: wrap;
+	}
+	
+	.nav-item {
+		margin-right: 15px;
+		margin-bottom: 5px;
+	}
+	
+	.nav-link {
+		font-size: 14px;
+	}
+	
+	.profile-icon {
+		font-size: 20px;
+		width: 36px;
+		height: 36px;
 	}
 }
 

@@ -1,13 +1,14 @@
 .table-accounts-container {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-	margin: 20px;
-	color: #105D8D;
+	margin: 2%;
+	color: #0173b1;
 }
 
 .table-heading {
-	color: #105D8D;
+	color: gray;
 	margin-bottom: 20px;
 	font-weight: 600;
+	font-size: 18px;
 }
 
 .table-wrapper {
@@ -29,10 +30,16 @@
 	padding: 16px;
 	text-align: left;
 	border-bottom: 1px solid rgba(16, 93, 141, 0.1);
+	border-right: 1px solid rgba(16, 93, 141, 0.1);
+}
+
+.accounts-table th:last-child,
+.accounts-table td:last-child {
+	border-right: none;
 }
 
 .accounts-table th {
-	background-color: #105D8D;
+	background-color: #0173b1;
 	color: #ffffff;
 	font-weight: 500;
 	white-space: nowrap;
