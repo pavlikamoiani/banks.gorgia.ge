@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../assets/css/Login.module.css';
 import logo from '../assets/images/logo.png';
 import defaultInstance from '../api/defaultInstance';
@@ -7,21 +8,17 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      console.log('Attempting login with:', { email });
       const response = await defaultInstance.post('/login', { email, password });
-      console.log('Login response:', response.data);
-
       if (!response.data.token) {
         throw new Error('No token received from server');
       }
-
-      // Save token, login flag, and email
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('userEmail', response.data.user?.email);
@@ -31,14 +28,13 @@ export default function Login() {
       // Redirect to dashboard by role
       const role = response.data.user?.role;
       if (role === 'super_admin') {
-        window.location.replace('/super-admin-dashboard');
+        navigate('/gorgia/statement');
       } else if (role === 'admin') {
-        window.location.replace('/admin-dashboard');
+        navigate('/admin-dashboard');
       } else {
-        window.location.replace('/dashboard');
+        navigate('/dashboard');
       }
     } catch (err) {
-      console.error('Login error:', err.response?.data || err.message);
       const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
     }

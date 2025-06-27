@@ -9,6 +9,14 @@ import AntaContragentsPage from './pages/anta/ContragentsPage'
 import AntaUsersPage from './pages/anta/UsersPage'
 import Login from './pages/Login';
 
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
 function AppContent() {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
@@ -19,14 +27,13 @@ function AppContent() {
       <div className="main-content">
         <Routes>
           <Route path="/login" element={<Login />} />
-          {/* <Route path="/" element={<Navigate to="/statement" replace />} /> */}
-          <Route path="/gorgia/statement" element={<StatementPage />} />
-          <Route path="/gorgia/contragents" element={<ContragentsPage />} />
-          <Route path="/gorgia/users" element={<UsersPage />} />
-          {/* Anta routes */}
-          <Route path="/anta/statement" element={<AntaStatementPage />} />
-          <Route path="/anta/contragents" element={<AntaContragentsPage />} />
-          <Route path="/anta/users" element={<AntaUsersPage />} />
+          {/* Protect all other routes */}
+          <Route path="/gorgia/statement" element={<ProtectedRoute><StatementPage /></ProtectedRoute>} />
+          <Route path="/gorgia/contragents" element={<ProtectedRoute><ContragentsPage /></ProtectedRoute>} />
+          <Route path="/gorgia/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
+          <Route path="/anta/statement" element={<ProtectedRoute><AntaStatementPage /></ProtectedRoute>} />
+          <Route path="/anta/contragents" element={<ProtectedRoute><AntaContragentsPage /></ProtectedRoute>} />
+          <Route path="/anta/users" element={<ProtectedRoute><AntaUsersPage /></ProtectedRoute>} />
         </Routes>
       </div>
     </div>

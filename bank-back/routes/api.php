@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\Api\ContragentController;
+use App\Http\Controllers\ContragentController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,3 +22,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/contragents', [ContragentController::class, 'index']);
 Route::post('/contragents', [ContragentController::class, 'store']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);

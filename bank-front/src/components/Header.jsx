@@ -2,6 +2,7 @@ import '../assets/css/Header.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/images/logo.png'; // Adjust the path as necessary
 import { useState, useRef, useEffect } from 'react';
+import defaultInstance from '../api/defaultInstance';
 
 const getCurrentVersion = (pathname) => {
 	if (pathname.startsWith('/anta')) return 'Anta';
@@ -39,6 +40,25 @@ const Header = () => {
 		} else if (version === 'Anta') {
 			navigate('/anta/statement');
 		}
+	};
+
+	const handleLogout = async () => {
+		try {
+			await defaultInstance.post('/logout');
+		} catch (e) {
+			// Ignore errors, proceed with logout
+		}
+		localStorage.removeItem('authToken');
+		localStorage.removeItem('isLoggedIn');
+		localStorage.removeItem('userEmail');
+		localStorage.removeItem('role');
+		localStorage.removeItem('department_id');
+		sessionStorage.removeItem('authToken');
+		sessionStorage.removeItem('isLoggedIn');
+		sessionStorage.removeItem('userEmail');
+		sessionStorage.removeItem('role');
+		sessionStorage.removeItem('department_id');
+		navigate('/login');
 	};
 
 	return (
@@ -92,9 +112,17 @@ const Header = () => {
 								>
 									Anta
 								</div>
+								<div
+									className="profile-dropdown-item"
+									onClick={handleLogout}
+									style={{ color: 'red', borderTop: '1px solid #eee', marginTop: 4 }}
+								>
+									გასვლა
+								</div>
 							</div>
 						)}
 					</div>
+					{/* ...existing code... */}
 				</div>
 			</div>
 		</header>
