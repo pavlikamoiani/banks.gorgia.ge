@@ -61,6 +61,50 @@
 	font-size: 14px;
 }
 
+/* Icon button styles */
+.icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border: none;
+	border-radius: 50%;
+	background: #e0e6ed;
+	color: #fff;
+	cursor: pointer;
+	transition: background 0.2s, box-shadow 0.2s;
+	margin-right: 8px;
+	box-shadow: 0 2px 6px rgba(16, 93, 141, 0.08);
+	padding: 0;
+	text-align: center;
+}
+
+.icon-btn:last-child {
+	margin-right: 0;
+}
+
+.icon-btn svg {
+	display: block;
+}
+
+.icon-btn-edit {
+	background: #0173b1;
+}
+
+.icon-btn-edit:hover {
+	background: #025b8a;
+    border-color: #025b8a;
+}
+
+.icon-btn-delete {
+	background: #d9534f;
+}
+
+.icon-btn-delete:hover {
+	background: #b52b27;
+}
+
 /* Responsive adjustments */
 @media screen and (max-width: 600px) {
 

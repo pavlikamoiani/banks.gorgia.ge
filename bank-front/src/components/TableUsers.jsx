@@ -149,12 +149,19 @@ const TableUsers = () => {
 			{userModalOpen && (
 				<div
 					className={styles.overlay}
-					onClick={handleCloseUserModal}
 				>
 					<div
 						className={styles.modal}
 						onClick={e => e.stopPropagation()}
 					>
+						<button
+							type="button"
+							className={styles.modalClose}
+							onClick={handleCloseUserModal}
+							aria-label="Close"
+						>
+							&times;
+						</button>
 						<h3 className={styles.modalTitle}>მომხმარებლის დამატება</h3>
 						<form onSubmit={handleUserSubmit}>
 							<div className={styles.modalFormGroup}>
@@ -242,12 +249,19 @@ const TableUsers = () => {
 			{editModalOpen && (
 				<div
 					className={styles.overlay}
-					onClick={handleCloseEditModal}
 				>
 					<div
 						className={styles.modal}
 						onClick={e => e.stopPropagation()}
 					>
+						<button
+							type="button"
+							className={styles.modalClose}
+							onClick={handleCloseEditModal}
+							aria-label="Close"
+						>
+							&times;
+						</button>
 						<h3 className={styles.modalTitle}>მომხმარებლის რედაქტირება</h3>
 						<form onSubmit={handleEditSubmit}>
 							<div className={styles.modalFormGroup}>
@@ -345,31 +359,25 @@ const TableUsers = () => {
 									<td>{new Date(u.created_at).toLocaleString()}</td>
 									<td>
 										<button
-											style={{
-												background: "#f0ad4e",
-												color: "#fff",
-												border: "none",
-												borderRadius: 4,
-												padding: "4px 10px",
-												marginRight: 6,
-												cursor: "pointer"
-											}}
+											className="icon-btn icon-btn-edit"
 											onClick={() => handleOpenEditModal(u)}
+											title="რედაქტირება"
 										>
-											რედაქტირება
+											{/* Edit (pencil) icon */}
+											<svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+												<path d="M14.85 2.85a2.121 2.121 0 0 1 3 3l-9.5 9.5-3.5.5.5-3.5 9.5-9.5zM13.44 4.27l2.29 2.29" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+											</svg>
 										</button>
 										<button
-											style={{
-												background: "#d9534f",
-												color: "#fff",
-												border: "none",
-												borderRadius: 4,
-												padding: "4px 10px",
-												cursor: "pointer"
-											}}
+											className="icon-btn icon-btn-delete"
 											onClick={() => handleDeleteUser(u.id)}
+											title="წაშლა"
 										>
-											წაშლა
+											{/* Delete (trash) icon */}
+											<svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+												<path d="M6 7v7M10 7v7M14 7v7M3 5h14M8 5V3h4v2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+												<rect x="5" y="7" width="10" height="9" rx="2" stroke="#fff" strokeWidth="1.5"/>
+											</svg>
 										</button>
 									</td>
 								</tr>

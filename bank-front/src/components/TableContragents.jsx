@@ -74,12 +74,19 @@ const TableContragents = () => {
 			{modalOpen && (
 				<div
 					className={styles.overlay}
-					onClick={handleCloseModal}
 				>
 					<div
 						className={styles.modal}
 						onClick={e => e.stopPropagation()}
 					>
+						<button
+							type="button"
+							className={styles.modalClose}
+							onClick={handleCloseModal}
+							aria-label="Close"
+						>
+							&times;
+						</button>
 						<h3 className={styles.modalTitle}>კონტრაგენტის დამატება</h3>
 						<form onSubmit={handleSubmit}>
 							<div className={styles.modalFormGroup}>
