@@ -9,15 +9,14 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('user');
-            $table->unsignedBigInteger('department_id')->nullable();
+            $table->string('bank')->nullable()->after('department_id');
         });
     }
 
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['role', 'department_id']);
+            $table->dropColumn(['bank']);
         });
     }
 };

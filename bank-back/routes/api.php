@@ -24,3 +24,9 @@ Route::get('/contragents', [ContragentController::class, 'index']);
 Route::post('/contragents', [ContragentController::class, 'store']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+Route::post('/users', [AuthController::class, 'store']);
+Route::get('/users', function () {
+    return \App\Models\User::orderBy('created_at', 'desc')->get();
+});
+Route::put('/users/{id}', [AuthController::class, 'update']);
+Route::delete('/users/{id}', [AuthController::class, 'destroy']);

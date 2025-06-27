@@ -1,7 +1,7 @@
-import TableAccounts from '../../components/TableAccounts'
+import TableContragents from '../../components/TableContragents'
 
 const ContragentsPage = () => {
-  return <TableAccounts type="contragents" />
+  return <TableContragents />
 }
 
 export default ContragentsPage

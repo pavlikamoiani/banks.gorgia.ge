@@ -40,4 +40,60 @@ class AuthController extends Controller
         }
         return response()->json(['message' => 'Logged out']);
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'role' => 'required|string',
+            'bank' => 'required|string|in:gorgia,anta',
+        ]);
+
+        try {
+            $user = \App\Models\User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => bcrypt($validated['password']),
+                'role' => $validated['role'],
+                'bank' => $validated['bank'],
+            ]);
+            return response()->json($user, 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'User creation failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => "required|email|unique:users,email,$id",
+            'role' => 'required|string',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->role = $validated['role'];
+        if (!empty($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
+        }
+        $user->save();
+
+        return response()->json($user);
+    }
+
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+        return response()->json(['message' => 'User deleted']);
+    }
 }

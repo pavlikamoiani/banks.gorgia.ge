@@ -1,7 +1,7 @@
-import TableAccounts from '../../components/TableAccounts'
+import TableStatement from '../../components/TableStatement'
 
 const StatementPage = () => {
-  return <TableAccounts type="statement" />
+  return <TableStatement />
 }
 
 export default StatementPage

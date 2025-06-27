@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'department_id',
+        'bank',
     ];
 
     /**
@@ -44,3 +45,4 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 }
+

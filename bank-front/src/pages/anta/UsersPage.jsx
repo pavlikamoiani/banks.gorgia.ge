@@ -1,7 +1,7 @@
-import TableAccounts from '../../components/TableAccounts'
+import TableUsers from '../../components/TableUsers';
 
 const UsersPage = () => {
-  return <TableAccounts type="users" />
+  return <TableUsers />;
 }
 
-export default UsersPage
+export default UsersPage;
