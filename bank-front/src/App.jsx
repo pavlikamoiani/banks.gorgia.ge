@@ -9,6 +9,12 @@ import AntaContragentsPage from './pages/anta/ContragentsPage'
 import AntaUsersPage from './pages/anta/UsersPage'
 import Login from './pages/Login';
 
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faTrash, faUserPen } from '@fortawesome/free-solid-svg-icons';
+
+library.add(faTrash, faUserPen);
+
+
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
   if (!token) {

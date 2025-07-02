@@ -66,8 +66,9 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 36px;
-	height: 36px;
+	text-align: center;
+	width: 40px;
+	height: 40px;
 	border: none;
 	border-radius: 50%;
 	background: #e0e6ed;
@@ -78,14 +79,11 @@
 	box-shadow: 0 2px 6px rgba(16, 93, 141, 0.08);
 	padding: 0;
 	text-align: center;
+	font-size: 1rem;
 }
 
 .icon-btn:last-child {
 	margin-right: 0;
-}
-
-.icon-btn svg {
-	display: block;
 }
 
 .icon-btn-edit {
@@ -94,7 +92,7 @@
 
 .icon-btn-edit:hover {
 	background: #025b8a;
-    border-color: #025b8a;
+	border-color: #025b8a;
 }
 
 .icon-btn-delete {
