@@ -1,4 +1,6 @@
 import styles from '../assets/css/filter.module.css';
+import { useTranslation } from 'react-i18next';
+
 
 const TableFilter = ({
     filters,
@@ -6,6 +8,9 @@ const TableFilter = ({
     onReset,
     fields = []
 }) => {
+
+    const { t } = useTranslation();
+
     return (
         <div className={styles.filterContainer}>
             <form
@@ -34,7 +39,7 @@ const TableFilter = ({
                         className={styles.filterButton}
                         onClick={onReset}
                     >
-                        Сбросить
+                        {t('reset')}
                     </button>
                 </div>
             </form>

@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/images/logo.png'; // Adjust the path as necessary
 import { useState, useRef, useEffect } from 'react';
 import defaultInstance from '../api/defaultInstance';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useTranslation } from 'react-i18next';
 
 const getCurrentVersion = (pathname) => {

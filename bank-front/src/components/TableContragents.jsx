@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import defaultInstance from '../api/defaultInstance';
 import TableFilter from './TableFilter';
+import SortableTable from './SortableTable';
 
 import styles from '../assets/css/modal.module.css';
 import filterStyles from '../assets/css/filter.module.css';
@@ -92,7 +93,11 @@ const TableContragents = () => {
 	const columns = [
 		{ key: 'name', label: t('title') },
 		{ key: 'identification_code', label: t('identification_code') },
-		{ key: 'created_at', label: t('registration_date') }
+		{
+			key: 'created_at',
+			label: t('registration_date'),
+			render: (val) => new Date(val).toLocaleString()
+		}
 	];
 
 	return (
@@ -133,8 +138,8 @@ const TableContragents = () => {
 						onChange={handleFilterChange}
 						onReset={handleFilterReset}
 						fields={[
-							{ name: 'name', label: 'დასახელება', placeholder: 'Поиск по названию' },
-							{ name: 'identification_code', label: 'საიდენფიკაციო კოდი', placeholder: 'Поиск по коду' }
+							{ name: 'name', label: t('title'), placeholder: t('search_by_title') },
+							{ name: 'identification_code', label: t('identification_code'), placeholder: t('search_by_code') }
 						]}
 					/>
 				</div>
@@ -200,34 +205,12 @@ const TableContragents = () => {
 				</div>
 			)}
 			<div className="table-wrapper">
-				<table className="accounts-table">
-					<thead>
-						<tr>
-							<th>{t('title')}</th>
-							<th>{t('identification_code')}</th>
-							<th>{t('registration_date')}</th>
-						</tr>
-					</thead>
-					<tbody className="table-contragents">
-						{loading ? (
-							<tr>
-								<td colSpan={3}>იტვირთება...</td>
-							</tr>
-						) : filteredContragents.length > 0 ? (
-							filteredContragents.map((c, idx) => (
-								<tr key={c.id || idx}>
-									<td>{c.name}</td>
-									<td>{c.identification_code}</td>
-									<td>{new Date(c.created_at).toLocaleString()}</td>
-								</tr>
-							))
-						) : (
-							<tr>
-								<td colSpan={3}>მონაცემები არ მოიძებნა</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
+				<SortableTable
+					columns={columns}
+					data={filteredContragents}
+					loading={loading}
+					emptyText={t('no_data_found') || 'მონაცემები არ მოიძებნა'}
+				/>
 			</div>
 		</div>
 	);

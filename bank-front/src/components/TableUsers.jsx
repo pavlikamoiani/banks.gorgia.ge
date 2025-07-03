@@ -1,10 +1,13 @@
 import '../assets/css/TableAccounts.css';
 import { useState, useEffect } from 'react';
-import defaultInstance from '../api/defaultInstance';
-import styles from '../assets/css/modal.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus, faUserPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+
+import SortableTable from './SortableTable';
+import defaultInstance from '../api/defaultInstance';
+import UserModal from './AddUserModal';
+import EditUserModal from './EditUserModal';
 
 const TableUsers = () => {
 	const { t } = useTranslation();
@@ -130,6 +133,47 @@ const TableUsers = () => {
 		}
 	};
 
+	const columns = [
+		{ key: 'name', label: t('name') },
+		{ key: 'email', label: t('email') },
+		{
+			key: 'role',
+			label: t('role'),
+			render: (value) =>
+				value === 'super_admin'
+					? 'მთავარი ადმინი'
+					: value
+		},
+		{ key: 'bank', label: t('bank') },
+		{
+			key: 'created_at',
+			label: t('registration_date'),
+			render: (value) => new Date(value).toLocaleString()
+		},
+		{
+			key: 'actions',
+			label: t('actions'),
+			render: (value, row) => (
+				<>
+					<button
+						className="icon-btn icon-btn-edit"
+						onClick={() => handleOpenEditModal(row)}
+						title={t('edit_user')}
+					>
+						<FontAwesomeIcon icon={faUserPen} color="#fff" />
+					</button>
+					<button
+						className="icon-btn icon-btn-delete"
+						onClick={() => handleDeleteUser(row.id)}
+						title={t('delete_user_confirm')}
+					>
+						<FontAwesomeIcon icon={faTrash} color="#fff" />
+					</button>
+				</>
+			)
+		}
+	];
+
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header">
@@ -151,242 +195,31 @@ const TableUsers = () => {
 					<FontAwesomeIcon icon={faUserPlus} color='#fff' fontSize={'18px'} />
 				</button>
 			</div>
-			{userModalOpen && (
-				<div
-					className={styles.overlay}
-				>
-					<div
-						className={styles.modal}
-						onClick={e => e.stopPropagation()}
-					>
-						<button
-							type="button"
-							className={styles.modalClose}
-							onClick={handleCloseUserModal}
-							aria-label="Close"
-						>
-							&times;
-						</button>
-						<h3 className={styles.modalTitle}>{t('add_user')}</h3>
-						<form onSubmit={handleUserSubmit}>
-							<div className={styles.modalFormGroup}>
-								<label>{t('name')}</label>
-								<input
-									type="text"
-									name="name"
-									value={userForm.name}
-									onChange={handleUserChange}
-									className={styles.modalInput}
-									required
-								/>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('email')}</label>
-								<input
-									type="email"
-									name="email"
-									value={userForm.email}
-									onChange={handleUserChange}
-									className={styles.modalInput}
-									required
-								/>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('password')}</label>
-								<input
-									type="password"
-									name="password"
-									value={userForm.password}
-									onChange={handleUserChange}
-									className={styles.modalInput}
-									required
-								/>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('role')}</label>
-								<select
-									name="role"
-									value={userForm.role}
-									onChange={handleUserChange}
-									className={styles.modalInput}
-									required
-								>
-									<option value="">{t('select_role')}</option>
-									<option value="დისტრიბუციის ოპერატორი">{t('distribution_operator')}</option>
-									<option value="კორპორატიული გაყიდვების მენეჯერი">{t('corporate_sales_manager')}</option>
-									<option value="ადმინისტრატორი">{t('administrator')}</option>
-								</select>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('bank')}</label>
-								<select
-									name="bank"
-									value={userForm.bank}
-									onChange={handleUserChange}
-									className={styles.modalInput}
-									required
-								>
-									<option value="">{t('select_bank')}</option>
-									<option value="gorgia">gorgia</option>
-									<option value="anta">anta</option>
-								</select>
-							</div>
-							{userError && <div className={styles.modalError}>{userError}</div>}
-							<div className={styles.modalActions}>
-								<button
-									type="button"
-									onClick={handleCloseUserModal}
-									className={`${styles.modalButton} ${styles.modalButtonCancel}`}
-								>
-									{t('cancel')}
-								</button>
-								<button
-									type="submit"
-									className={`${styles.modalButton} ${styles.modalButtonSubmit}`}
-								>
-									{t('add')}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			)}
-			{editModalOpen && (
-				<div
-					className={styles.overlay}
-				>
-					<div
-						className={styles.modal}
-						onClick={e => e.stopPropagation()}
-					>
-						<button
-							type="button"
-							className={styles.modalClose}
-							onClick={handleCloseEditModal}
-							aria-label="Close"
-						>
-							&times;
-						</button>
-						<h3 className={styles.modalTitle}>{t('edit_user')}</h3>
-						<form onSubmit={handleEditSubmit}>
-							<div className={styles.modalFormGroup}>
-								<label>{t('name')}</label>
-								<input
-									type="text"
-									name="name"
-									value={editForm.name}
-									onChange={handleEditChange}
-									className={styles.modalInput}
-									required
-								/>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('email')}</label>
-								<input
-									type="email"
-									name="email"
-									value={editForm.email}
-									onChange={handleEditChange}
-									className={styles.modalInput}
-									required
-								/>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('role')}</label>
-								<select
-									name="role"
-									value={editForm.role}
-									onChange={handleEditChange}
-									className={styles.modalInput}
-									required
-								>
-									<option value="">{t('select_role')}</option>
-									<option value="დისტრიბუციის ოპერატორი">{t('distribution_operator')}</option>
-									<option value="კორპორატიული გაყიდვების მენეჯერი">{t('corporate_sales_manager')}</option>
-									<option value="ადმინისტრატორი">{t('administrator')}</option>
-								</select>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('password')}</label>
-								<input
-									type="password"
-									name="password"
-									value={editForm.password}
-									onChange={handleEditChange}
-									className={styles.modalInput}
-									placeholder={t('new_password')}
-								/>
-							</div>
-							{editError && <div className={styles.modalError}>{editError}</div>}
-							<div className={styles.modalActions}>
-								<button
-									type="button"
-									onClick={handleCloseEditModal}
-									className={`${styles.modalButton} ${styles.modalButtonCancel}`}
-								>
-									{t('cancel')}
-								</button>
-								<button
-									type="submit"
-									className={`${styles.modalButton} ${styles.modalButtonSubmit}`}
-								>
-									{t('save')}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			)}
+			<UserModal
+				open={userModalOpen}
+				onClose={handleCloseUserModal}
+				onSubmit={handleUserSubmit}
+				form={userForm}
+				onChange={handleUserChange}
+				error={userError}
+				t={t}
+			/>
+			<EditUserModal
+				open={editModalOpen}
+				onClose={handleCloseEditModal}
+				onSubmit={handleEditSubmit}
+				form={editForm}
+				onChange={handleEditChange}
+				error={editError}
+				t={t}
+			/>
 			<div className="table-wrapper">
-				<table className="accounts-table">
-					<thead>
-						<tr>
-							<th>{t('name')}</th>
-							<th>{t('email')}</th>
-							<th>{t('role')}</th>
-							<th>{t('bank')}</th>
-							<th>{t('registration_date')}</th>
-							<th>{t('actions')}</th>
-						</tr>
-					</thead>
-					<tbody className="table-contragents">
-						{loading ? (
-							<tr>
-								<td colSpan={6}>{t('loading')}</td>
-							</tr>
-						) : users.length > 0 ? (
-							users.map((u, idx) => (
-								<tr key={u.id || idx}>
-									<td>{u.name}</td>
-									<td>{u.email}</td>
-									<td>{u.role}</td>
-									<td>{u.bank}</td>
-									<td>{new Date(u.created_at).toLocaleString()}</td>
-									<td>
-										<button
-											className="icon-btn icon-btn-edit"
-											onClick={() => handleOpenEditModal(u)}
-											title={t('edit_user')}
-										>
-											<FontAwesomeIcon icon={faUserPen} color="#fff" />
-										</button>
-										<button
-											className="icon-btn icon-btn-delete"
-											onClick={() => handleDeleteUser(u.id)}
-											title={t('delete_user_confirm')}
-										>
-											<FontAwesomeIcon icon={faTrash} color="#fff" />
-										</button>
-									</td>
-								</tr>
-							))
-						) : (
-							<tr>
-								<td colSpan={6}>{t('no_data')}</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
+				<SortableTable
+					columns={columns}
+					data={users}
+					loading={loading}
+					emptyText={t('no_data')}
+				/>
 			</div>
 		</div>
 	);

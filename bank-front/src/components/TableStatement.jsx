@@ -1,31 +1,44 @@
 import '../assets/css/TableAccounts.css';
+import SortableTable from './SortableTable';
+import { useTranslation } from 'react-i18next';
 
 const TableStatement = () => {
+
+	const { t } = useTranslation();
+
+	const columns = [
+		{ key: 'contragent', label: t('contragent') },
+		{ key: 'bank', label: t('bank') },
+		{ key: 'amount', label: t('amount') },
+		{ key: 'transferDate', label: t('transferDate') },
+		{ key: 'purpose', label: t('purpose') },
+		{ key: 'syncDate', label: t('syncDate') }
+	];
+
+	const data = [
+		{
+			id: 1,
+			contragent: 'Comp A',
+			bank: 'Bank X',
+			amount: 1000,
+			transferDate: '2024-07-01',
+			purpose: 'Invoice #123',
+			syncDate: '2024-07-02',
+		},
+	];
 
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header">
-				<h2 className="table-heading">ამონაწერი</h2>
+				<h2 className="table-heading">{t('statement')}</h2>
 			</div>
 			<div className="table-wrapper">
-				<table className="accounts-table">
-					<thead>
-						<tr>
-							<th>კონტრაგენტი</th>
-							<th>ბანკი</th>
-							<th>თანხა</th>
-							<th>გადმორიცხვის თარიღი</th>
-							<th>დანიშნულება</th>
-							<th>სინქრონიზაციის თარიღი</th>
-						</tr>
-					</thead>
-					<tbody className="table-contragents">
-						{/* Add statement rows here */}
-						<tr>
-							<td colSpan={6}></td>
-						</tr>
-					</tbody>
-				</table>
+				<SortableTable
+					columns={columns}
+					data={data}
+					loading={false}
+					emptyText="ამონაწერი არ მოიძებნა"
+				/>
 			</div>
 		</div>
 	);

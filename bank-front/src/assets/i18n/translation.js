@@ -12,6 +12,9 @@ const resources = {
       "cancel": "Cancel",
       "add": "Add",
       "registration_date": "Registration Date",
+      "reset": "Reset",
+      "bank": "Bank",
+
 
       // Table users
       "users_title": "Users",
@@ -21,7 +24,6 @@ const resources = {
       "email": "Email",
       "password": "Password",
       "role": "Role",
-      "bank": "Bank",
       "actions": "Actions",
       "select_role": "Select Role",
       "distribution_operator": "Distribution Operator",
@@ -42,6 +44,15 @@ const resources = {
       "add_contragent": "Add Contragents",
       "title": "Title",
       "identification_code": "Identification Code",
+      "search_by_title": "Search by title",
+      "search_by_code": "Search by code",
+
+      // table statement
+      "contragent": "Contragent",
+      "amount": "Amount",
+      "transferDate": "Transfer Date",
+      "purpose": "Purpose",
+      "syncDate": "Sync Date",
     }
   },
   ru: {
@@ -54,6 +65,9 @@ const resources = {
       "registration_date": "Дата регистрации",
       "cancel": "Отмена",
       "add": "Добавить",
+      "reset": "Сбросить",
+      "bank": "Банк",
+
 
       // Table users
       "users_title": "Пользователи",
@@ -63,7 +77,6 @@ const resources = {
       "email": "Эл. почта",
       "password": "Пароль",
       "role": "Роль",
-      "bank": "Банк",
       "actions": "Действия",
       "select_role": "Выберите роль",
       "distribution_operator": "Оператор дистрибуции",
@@ -84,6 +97,16 @@ const resources = {
       "add_contragent": "Добавить контрагента",
       "title": "Название",
       "identification_code": "Идентификационный код",
+      "search_by_title": "Поиск по названию",
+      "search_by_code": "Поиск по коду",
+
+
+      // table statement
+      "contragent": "Контрагент",
+      "amount": "Сумма",
+      "transferDate": "Дата перевода",
+      "purpose": "Назначение",
+      "syncDate": "Дата синхронизации",
     }
   },
   ka: {
@@ -95,6 +118,9 @@ const resources = {
       "logout": "გასვლა",
       "cancel": "გაუქმება",
       "add": "დამატება",
+      "reset": "გაუქმება",
+      "bank": "დანიშნული ბანკი",
+
 
       // Table users
       "users_title": "მომხმარებლები",
@@ -104,7 +130,6 @@ const resources = {
       "email": "მომხმარებლის ელფოსტა",
       "password": "პაროლი",
       "role": "მომხმარებლის როლი",
-      "bank": "დანიშნული ბანკი",
       "registration_date": "რეგისტრაციის თარიღი",
       "actions": "ქმედებები",
       "select_role": "აირჩიეთ როლი",
@@ -126,6 +151,16 @@ const resources = {
       "add_contragent": "კონტრაგენტის დამატება",
       "title": "დასახელება",
       "identification_code": "საიდენფიკაციო კოდი",
+      "search_by_title": "ძებნა დასახელებით",
+      "search_by_code": "ძებნა კოდით",
+
+
+      // table statement
+      "contragent": "კონტრაგენტი",
+      "amount": "თანხა",
+      "transferDate": "გადმორიცხვის თარიღი",
+      "purpose": "დანიშნულება",
+      "syncDate": "სინქრონიზაციის თარიღი",
     }
   }
 };

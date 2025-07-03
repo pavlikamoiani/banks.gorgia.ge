@@ -1,0 +1,76 @@
+.sortableTable {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sortableTable th,
+.sortableTable td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(16, 93, 141, 0.1);
+    border-right: 1px solid rgba(16, 93, 141, 0.1);
+}
+
+.sortableTable th:last-child,
+.sortableTable td:last-child {
+    border-right: none;
+}
+
+.sortableTable th {
+    background-color: #0173b1;
+    color: #ffffff;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.sortableTable .sort-icons {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+}
+
+.sortableTable .sort-arrow {
+    color: #bbb;
+    font-weight: normal;
+    line-height: 1;
+    font-size: 10px;
+}
+
+.sortableTable .sort-arrow.active {
+    color: #fff;
+    font-weight: bold;
+}
+
+.sortableTable tr:last-child td {
+    border-bottom: none;
+}
+
+.sortableTable tr:hover {
+    background-color: rgba(16, 93, 141, 0.03);
+}
+
+.sortableTh {
+    padding: 0;
+}
+
+.thContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media screen and (max-width: 600px) {
+
+    .sortableTable th,
+    .sortableTable td {
+        padding: 12px 8px;
+        font-size: 0.9rem;
+    }
+}
