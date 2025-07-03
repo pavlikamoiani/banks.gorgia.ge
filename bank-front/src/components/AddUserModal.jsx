@@ -1,6 +1,7 @@
 import styles from '../assets/css/modal.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import useCurrentUser from '../hooks/useCurrentUser';
 
 const UserModal = ({
     open,
@@ -11,9 +12,12 @@ const UserModal = ({
     error,
     t
 }) => {
+
+    const user = useCurrentUser();
     if (!open) return null;
 
     return (
+
         <div className={styles.overlay}>
             <div
                 className={styles.modal}
@@ -72,9 +76,9 @@ const UserModal = ({
                             required
                         >
                             <option value="">{t('select_role')}</option>
-                            <option value="დისტრიბუციის ოპერატორი">{t('distribution_operator')}</option>
-                            <option value="კორპორატიული გაყიდვების მენეჯერი">{t('corporate_sales_manager')}</option>
-                            <option value="ადმინისტრატორი">{t('administrator')}</option>
+                            <option value="distribution_operator">{t('distribution_operator')}</option>
+                            <option value="corporate_sales_manager">{t('corporate_sales_manager')}</option>
+                            <option value="admin">{t('administrator')}</option>
                         </select>
                     </div>
                     <div className={styles.modalFormGroup}>
@@ -87,8 +91,12 @@ const UserModal = ({
                             required
                         >
                             <option value="">{t('select_bank')}</option>
-                            <option value="gorgia">gorgia</option>
-                            <option value="anta">anta</option>
+                            {user && user.bank === 'gorgia' && (
+                                <option value="gorgia">gorgia</option>
+                            )}
+                            {user && user.bank === 'anta' && (
+                                <option value="anta">anta</option>
+                            )}
                         </select>
                     </div>
                     {error && <div className={styles.modalError}>{error}</div>}

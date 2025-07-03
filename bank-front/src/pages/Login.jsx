@@ -21,8 +21,7 @@ export default function Login() {
       }
       localStorage.setItem('authToken', response.data.token);
 
-      // Redirect to dashboard by role
-      // Instead, fetch user info after login and redirect accordingly
+
       const userRes = await defaultInstance.get('/user');
       const user = userRes.data;
       if (user.role === 'super_admin') {

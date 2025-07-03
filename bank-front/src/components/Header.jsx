@@ -2,8 +2,9 @@ import '../assets/css/Header.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
 import { useState, useRef, useEffect } from 'react';
-import defaultInstance from '../api/defaultInstance';
 import { useTranslation } from 'react-i18next';
+import useCurrentUser from '../hooks/useCurrentUser';
+import defaultInstance from '../api/defaultInstance';
 
 const getCurrentVersion = (pathname) => {
 	if (pathname.startsWith('/anta')) return 'Anta';
@@ -13,19 +14,13 @@ const getCurrentVersion = (pathname) => {
 const Header = () => {
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-	const [user, setUser] = useState(null);
 	const dropdownRef = useRef(null);
 	const langDropdownRef = useRef(null);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { t, i18n } = useTranslation();
 	const currentVersion = getCurrentVersion(location.pathname);
-
-	useEffect(() => {
-		defaultInstance.get('/user')
-			.then(res => setUser(res.data))
-			.catch(() => setUser(null));
-	}, []);
+	const user = useCurrentUser();
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -43,7 +38,6 @@ const Header = () => {
 		};
 	}, [dropdownOpen]);
 
-	// Close language dropdown on outside click
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
@@ -118,14 +112,16 @@ const Header = () => {
 											{t('contragents')}
 										</Link>
 									</li>
-									<li className="nav-item">
-										<Link
-											to="/gorgia/users"
-											className={`nav-link${location.pathname === "/gorgia/users" ? " active" : ""}`}
-										>
-											{t('users')}
-										</Link>
-									</li>
+									{user && (user.role === 'super_admin' || user.role === "admin") && (
+										<li className="nav-item">
+											<Link
+												to="/gorgia/users"
+												className={`nav-link${location.pathname === "/gorgia/users" ? " active" : ""}`}
+											>
+												{t('users')}
+											</Link>
+										</li>
+									)}
 								</>
 							)}
 							{user && (user.role === 'super_admin' || user.bank === 'anta') && currentVersion === 'Anta' && (
@@ -146,14 +142,16 @@ const Header = () => {
 											{t('contragents')}
 										</Link>
 									</li>
-									<li className="nav-item">
-										<Link
-											to="/anta/users"
-											className={`nav-link${location.pathname === "/anta/users" ? " active" : ""}`}
-										>
-											{t('users')}
-										</Link>
-									</li>
+									{user && (user.role === 'super_admin' || user.role === "admin") && (
+										<li className="nav-item">
+											<Link
+												to="/anta/users"
+												className={`nav-link${location.pathname === "/anta/users" ? " active" : ""}`}
+											>
+												{t('users')}
+											</Link>
+										</li>
+									)}
 								</>
 							)}
 						</ul>
@@ -175,7 +173,6 @@ const Header = () => {
 								style={{ fontWeight: 600 }}
 							>
 								{(i18n.language === 'ka') && (
-									// Correct Georgian flag SVG
 									<svg width="22" height="16" viewBox="0 0 22 16">
 										<rect width="22" height="16" fill="#fff" />
 										<rect x="9" width="4" height="16" fill="#e8112d" />
@@ -187,7 +184,6 @@ const Header = () => {
 									</svg>
 								)}
 								{(i18n.language === 'en') && (
-									// Correct UK flag SVG
 									<svg width="22" height="16" viewBox="0 0 22 16">
 										<rect width="22" height="16" fill="#012169" />
 										<polygon points="0,0 22,16 22,14.5 2.5,0 0,0" fill="#fff" />
@@ -203,7 +199,6 @@ const Header = () => {
 									</svg>
 								)}
 								{(i18n.language === 'ru') && (
-									// Correct Russian flag SVG
 									<svg width="22" height="16" viewBox="0 0 22 16">
 										<rect width="22" height="16" fill="#fff" />
 										<rect y="5.33" width="22" height="5.33" fill="#0033a0" />

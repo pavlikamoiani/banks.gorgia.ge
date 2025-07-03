@@ -77,12 +77,16 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => "required|email|unique:users,email,$id",
             'role' => 'required|string',
+            'bank' => 'sometimes|required|string|in:gorgia,anta',
             'password' => 'nullable|string|min:6',
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
+        if (isset($validated['bank'])) {
+            $user->bank = $validated['bank'];
+        }
         if (!empty($validated['password'])) {
             $user->password = bcrypt($validated['password']);
         }

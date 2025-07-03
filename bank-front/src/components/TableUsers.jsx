@@ -9,6 +9,7 @@ import defaultInstance from '../api/defaultInstance';
 import UserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 
+
 const TableUsers = () => {
 	const { t } = useTranslation();
 	const [users, setUsers] = useState([]);
@@ -27,6 +28,7 @@ const TableUsers = () => {
 		name: '',
 		email: '',
 		role: '',
+		bank: '',
 		password: ''
 	});
 	const [editError, setEditError] = useState('');
@@ -82,7 +84,8 @@ const TableUsers = () => {
 		setEditForm({
 			name: user.name || '',
 			email: user.email || '',
-			role: user.role || '',
+			role: user.role || '', // ensure role is set
+			bank: user.bank || '', // add this if you want to support editing bank
 			password: ''
 		});
 		setEditError('');
@@ -91,7 +94,7 @@ const TableUsers = () => {
 	const handleCloseEditModal = () => {
 		setEditModalOpen(false);
 		setEditUser(null);
-		setEditForm({ name: '', email: '', role: '', password: '' });
+		setEditForm({ name: '', email: '', role: '', bank: '', password: '' }); // add bank here too
 		setEditError('');
 	};
 	const handleEditChange = (e) => {
@@ -108,7 +111,8 @@ const TableUsers = () => {
 				name: editForm.name,
 				email: editForm.email,
 				role: editForm.role,
-				password: editForm.password // send empty string if not changing
+				bank: editForm.bank,
+				password: editForm.password
 			});
 			handleCloseEditModal();
 			setUserModalOpen(false);
@@ -126,7 +130,6 @@ const TableUsers = () => {
 		if (!window.confirm(t('delete_user_confirm'))) return;
 		try {
 			await defaultInstance.delete(`/users/${userId}`);
-			// Refresh users
 			setUsers(users.filter(u => u.id !== userId));
 		} catch (err) {
 			alert(t('error_deleting'));
@@ -142,7 +145,13 @@ const TableUsers = () => {
 			render: (value) =>
 				value === 'super_admin'
 					? 'მთავარი ადმინი'
-					: value
+					: value === 'admin'
+						? 'ადმინისტრატორი'
+						: value === 'distribution_operator'
+							? 'დისტრიბუციის ოპერატორი'
+							: value === 'corporate_sales_manager'
+								? 'კორპორატიული გაყიდვების მენეჯერი'
+								: value
 		},
 		{ key: 'bank', label: t('bank') },
 		{

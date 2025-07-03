@@ -1,4 +1,5 @@
 import styles from '../assets/css/modal.module.css';
+import useCurrentUser from '../hooks/useCurrentUser';
 
 const EditUserModal = ({
     open,
@@ -9,6 +10,7 @@ const EditUserModal = ({
     error,
     t
 }) => {
+    const user = useCurrentUser();
     if (!open) return null;
 
     return (
@@ -59,11 +61,27 @@ const EditUserModal = ({
                             required
                         >
                             <option value="">{t('select_role')}</option>
-                            <option value="დისტრიბუციის ოპერატორი">{t('distribution_operator')}</option>
-                            <option value="კორპორატიული გაყიდვების მენეჯერი">{t('corporate_sales_manager')}</option>
-                            <option value="ადმინისტრატორი">{t('administrator')}</option>
+                            <option value="distribution_operator">{t('distribution_operator')}</option>
+                            <option value="corporate_sales_manager">{t('corporate_sales_manager')}</option>
+                            <option value="admin">{t('administrator')}</option>
                         </select>
                     </div>
+                    {user && user.role === 'super_admin' && (
+                        <div className={styles.modalFormGroup}>
+                            <label>{t('bank')}</label>
+                            <select
+                                name="bank"
+                                value={form.bank || ''}
+                                onChange={onChange}
+                                className={styles.modalInput}
+                                required
+                            >
+                                <option value="">{t('select_bank')}</option>
+                                <option value="gorgia">gorgia</option>
+                                <option value="anta">anta</option>
+                            </select>
+                        </div>
+                    )}
                     <div className={styles.modalFormGroup}>
                         <label>{t('password')}</label>
                         <input
