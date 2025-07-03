@@ -8,6 +8,8 @@ import AntaStatementPage from './pages/anta/StatementPage'
 import AntaContragentsPage from './pages/anta/ContragentsPage'
 import AntaUsersPage from './pages/anta/UsersPage'
 import Login from './pages/Login';
+import { useEffect, useState } from 'react'
+import defaultInstance from './api/defaultInstance'
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faTrash, faUserPen } from '@fortawesome/free-solid-svg-icons';
@@ -20,15 +22,36 @@ library.add(faTrash, faUserPen);
 
 function ProtectedRoute({ children, bank }) {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-  const userRole = localStorage.getItem('role');
-  const userBank = localStorage.getItem('bank');
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    defaultInstance.get('/user')
+      .then(res => {
+        setUser(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setUser(null);
+        setLoading(false);
+      });
+  }, [token]);
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  // Only super_admin can access both banks, others only their assigned bank
-  if (userRole !== 'super_admin' && bank && userBank !== bank) {
-    // Redirect to their assigned bank's dashboard
-    return <Navigate to={`/${userBank}/statement`} replace />;
+  if (loading) {
+    return null;
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (user.role !== 'super_admin' && bank && user.bank !== bank) {
+    return <Navigate to={`/${user.bank}/statement`} replace />;
   }
   return children;
 }

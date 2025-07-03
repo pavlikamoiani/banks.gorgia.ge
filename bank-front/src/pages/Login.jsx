@@ -20,20 +20,16 @@ export default function Login() {
         throw new Error('No token received from server');
       }
       localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userEmail', response.data.user?.email);
-      localStorage.setItem('role', response.data.user?.role);
-      localStorage.setItem('department_id', response.data.user?.department_id);
-      localStorage.setItem('bank', response.data.user?.bank); // save assigned bank
 
       // Redirect to dashboard by role
-      const role = response.data.user?.role;
-      const bank = response.data.user?.bank;
-      if (role === 'super_admin') {
+      // Instead, fetch user info after login and redirect accordingly
+      const userRes = await defaultInstance.get('/user');
+      const user = userRes.data;
+      if (user.role === 'super_admin') {
         navigate('/gorgia/statement');
-      } else if (bank === 'gorgia') {
+      } else if (user.bank === 'gorgia') {
         navigate('/gorgia/statement');
-      } else if (bank === 'anta') {
+      } else if (user.bank === 'anta') {
         navigate('/anta/statement');
       } else {
         navigate('/login');

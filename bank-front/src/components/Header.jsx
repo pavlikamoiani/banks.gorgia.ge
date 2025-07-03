@@ -13,14 +13,19 @@ const getCurrentVersion = (pathname) => {
 const Header = () => {
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+	const [user, setUser] = useState(null);
 	const dropdownRef = useRef(null);
 	const langDropdownRef = useRef(null);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { t, i18n } = useTranslation();
-	const userRole = localStorage.getItem('role');
-	const userBank = localStorage.getItem('bank');
 	const currentVersion = getCurrentVersion(location.pathname);
+
+	useEffect(() => {
+		defaultInstance.get('/user')
+			.then(res => setUser(res.data))
+			.catch(() => setUser(null));
+	}, []);
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -95,7 +100,7 @@ const Header = () => {
 					</div>
 					<nav className="header-nav">
 						<ul className="nav-menu">
-							{(userRole === 'super_admin' || userBank === 'gorgia') && currentVersion === 'Gorgia' && (
+							{user && (user.role === 'super_admin' || user.bank === 'gorgia') && currentVersion === 'Gorgia' && (
 								<>
 									<li className="nav-item">
 										<Link
@@ -123,7 +128,7 @@ const Header = () => {
 									</li>
 								</>
 							)}
-							{(userRole === 'super_admin' || userBank === 'anta') && currentVersion === 'Anta' && (
+							{user && (user.role === 'super_admin' || user.bank === 'anta') && currentVersion === 'Anta' && (
 								<>
 									<li className="nav-item">
 										<Link
@@ -280,18 +285,22 @@ const Header = () => {
 							<i className="fas fa-user"></i>
 							{dropdownOpen && (
 								<div className="profile-dropdown">
-									<div
-										className="profile-dropdown-item"
-										onClick={() => handleDropdownClick('Gorgia')}
-									>
-										Gorgia
-									</div>
-									<div
-										className="profile-dropdown-item"
-										onClick={() => handleDropdownClick('Anta')}
-									>
-										Anta
-									</div>
+									{user && user.role === 'super_admin' && (
+										<>
+											<div
+												className="profile-dropdown-item"
+												onClick={() => handleDropdownClick('Gorgia')}
+											>
+												Gorgia
+											</div>
+											<div
+												className="profile-dropdown-item"
+												onClick={() => handleDropdownClick('Anta')}
+											>
+												Anta
+											</div>
+										</>
+									)}
 									<div
 										className="profile-dropdown-item"
 										onClick={handleLogout}

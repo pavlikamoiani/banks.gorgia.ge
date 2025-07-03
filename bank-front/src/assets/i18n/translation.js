@@ -14,6 +14,7 @@ const resources = {
       "registration_date": "Registration Date",
       "reset": "Reset",
       "bank": "Bank",
+      "no_data_found": "No data found",
 
 
       // Table users
@@ -67,6 +68,7 @@ const resources = {
       "add": "Добавить",
       "reset": "Сбросить",
       "bank": "Банк",
+      "no_data_found": "Данные не найдены",
 
 
       // Table users
@@ -120,7 +122,7 @@ const resources = {
       "add": "დამატება",
       "reset": "გაუქმება",
       "bank": "დანიშნული ბანკი",
-
+      "no_data_found": "მონაცემები არ მოიძებნა",
 
       // Table users
       "users_title": "მომხმარებლები",
