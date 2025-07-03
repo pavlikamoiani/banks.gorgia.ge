@@ -18,10 +18,17 @@ import './assets/i18n/translation';
 library.add(faTrash, faUserPen);
 
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, bank }) {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  const userRole = localStorage.getItem('role');
+  const userBank = localStorage.getItem('bank');
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+  // Only super_admin can access both banks, others only their assigned bank
+  if (userRole !== 'super_admin' && bank && userBank !== bank) {
+    // Redirect to their assigned bank's dashboard
+    return <Navigate to={`/${userBank}/statement`} replace />;
   }
   return children;
 }
@@ -37,12 +44,24 @@ function AppContent() {
         <Routes>
           <Route path="/login" element={<Login />} />
           {/* Protect all other routes */}
-          <Route path="/gorgia/statement" element={<ProtectedRoute><StatementPage /></ProtectedRoute>} />
-          <Route path="/gorgia/contragents" element={<ProtectedRoute><ContragentsPage /></ProtectedRoute>} />
-          <Route path="/gorgia/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
-          <Route path="/anta/statement" element={<ProtectedRoute><AntaStatementPage /></ProtectedRoute>} />
-          <Route path="/anta/contragents" element={<ProtectedRoute><AntaContragentsPage /></ProtectedRoute>} />
-          <Route path="/anta/users" element={<ProtectedRoute><AntaUsersPage /></ProtectedRoute>} />
+          <Route path="/gorgia/statement" element={
+            <ProtectedRoute bank="gorgia"><StatementPage /></ProtectedRoute>
+          } />
+          <Route path="/gorgia/contragents" element={
+            <ProtectedRoute bank="gorgia"><ContragentsPage /></ProtectedRoute>
+          } />
+          <Route path="/gorgia/users" element={
+            <ProtectedRoute bank="gorgia"><UsersPage /></ProtectedRoute>
+          } />
+          <Route path="/anta/statement" element={
+            <ProtectedRoute bank="anta"><AntaStatementPage /></ProtectedRoute>
+          } />
+          <Route path="/anta/contragents" element={
+            <ProtectedRoute bank="anta"><AntaContragentsPage /></ProtectedRoute>
+          } />
+          <Route path="/anta/users" element={
+            <ProtectedRoute bank="anta"><AntaUsersPage /></ProtectedRoute>
+          } />
         </Routes>
       </div>
     </div>

@@ -24,15 +24,19 @@ export default function Login() {
       localStorage.setItem('userEmail', response.data.user?.email);
       localStorage.setItem('role', response.data.user?.role);
       localStorage.setItem('department_id', response.data.user?.department_id);
+      localStorage.setItem('bank', response.data.user?.bank); // save assigned bank
 
       // Redirect to dashboard by role
       const role = response.data.user?.role;
+      const bank = response.data.user?.bank;
       if (role === 'super_admin') {
         navigate('/gorgia/statement');
-      } else if (role === 'admin') {
-        navigate('/admin-dashboard');
+      } else if (bank === 'gorgia') {
+        navigate('/gorgia/statement');
+      } else if (bank === 'anta') {
+        navigate('/anta/statement');
       } else {
-        navigate('/dashboard');
+        navigate('/login');
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';

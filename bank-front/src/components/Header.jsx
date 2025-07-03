@@ -18,7 +18,8 @@ const Header = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { t, i18n } = useTranslation();
-
+	const userRole = localStorage.getItem('role');
+	const userBank = localStorage.getItem('bank');
 	const currentVersion = getCurrentVersion(location.pathname);
 
 	useEffect(() => {
@@ -94,42 +95,62 @@ const Header = () => {
 					</div>
 					<nav className="header-nav">
 						<ul className="nav-menu">
-							<li className="nav-item">
-								<Link
-									to={currentVersion === 'Anta' ? "/anta/statement" : "/gorgia/statement"}
-									className={`nav-link${(location.pathname === "/gorgia/statement" && currentVersion === "Gorgia") ||
-										(location.pathname === "/anta/statement" && currentVersion === "Anta")
-										? " active"
-										: ""
-										}`}
-								>
-									{t('statement')}
-								</Link>
-							</li>
-							<li className="nav-item">
-								<Link
-									to={currentVersion === 'Anta' ? "/anta/contragents" : "/gorgia/contragents"}
-									className={`nav-link${(location.pathname === "/gorgia/contragents" && currentVersion === "Gorgia") ||
-										(location.pathname === "/anta/contragents" && currentVersion === "Anta")
-										? " active"
-										: ""
-										}`}
-								>
-									{t('contragents')}
-								</Link>
-							</li>
-							<li className="nav-item">
-								<Link
-									to={currentVersion === 'Anta' ? "/anta/users" : "/gorgia/users"}
-									className={`nav-link${(location.pathname === "/gorgia/users" && currentVersion === "Gorgia") ||
-										(location.pathname === "/anta/users" && currentVersion === "Anta")
-										? " active"
-										: ""
-										}`}
-								>
-									{t('users')}
-								</Link>
-							</li>
+							{(userRole === 'super_admin' || userBank === 'gorgia') && currentVersion === 'Gorgia' && (
+								<>
+									<li className="nav-item">
+										<Link
+											to="/gorgia/statement"
+											className={`nav-link${location.pathname === "/gorgia/statement" ? " active" : ""}`}
+										>
+											{t('statement')}
+										</Link>
+									</li>
+									<li className="nav-item">
+										<Link
+											to="/gorgia/contragents"
+											className={`nav-link${location.pathname === "/gorgia/contragents" ? " active" : ""}`}
+										>
+											{t('contragents')}
+										</Link>
+									</li>
+									<li className="nav-item">
+										<Link
+											to="/gorgia/users"
+											className={`nav-link${location.pathname === "/gorgia/users" ? " active" : ""}`}
+										>
+											{t('users')}
+										</Link>
+									</li>
+								</>
+							)}
+							{(userRole === 'super_admin' || userBank === 'anta') && currentVersion === 'Anta' && (
+								<>
+									<li className="nav-item">
+										<Link
+											to="/anta/statement"
+											className={`nav-link${location.pathname === "/anta/statement" ? " active" : ""}`}
+										>
+											{t('statement')}
+										</Link>
+									</li>
+									<li className="nav-item">
+										<Link
+											to="/anta/contragents"
+											className={`nav-link${location.pathname === "/anta/contragents" ? " active" : ""}`}
+										>
+											{t('contragents')}
+										</Link>
+									</li>
+									<li className="nav-item">
+										<Link
+											to="/anta/users"
+											className={`nav-link${location.pathname === "/anta/users" ? " active" : ""}`}
+										>
+											{t('users')}
+										</Link>
+									</li>
+								</>
+							)}
 						</ul>
 					</nav>
 				</div>
