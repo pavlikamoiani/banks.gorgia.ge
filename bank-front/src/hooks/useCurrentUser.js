@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
-import defaultInstance from '../api/defaultInstance';
+// import { useSelector } from 'react-redux';
 
-const useCurrentUser = () => {
-    const [user, setUser] = useState(null);
+// // This hook now selects the user from Redux state
+// const useCurrentUser = () => {
+//     return useSelector(state => state.user.user);
+// };
 
-    useEffect(() => {
-        defaultInstance.get('/user')
-            .then(res => setUser(res.data))
-            .catch(() => setUser(null));
-    }, []);
+// export default useCurrentUser;
+//             .then(res => setUser(res.data))
+//     .catch(() => setUser(null));
+//     }, []);
 
-    return user;
-};
+// return user;
+// };
 
-export default useCurrentUser;
+// export default useCurrentUser;

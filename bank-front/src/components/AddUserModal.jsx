@@ -1,7 +1,7 @@
 import styles from '../assets/css/modal.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
-import useCurrentUser from '../hooks/useCurrentUser';
+import { useSelector } from 'react-redux';
 
 const UserModal = ({
     open,
@@ -13,7 +13,8 @@ const UserModal = ({
     t
 }) => {
 
-    const user = useCurrentUser();
+    // Use Redux selector instead of useCurrentUser
+    const user = useSelector(state => state.user.user);
     if (!open) return null;
 
     return (

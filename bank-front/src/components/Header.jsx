@@ -3,7 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import useCurrentUser from '../hooks/useCurrentUser';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser } from '../store/userSlice';
 import defaultInstance from '../api/defaultInstance';
 
 const getCurrentVersion = (pathname) => {
@@ -20,7 +21,9 @@ const Header = () => {
 	const location = useLocation();
 	const { t, i18n } = useTranslation();
 	const currentVersion = getCurrentVersion(location.pathname);
-	const user = useCurrentUser();
+	const dispatch = useDispatch();
+	// Use Redux selector instead of useCurrentUser
+	const user = useSelector(state => state.user.user);
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -82,6 +85,7 @@ const Header = () => {
 		sessionStorage.removeItem('userEmail');
 		sessionStorage.removeItem('role');
 		sessionStorage.removeItem('department_id');
+		dispatch(setUser(null)); // Clear user in Redux
 		navigate('/login');
 	};
 

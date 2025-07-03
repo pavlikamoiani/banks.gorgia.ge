@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import styles from '../assets/css/Login.module.css';
 import logo from '../assets/images/logo.png';
 import defaultInstance from '../api/defaultInstance';
+import { setUser } from '../store/userSlice';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,9 +24,10 @@ export default function Login() {
       }
       localStorage.setItem('authToken', response.data.token);
 
+      // Use user info from login response, not /user endpoint
+      const user = response.data.user;
+      dispatch(setUser(user));
 
-      const userRes = await defaultInstance.get('/user');
-      const user = userRes.data;
       if (user.role === 'super_admin') {
         navigate('/gorgia/statement');
       } else if (user.bank === 'gorgia') {

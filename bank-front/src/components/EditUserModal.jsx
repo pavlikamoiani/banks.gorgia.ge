@@ -1,5 +1,5 @@
 import styles from '../assets/css/modal.module.css';
-import useCurrentUser from '../hooks/useCurrentUser';
+import { useSelector } from 'react-redux';
 
 const EditUserModal = ({
     open,
@@ -10,7 +10,7 @@ const EditUserModal = ({
     error,
     t
 }) => {
-    const user = useCurrentUser();
+    const user = useSelector(state => state.user.user);
     if (!open) return null;
 
     return (

@@ -1,3 +1,4 @@
+import React from 'react';
 import './App.css'
 import Header from './components/Header'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
@@ -8,7 +9,10 @@ import AntaStatementPage from './pages/anta/StatementPage'
 import AntaContragentsPage from './pages/anta/ContragentsPage'
 import AntaUsersPage from './pages/anta/UsersPage'
 import Login from './pages/Login';
-import useCurrentUser from './hooks/useCurrentUser';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import store from './store';
+import { setUser } from './store/userSlice';
+import defaultInstance from './api/defaultInstance';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faTrash, faUserPen } from '@fortawesome/free-solid-svg-icons';
@@ -21,7 +25,7 @@ library.add(faTrash, faUserPen);
 
 function ProtectedRoute({ children, bank, requireAdmin }) {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-  const user = useCurrentUser();
+  const user = useSelector(state => state.user.user);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -41,6 +45,22 @@ function ProtectedRoute({ children, bank, requireAdmin }) {
 function AppContent() {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
+  const dispatch = useDispatch();
+
+  // On mount, try to fetch user if token exists and not already in Redux
+  // (This prevents repeated requests, only on reload)
+  React.useEffect(() => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (token) {
+      defaultInstance.get('/user')
+        .then(res => {
+          dispatch(setUser(res.data));
+        })
+        .catch(() => {
+          dispatch(setUser(null));
+        });
+    }
+  }, [dispatch]);
 
   return (
     <div className="app-container">
@@ -75,10 +95,12 @@ function AppContent() {
 
 function App() {
   return (
-    <Router basename="/">
-      <AppContent />
-    </Router>
+    <Provider store={store}>
+      <Router basename="/">
+        <AppContent />
+      </Router>
+    </Provider>
   )
 }
 
-export default App
+export default App;
