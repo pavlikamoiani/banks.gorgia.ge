@@ -78,7 +78,9 @@ const UserModal = ({
                             <option value="">{t('select_role')}</option>
                             <option value="distribution_operator">{t('distribution_operator')}</option>
                             <option value="corporate_sales_manager">{t('corporate_sales_manager')}</option>
-                            <option value="admin">{t('administrator')}</option>
+                            {user && user.role === 'super_admin' && (
+                                <option value="admin">{t('administrator')}</option>
+                            )}
                         </select>
                     </div>
                     <div className={styles.modalFormGroup}>

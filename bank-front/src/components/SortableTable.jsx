@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import styles from '../assets/css/SortableTable.module.css';
+import { useTranslation } from 'react-i18next';
 
 const SortableTable = ({ columns, data, loading, emptyText }) => {
+    const { t } = useTranslation();
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
     const sortedData = (() => {
@@ -67,7 +69,7 @@ const SortableTable = ({ columns, data, loading, emptyText }) => {
             <tbody>
                 {loading ? (
                     <tr>
-                        <td colSpan={columns.length}>Загрузка...</td>
+                        <td colSpan={columns.length}>{t('loading')}</td>
                     </tr>
                 ) : sortedData.length > 0 ? (
                     sortedData.map((row, idx) => (
