@@ -3,8 +3,11 @@ import { useState, useEffect } from 'react';
 import defaultInstance from '../api/defaultInstance';
 import styles from '../assets/css/modal.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserPlus, faUserPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const TableUsers = () => {
+	const { t } = useTranslation();
 	const [users, setUsers] = useState([]);
 	const [userModalOpen, setUserModalOpen] = useState(false);
 	const [userForm, setUserForm] = useState({
@@ -54,7 +57,7 @@ const TableUsers = () => {
 			!userForm.role ||
 			!userForm.bank
 		) {
-			setUserError('ყველა ველი სავალდებულოა');
+			setUserError(t('all_fields_required'));
 			return;
 		}
 		try {
@@ -67,7 +70,7 @@ const TableUsers = () => {
 			});
 			handleCloseUserModal();
 		} catch (err) {
-			setUserError('შეცდომა დამატებისას');
+			setUserError(t('error_adding'));
 		}
 	};
 
@@ -94,7 +97,7 @@ const TableUsers = () => {
 	const handleEditSubmit = async (e) => {
 		e.preventDefault();
 		if (!editForm.name.trim() || !editForm.email.trim() || !editForm.role) {
-			setEditError('ყველა ველი სავალდებულოა');
+			setEditError(t('all_fields_required'));
 			return;
 		}
 		try {
@@ -112,39 +115,40 @@ const TableUsers = () => {
 			setUsers(res.data);
 			setLoading(false);
 		} catch (err) {
-			setEditError('შეცდომა რედაქტირებისას');
+			setEditError(t('error_editing'));
 		}
 	};
 
 	const handleDeleteUser = async (userId) => {
-		if (!window.confirm('ნამდვილად გსურთ მომხმარებლის წაშლა?')) return;
+		if (!window.confirm(t('delete_user_confirm'))) return;
 		try {
 			await defaultInstance.delete(`/users/${userId}`);
 			// Refresh users
 			setUsers(users.filter(u => u.id !== userId));
 		} catch (err) {
-			alert('შეცდომა წაშლისას');
+			alert(t('error_deleting'));
 		}
 	};
 
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header">
-				<h2 className="table-heading">მომხმარებლები</h2>
+				<h2 className="table-heading">{t('users_title')}</h2>
 				<button
 					style={{
+						textAlign: "center",
+						textJustify: "center",
 						background: "#0173b1",
 						color: "#fff",
 						border: "none",
 						borderRadius: 6,
-						padding: "8px 16px",
+						padding: "12px 14px",
 						cursor: "pointer",
 						fontWeight: 500,
-						marginLeft: 12
 					}}
 					onClick={handleOpenUserModal}
 				>
-					მომხმარებლის დამატება
+					<FontAwesomeIcon icon={faUserPlus} color='#fff' fontSize={'18px'} />
 				</button>
 			</div>
 			{userModalOpen && (
@@ -163,10 +167,10 @@ const TableUsers = () => {
 						>
 							&times;
 						</button>
-						<h3 className={styles.modalTitle}>მომხმარებლის დამატება</h3>
+						<h3 className={styles.modalTitle}>{t('add_user')}</h3>
 						<form onSubmit={handleUserSubmit}>
 							<div className={styles.modalFormGroup}>
-								<label>სახელი</label>
+								<label>{t('name')}</label>
 								<input
 									type="text"
 									name="name"
@@ -177,7 +181,7 @@ const TableUsers = () => {
 								/>
 							</div>
 							<div className={styles.modalFormGroup}>
-								<label>მომხმარებლის ელფოსტა</label>
+								<label>{t('email')}</label>
 								<input
 									type="email"
 									name="email"
@@ -188,7 +192,7 @@ const TableUsers = () => {
 								/>
 							</div>
 							<div className={styles.modalFormGroup}>
-								<label>პაროლი</label>
+								<label>{t('password')}</label>
 								<input
 									type="password"
 									name="password"
@@ -199,7 +203,7 @@ const TableUsers = () => {
 								/>
 							</div>
 							<div className={styles.modalFormGroup}>
-								<label>მომხმარებლის როლი</label>
+								<label>{t('role')}</label>
 								<select
 									name="role"
 									value={userForm.role}
@@ -207,14 +211,14 @@ const TableUsers = () => {
 									className={styles.modalInput}
 									required
 								>
-									<option value="">აირჩიეთ როლი</option>
-									<option value="დისტრიბუციის ოპერატორი">დისტრიბუციის ოპერატორი</option>
-									<option value="კორპორატიული გაყიდვების მენეჯერი">კორპორატიული გაყიდვების მენეჯერი</option>
-									<option value="ადმინისტრატორი">ადმინისტრატორი</option>
+									<option value="">{t('select_role')}</option>
+									<option value="დისტრიბუციის ოპერატორი">{t('distribution_operator')}</option>
+									<option value="კორპორატიული გაყიდვების მენეჯერი">{t('corporate_sales_manager')}</option>
+									<option value="ადმინისტრატორი">{t('administrator')}</option>
 								</select>
 							</div>
 							<div className={styles.modalFormGroup}>
-								<label>დანიშნული ბანკი</label>
+								<label>{t('bank')}</label>
 								<select
 									name="bank"
 									value={userForm.bank}
@@ -222,7 +226,7 @@ const TableUsers = () => {
 									className={styles.modalInput}
 									required
 								>
-									<option value="">აირჩიეთ ბანკი</option>
+									<option value="">{t('select_bank')}</option>
 									<option value="gorgia">gorgia</option>
 									<option value="anta">anta</option>
 								</select>
@@ -234,13 +238,13 @@ const TableUsers = () => {
 									onClick={handleCloseUserModal}
 									className={`${styles.modalButton} ${styles.modalButtonCancel}`}
 								>
-									გაუქმება
+									{t('cancel')}
 								</button>
 								<button
 									type="submit"
 									className={`${styles.modalButton} ${styles.modalButtonSubmit}`}
 								>
-									დამატება
+									{t('add')}
 								</button>
 							</div>
 						</form>
@@ -263,10 +267,10 @@ const TableUsers = () => {
 						>
 							&times;
 						</button>
-						<h3 className={styles.modalTitle}>მომხმარებლის რედაქტირება</h3>
+						<h3 className={styles.modalTitle}>{t('edit_user')}</h3>
 						<form onSubmit={handleEditSubmit}>
 							<div className={styles.modalFormGroup}>
-								<label>სახელი და გვარი</label>
+								<label>{t('name')}</label>
 								<input
 									type="text"
 									name="name"
@@ -277,7 +281,7 @@ const TableUsers = () => {
 								/>
 							</div>
 							<div className={styles.modalFormGroup}>
-								<label>მომხმარებლის ელფოსტა</label>
+								<label>{t('email')}</label>
 								<input
 									type="email"
 									name="email"
@@ -288,7 +292,7 @@ const TableUsers = () => {
 								/>
 							</div>
 							<div className={styles.modalFormGroup}>
-								<label>მომხმარებლის როლი</label>
+								<label>{t('role')}</label>
 								<select
 									name="role"
 									value={editForm.role}
@@ -296,21 +300,21 @@ const TableUsers = () => {
 									className={styles.modalInput}
 									required
 								>
-									<option value="">აირჩიეთ როლი</option>
-									<option value="დისტრიბუციის ოპერატორი">დისტრიბუციის ოპერატორი</option>
-									<option value="კორპორატიული გაყიდვების მენეჯერი">კორპორატიული გაყიდვების მენეჯერი</option>
-									<option value="ადმინისტრატორი">ადმინისტრატორი</option>
+									<option value="">{t('select_role')}</option>
+									<option value="დისტრიბუციის ოპერატორი">{t('distribution_operator')}</option>
+									<option value="კორპორატიული გაყიდვების მენეჯერი">{t('corporate_sales_manager')}</option>
+									<option value="ადმინისტრატორი">{t('administrator')}</option>
 								</select>
 							</div>
 							<div className={styles.modalFormGroup}>
-								<label>პაროლის შეცვლა</label>
+								<label>{t('password')}</label>
 								<input
 									type="password"
 									name="password"
 									value={editForm.password}
 									onChange={handleEditChange}
 									className={styles.modalInput}
-									placeholder="ახალი პაროლი (სურვილისამებრ)"
+									placeholder={t('new_password')}
 								/>
 							</div>
 							{editError && <div className={styles.modalError}>{editError}</div>}
@@ -320,13 +324,13 @@ const TableUsers = () => {
 									onClick={handleCloseEditModal}
 									className={`${styles.modalButton} ${styles.modalButtonCancel}`}
 								>
-									გაუქმება
+									{t('cancel')}
 								</button>
 								<button
 									type="submit"
 									className={`${styles.modalButton} ${styles.modalButtonSubmit}`}
 								>
-									შენახვა
+									{t('save')}
 								</button>
 							</div>
 						</form>
@@ -337,18 +341,18 @@ const TableUsers = () => {
 				<table className="accounts-table">
 					<thead>
 						<tr>
-							<th>სახელი</th>
-							<th>მომხმარებლის ელფოსტა</th>
-							<th>მომხმარებლის როლი</th>
-							<th>დანიშნული ბანკი</th>
-							<th>რეგისტრაციის თარიღი</th>
-							<th>ქმედებები</th>
+							<th>{t('name')}</th>
+							<th>{t('email')}</th>
+							<th>{t('role')}</th>
+							<th>{t('bank')}</th>
+							<th>{t('registration_date')}</th>
+							<th>{t('actions')}</th>
 						</tr>
 					</thead>
 					<tbody className="table-contragents">
 						{loading ? (
 							<tr>
-								<td colSpan={6}>იტვირთება...</td>
+								<td colSpan={6}>{t('loading')}</td>
 							</tr>
 						) : users.length > 0 ? (
 							users.map((u, idx) => (
@@ -362,23 +366,23 @@ const TableUsers = () => {
 										<button
 											className="icon-btn icon-btn-edit"
 											onClick={() => handleOpenEditModal(u)}
-											title="რედაქტირება"
+											title={t('edit_user')}
 										>
-											<FontAwesomeIcon icon="user-pen" color="#fff" />
+											<FontAwesomeIcon icon={faUserPen} color="#fff" />
 										</button>
 										<button
 											className="icon-btn icon-btn-delete"
 											onClick={() => handleDeleteUser(u.id)}
-											title="წაშლა"
+											title={t('delete_user_confirm')}
 										>
-											<FontAwesomeIcon icon="trash" color="#fff" />
+											<FontAwesomeIcon icon={faTrash} color="#fff" />
 										</button>
 									</td>
 								</tr>
 							))
 						) : (
 							<tr>
-								<td colSpan={6}>მონაცემები არ მოიძებნა</td>
+								<td colSpan={6}>{t('no_data')}</td>
 							</tr>
 						)}
 					</tbody>

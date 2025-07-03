@@ -1,0 +1,143 @@
+.filterDrawer {
+    width: 100%;
+    background: #f8fafc;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(1, 115, 177, 0.08);
+    margin-bottom: 18px;
+    padding: 24px 28px 18px 28px;
+    animation: filterSlideDown 0.25s cubic-bezier(.4, 0, .2, 1);
+    border: 1.5px solid #e6eaf0;
+}
+
+@keyframes filterSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filterContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.filterForm {
+    display: flex;
+    flex-direction: column;
+    gap: 24px 0;
+}
+
+.filterFieldsRow {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+}
+
+.filterField {
+    display: flex;
+    flex-direction: column;
+    min-width: 220px;
+    margin-bottom: 0;
+}
+
+.filterLabel {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2d3a4a;
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+}
+
+.filterInput {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1.5px solid #dbe3ea;
+    background: #fff;
+    font-size: 1rem;
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+    color: #1a2a36;
+    box-sizing: border-box;
+    margin-top: 5px;
+}
+
+.filterInput:focus {
+    border-color: #0173b1;
+    background: #f8fafc;
+    box-shadow: 0 0 0 2px #0173b120;
+}
+
+.filterActions {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: stretch;
+    max-width: 10%;
+}
+
+.filterButton {
+    padding: 9px 22px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    background: #f3f6fa;
+    color: #2d3a4a;
+    border: 1.5px solid #e6eaf0;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    box-shadow: 0 1.5px 4px rgba(1, 115, 177, 0.06);
+}
+
+.filterButton:hover {
+    background: #e6eaf0;
+}
+
+.filterToggleBtn {
+    background: #fff;
+    color: #0173b1;
+    border: 1.5px solid #0173b1;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-left: 4px;
+    transition: background 0.18s, color 0.18s, border 0.18s;
+    box-shadow: 0 1.5px 4px rgba(1, 115, 177, 0.06);
+}
+
+.filterToggleBtn:hover {
+    background: #0173b1;
+    color: #fff;
+}
+
+@media (max-width: 600px) {
+    .filterDrawer {
+        padding: 12px 6px 10px 6px;
+    }
+
+    .filterForm {
+        flex-direction: column;
+        gap: 16px 0;
+    }
+
+    .filterField {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .filterButton,
+    .filterToggleBtn {
+        font-size: 0.97rem;
+        padding: 8px 12px;
+    }
+}

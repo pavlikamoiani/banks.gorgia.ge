@@ -12,6 +12,9 @@ import Login from './pages/Login';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faTrash, faUserPen } from '@fortawesome/free-solid-svg-icons';
 
+// Import i18n
+import './assets/i18n/translation';
+
 library.add(faTrash, faUserPen);
 
 
