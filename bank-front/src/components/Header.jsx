@@ -1,6 +1,6 @@
 import '../assets/css/Header.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import logo from '../assets/images/logo.png'; // Adjust the path as necessary
+import logo from '../assets/images/logo.png';
 import { useState, useRef, useEffect } from 'react';
 import defaultInstance from '../api/defaultInstance';
 import { useTranslation } from 'react-i18next';
@@ -144,12 +144,48 @@ const Header = () => {
 							onClick={() => setLangDropdownOpen((open) => !open)}
 							style={{ display: 'flex', alignItems: 'center', gap: 6 }}
 						>
-							<span style={{ fontWeight: 600 }}>
-								{i18n.language === 'ka' && 'GE'}
-								{i18n.language === 'en' && 'EN'}
-								{i18n.language === 'ru' && 'RU'}
+							<span
+								className={`flag-animate${langDropdownOpen ? ' open' : ' closed'}`}
+								style={{ fontWeight: 600 }}
+							>
+								{(i18n.language === 'ka') && (
+									// Correct Georgian flag SVG
+									<svg width="22" height="16" viewBox="0 0 22 16">
+										<rect width="22" height="16" fill="#fff" />
+										<rect x="9" width="4" height="16" fill="#e8112d" />
+										<rect y="6" width="22" height="4" fill="#e8112d" />
+										<rect x="2" y="2" width="2" height="2" fill="#e8112d" />
+										<rect x="18" y="2" width="2" height="2" fill="#e8112d" />
+										<rect x="2" y="12" width="2" height="2" fill="#e8112d" />
+										<rect x="18" y="12" width="2" height="2" fill="#e8112d" />
+									</svg>
+								)}
+								{(i18n.language === 'en') && (
+									// Correct UK flag SVG
+									<svg width="22" height="16" viewBox="0 0 22 16">
+										<rect width="22" height="16" fill="#012169" />
+										<polygon points="0,0 22,16 22,14.5 2.5,0 0,0" fill="#fff" />
+										<polygon points="22,0 0,16 0,14.5 19.5,0 22,0" fill="#fff" />
+										<rect x="9" width="4" height="16" fill="#fff" />
+										<rect y="6" width="22" height="4" fill="#fff" />
+										<rect x="10" width="2" height="16" fill="#c8102e" />
+										<rect y="7" width="22" height="2" fill="#c8102e" />
+										<polygon points="0,0 9,6 10,6 0,0" fill="#c8102e" />
+										<polygon points="22,0 13,6 12,6 22,0" fill="#c8102e" />
+										<polygon points="0,16 9,10 10,10 0,16" fill="#c8102e" />
+										<polygon points="22,16 13,10 12,10 22,16" fill="#c8102e" />
+									</svg>
+								)}
+								{(i18n.language === 'ru') && (
+									// Correct Russian flag SVG
+									<svg width="22" height="16" viewBox="0 0 22 16">
+										<rect width="22" height="16" fill="#fff" />
+										<rect y="5.33" width="22" height="5.33" fill="#0033a0" />
+										<rect y="10.66" width="22" height="5.34" fill="#d52b1e" />
+									</svg>
+								)}
 							</span>
-							<span style={{ fontSize: 12, marginLeft: 2 }}>▼</span>
+							<span style={{ fontSize: 12, marginLeft: 2, transition: 'transform 0.3s', display: 'inline-block', transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
 						</button>
 						{langDropdownOpen && (
 							<ul className="lang-dropdown-list">
@@ -158,7 +194,18 @@ const Header = () => {
 										onClick={() => { handleLanguageChange('ka'); setLangDropdownOpen(false); }}
 										className={`lang-btn ${i18n.language === 'ka' ? 'active' : ''}`}
 									>
-										<span role="img" aria-label="Georgian Flag"></span> GE
+										<span className="flag-animate closed" style={{ marginRight: 6 }}>
+											<svg width="22" height="16" viewBox="0 0 22 16">
+												<rect width="22" height="16" fill="#fff" />
+												<rect x="9" width="4" height="16" fill="#e8112d" />
+												<rect y="6" width="22" height="4" fill="#e8112d" />
+												<rect x="2" y="2" width="2" height="2" fill="#e8112d" />
+												<rect x="18" y="2" width="2" height="2" fill="#e8112d" />
+												<rect x="2" y="12" width="2" height="2" fill="#e8112d" />
+												<rect x="18" y="12" width="2" height="2" fill="#e8112d" />
+											</svg>
+										</span>
+										GE
 									</button>
 								</li>
 								<li>
@@ -166,7 +213,22 @@ const Header = () => {
 										onClick={() => { handleLanguageChange('en'); setLangDropdownOpen(false); }}
 										className={`lang-btn ${i18n.language === 'en' ? 'active' : ''}`}
 									>
-										<span role="img" aria-label="UK Flag"></span> EN
+										<span className="flag-animate closed" style={{ marginRight: 6 }}>
+											<svg width="22" height="16" viewBox="0 0 22 16">
+												<rect width="22" height="16" fill="#012169" />
+												<polygon points="0,0 22,16 22,14.5 2.5,0 0,0" fill="#fff" />
+												<polygon points="22,0 0,16 0,14.5 19.5,0 22,0" fill="#fff" />
+												<rect x="9" width="4" height="16" fill="#fff" />
+												<rect y="6" width="22" height="4" fill="#fff" />
+												<rect x="10" width="2" height="16" fill="#c8102e" />
+												<rect y="7" width="22" height="2" fill="#c8102e" />
+												<polygon points="0,0 9,6 10,6 0,0" fill="#c8102e" />
+												<polygon points="22,0 13,6 12,6 22,0" fill="#c8102e" />
+												<polygon points="0,16 9,10 10,10 0,16" fill="#c8102e" />
+												<polygon points="22,16 13,10 12,10 22,16" fill="#c8102e" />
+											</svg>
+										</span>
+										EN
 									</button>
 								</li>
 								<li>
@@ -174,7 +236,14 @@ const Header = () => {
 										onClick={() => { handleLanguageChange('ru'); setLangDropdownOpen(false); }}
 										className={`lang-btn ${i18n.language === 'ru' ? 'active' : ''}`}
 									>
-										<span role="img" aria-label="Russian Flag"></span> RU
+										<span className="flag-animate closed" style={{ marginRight: 6 }}>
+											<svg width="22" height="16" viewBox="0 0 22 16">
+												<rect width="22" height="16" fill="#fff" />
+												<rect y="5.33" width="22" height="5.33" fill="#0033a0" />
+												<rect y="10.66" width="22" height="5.34" fill="#d52b1e" />
+											</svg>
+										</span>
+										RU
 									</button>
 								</li>
 							</ul>

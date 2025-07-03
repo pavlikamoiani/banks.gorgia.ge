@@ -38,23 +38,27 @@ const SortableTable = ({ columns, data, loading, emptyText }) => {
                     {columns.map(col => (
                         <th
                             key={col.key}
-                            onClick={() => handleSort(col.key)}
+                            onClick={() => col.key !== 'actions' && handleSort(col.key)}
                             className={styles.sortableTh}
                         >
                             <span className={styles.thContent}>
-                                <span>{col.label}</span>
-                                <span className={styles['sort-icons']}>
-                                    <span
-                                        className={`${styles['sort-arrow']} ${sortConfig.key === col.key && sortConfig.direction === 'asc' ? styles.active : ''}`}
-                                    >
-                                        ▲
-                                    </span>
-                                    <span
-                                        className={`${styles['sort-arrow']} ${sortConfig.key === col.key && sortConfig.direction === 'desc' ? styles.active : ''}`}
-                                    >
-                                        ▼
-                                    </span>
+                                <span>
+                                    {col.label}
                                 </span>
+                                {col.key !== 'actions' && (
+                                    <span className={styles['sort-icons']}>
+                                        <span
+                                            className={`${styles['sort-arrow']} ${sortConfig.key === col.key && sortConfig.direction === 'asc' ? styles.active : ''}`}
+                                        >
+                                            ▲
+                                        </span>
+                                        <span
+                                            className={`${styles['sort-arrow']} ${sortConfig.key === col.key && sortConfig.direction === 'desc' ? styles.active : ''}`}
+                                        >
+                                            ▼
+                                        </span>
+                                    </span>
+                                )}
                             </span>
                         </th>
                     ))}

@@ -126,6 +126,13 @@
 	position: relative;
 }
 
+/* Add animation for the flag icon */
+.flag-animate {
+	display: inline-block;
+	transition: transform 0.4s cubic-bezier(0.4, 0.2, 0.2, 1);
+	transform-origin: center;
+}
+
 .lang-btn {
 	background: #f0f0f0;
 	border: 1px solid #ddd;
