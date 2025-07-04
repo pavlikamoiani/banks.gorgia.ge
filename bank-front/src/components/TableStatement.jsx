@@ -25,7 +25,6 @@ const TableStatement = () => {
 		setLoading(true);
 		defaultInstance.get('/bog/todayactivities')
 			.then(res => {
-				// Преобразуйте данные под нужные колонки
 				const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
 					id: idx + 1,
 					contragent:
