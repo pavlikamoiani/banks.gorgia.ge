@@ -34,6 +34,10 @@
     vertical-align: middle;
 }
 
+.sort-icons {
+    margin-left: 20px;
+}
+
 .sortableTable .sort-arrow {
     color: #bbb;
     font-weight: normal;

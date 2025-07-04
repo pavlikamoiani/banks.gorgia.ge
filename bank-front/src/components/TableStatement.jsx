@@ -3,6 +3,7 @@ import SortableTable from './SortableTable';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import defaultInstance from '../api/defaultInstance';
+import Pagination from './Pagination';
 
 const TableStatement = () => {
 
@@ -20,6 +21,8 @@ const TableStatement = () => {
 	const [data, setData] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [page, setPage] = useState(1);
+	const pageSize = 20;
 
 	useEffect(() => {
 		setLoading(true);
@@ -32,7 +35,7 @@ const TableStatement = () => {
 						'',
 					bank:
 						item.Sender?.BankName ||
-						'',
+						'ბანკი არ არის მითითებული',
 					amount:
 						item.Amount ||
 						'',
@@ -44,12 +47,14 @@ const TableStatement = () => {
 						item.EntryComment ||
 						'',
 					syncDate: item.syncDate || '',
-				})).slice(0, 20);
+				}));
 				setData(rows);
 			})
 			.catch(() => setError('დატვირთვის შეცდომა'))
 			.finally(() => setLoading(false));
 	}, []);
+
+	const pagedData = data.slice((page - 1) * pageSize, page * pageSize);
 
 	return (
 		<div className="table-accounts-container">
@@ -60,11 +65,18 @@ const TableStatement = () => {
 				{error && <div style={{ color: 'red' }}>{error}</div>}
 				<SortableTable
 					columns={columns}
-					data={data}
+					data={pagedData}
 					loading={loading}
 					emptyText="ამონაწერი არ მოიძებნა"
 				/>
+
 			</div>
+			<Pagination
+				total={data.length}
+				page={page}
+				pageSize={pageSize}
+				onChange={setPage}
+			/>
 		</div>
 	);
 };
