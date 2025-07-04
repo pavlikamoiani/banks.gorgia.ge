@@ -1,6 +1,8 @@
 import '../assets/css/TableAccounts.css';
 import SortableTable from './SortableTable';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
+import defaultInstance from '../api/defaultInstance';
 
 const TableStatement = () => {
 
@@ -15,17 +17,40 @@ const TableStatement = () => {
 		{ key: 'syncDate', label: t('syncDate') }
 	];
 
-	const data = [
-		{
-			id: 1,
-			contragent: 'Comp A',
-			bank: 'Bank X',
-			amount: 1000,
-			transferDate: '2024-07-01',
-			purpose: 'Invoice #123',
-			syncDate: '2024-07-02',
-		},
-	];
+	const [data, setData] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+
+	useEffect(() => {
+		setLoading(true);
+		defaultInstance.get('/bog/todayactivities')
+			.then(res => {
+				// Преобразуйте данные под нужные колонки
+				const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
+					id: idx + 1,
+					contragent:
+						item.Sender?.Name ||
+						'',
+					bank:
+						item.Sender?.BankName ||
+						'',
+					amount:
+						item.Amount ||
+						'',
+					transferDate:
+						item.PostDate ||
+						item.ValueDate ||
+						'',
+					purpose:
+						item.EntryComment ||
+						'',
+					syncDate: item.syncDate || '',
+				})).slice(0, 20);
+				setData(rows);
+			})
+			.catch(() => setError('დატვირთვის შეცდომა'))
+			.finally(() => setLoading(false));
+	}, []);
 
 	return (
 		<div className="table-accounts-container">
@@ -33,10 +58,11 @@ const TableStatement = () => {
 				<h2 className="table-heading">{t('statement')}</h2>
 			</div>
 			<div className="table-wrapper">
+				{error && <div style={{ color: 'red' }}>{error}</div>}
 				<SortableTable
 					columns={columns}
 					data={data}
-					loading={false}
+					loading={loading}
 					emptyText="ამონაწერი არ მოიძებნა"
 				/>
 			</div>

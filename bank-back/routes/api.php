@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\ContragentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BOGStatementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -16,17 +18,25 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
+// Route::get('/bog/allActivities/{accountNumber}/{currency}/{startDate}/{endDate}/{includeToday}/{orderByDate}', [BOGStatementController::class, 'allActivities']);
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/contragents', [ContragentController::class, 'index']);
-Route::post('/contragents', [ContragentController::class, 'store']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-Route::post('/users', [AuthController::class, 'store']);
-Route::get('/users', function () {
-    return \App\Models\User::orderBy('created_at', 'desc')->get();
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/contragents', [ContragentController::class, 'index']);
+    Route::post('/contragents', [ContragentController::class, 'store']);
+    Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+    Route::post('/users', [AuthController::class, 'store']);
+    Route::get('/users', function () {
+        return \App\Models\User::orderBy('created_at', 'desc')->get();
+    });
+    Route::put('/users/{id}', [AuthController::class, 'update']);
+    Route::delete('/users/{id}', [AuthController::class, 'destroy']);
+
+
 });
-Route::put('/users/{id}', [AuthController::class, 'update']);
-Route::delete('/users/{id}', [AuthController::class, 'destroy']);
+
