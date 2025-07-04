@@ -9,8 +9,7 @@ import AntaStatementPage from './pages/anta/StatementPage'
 import AntaContragentsPage from './pages/anta/ContragentsPage'
 import AntaUsersPage from './pages/anta/UsersPage'
 import Login from './pages/Login';
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import store from './store';
+import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from './store/userSlice';
 import defaultInstance from './api/defaultInstance';
 
@@ -46,21 +45,23 @@ function AppContent() {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
   const dispatch = useDispatch();
+  const user = useSelector(state => state.user.user);
+  const fetchedRef = React.useRef(false);
 
-  // On mount, try to fetch user if token exists and not already in Redux
-  // (This prevents repeated requests, only on reload)
   React.useEffect(() => {
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    if (token) {
+    if (token && !user && !fetchedRef.current) {
+      fetchedRef.current = true;
       defaultInstance.get('/user')
         .then(res => {
-          dispatch(setUser(res.data));
+          dispatch(setUser(res.data));  // автоматически сохранится в localStorage
         })
         .catch(() => {
           dispatch(setUser(null));
         });
     }
-  }, [dispatch]);
+  }, [dispatch, user]);
+
 
   return (
     <div className="app-container">
@@ -92,6 +93,9 @@ function AppContent() {
     </div>
   );
 }
+
+import { Provider } from 'react-redux';
+import store from './store';
 
 function App() {
   return (

@@ -1,5 +1,6 @@
 import '../assets/css/TableAccounts.css';
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus, faUserPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
@@ -9,10 +10,13 @@ import defaultInstance from '../api/defaultInstance';
 import UserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 
+// Import Redux actions
+import { fetchUsers, setUsers } from '../store/userSlice';
 
 const TableUsers = () => {
 	const { t } = useTranslation();
-	const [users, setUsers] = useState([]);
+	const dispatch = useDispatch();
+	const users = useSelector(state => state.user.users); // users from redux
 	const [userModalOpen, setUserModalOpen] = useState(false);
 	const [userForm, setUserForm] = useState({
 		name: '',
@@ -36,13 +40,8 @@ const TableUsers = () => {
 
 	useEffect(() => {
 		setLoading(true);
-		defaultInstance.get('/users')
-			.then(res => {
-				setUsers(res.data);
-				setLoading(false);
-			})
-			.catch(() => setLoading(false));
-	}, [userModalOpen, editModalOpen]);
+		dispatch(fetchUsers()).finally(() => setLoading(false));
+	}, [dispatch]);
 
 	const handleOpenUserModal = () => setUserModalOpen(true);
 	const handleCloseUserModal = () => {
@@ -74,6 +73,7 @@ const TableUsers = () => {
 				bank: userForm.bank
 			});
 			handleCloseUserModal();
+			dispatch(fetchUsers()); // fetch after add
 		} catch (err) {
 			setUserError(t('error_adding'));
 		}
@@ -84,8 +84,8 @@ const TableUsers = () => {
 		setEditForm({
 			name: user.name || '',
 			email: user.email || '',
-			role: user.role || '', // ensure role is set
-			bank: user.bank || '', // add this if you want to support editing bank
+			role: user.role || '',
+			bank: user.bank || '',
 			password: ''
 		});
 		setEditError('');
@@ -94,7 +94,7 @@ const TableUsers = () => {
 	const handleCloseEditModal = () => {
 		setEditModalOpen(false);
 		setEditUser(null);
-		setEditForm({ name: '', email: '', role: '', bank: '', password: '' }); // add bank here too
+		setEditForm({ name: '', email: '', role: '', bank: '', password: '' });
 		setEditError('');
 	};
 	const handleEditChange = (e) => {
@@ -116,11 +116,7 @@ const TableUsers = () => {
 			});
 			handleCloseEditModal();
 			setUserModalOpen(false);
-			// Refresh users
-			setLoading(true);
-			const res = await defaultInstance.get('/users');
-			setUsers(res.data);
-			setLoading(false);
+			dispatch(fetchUsers()); // fetch after edit
 		} catch (err) {
 			setEditError(t('error_editing'));
 		}
@@ -130,7 +126,7 @@ const TableUsers = () => {
 		if (!window.confirm(t('delete_user_confirm'))) return;
 		try {
 			await defaultInstance.delete(`/users/${userId}`);
-			setUsers(users.filter(u => u.id !== userId));
+			dispatch(fetchUsers()); // fetch after delete
 		} catch (err) {
 			alert(t('error_deleting'));
 		}

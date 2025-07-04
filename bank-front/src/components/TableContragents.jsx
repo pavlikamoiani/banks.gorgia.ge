@@ -1,5 +1,5 @@
 import '../assets/css/TableAccounts.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faXmark, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
@@ -7,10 +7,15 @@ import { useTranslation } from 'react-i18next';
 import defaultInstance from '../api/defaultInstance';
 import TableFilter from './TableFilter';
 import SortableTable from './SortableTable';
+import AddContragentModal from './AddContragentModal';
 
-import styles from '../assets/css/modal.module.css';
 import filterStyles from '../assets/css/filter.module.css';
 
+let company = '';
+if (typeof window !== "undefined") {
+	if (window.location.pathname.startsWith('/anta')) company = 'anta';
+	else company = 'gorgia';
+}
 
 const TableContragents = () => {
 	const [contragents, setContragents] = useState([]);
@@ -21,16 +26,10 @@ const TableContragents = () => {
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({ name: '', identification_code: '' });
 	const [filteredContragents, setFilteredContragents] = useState([]);
-	let company = '';
-	if (typeof window !== "undefined") {
-		if (window.location.pathname.startsWith('/anta')) company = 'anta';
-		else company = 'gorgia';
-	}
 
 	const { t } = useTranslation();
 
-	// Fetch contragents from API
-	useEffect(() => {
+	const fetchContragents = useCallback(() => {
 		setLoading(true);
 		defaultInstance.get(`/contragents?company=${company}`)
 			.then(res => {
@@ -38,8 +37,11 @@ const TableContragents = () => {
 				setLoading(false);
 			})
 			.catch(() => setLoading(false));
-		// eslint-disable-next-line
-	}, [company, modalOpen]);
+	}, []);
+
+	useEffect(() => {
+		fetchContragents();
+	}, [fetchContragents]);
 
 	// Фильтрация контрагентов
 	useEffect(() => {
@@ -76,7 +78,7 @@ const TableContragents = () => {
 				company
 			});
 			handleCloseModal();
-			// eslint-disable-next-line
+			fetchContragents(); // Fetch only after successful add
 		} catch (err) {
 			setError('შეცდომა დამატებისას');
 		}
@@ -145,64 +147,15 @@ const TableContragents = () => {
 				</div>
 			)}
 			{modalOpen && (
-				<div
-					className={styles.overlay}
-				>
-					<div
-						className={styles.modal}
-						onClick={e => e.stopPropagation()}
-					>
-						<button
-							type="button"
-							className={styles.modalClose}
-							onClick={handleCloseModal}
-							aria-label="Close"
-						>
-							&times;
-						</button>
-						<h3 className={styles.modalTitle}>{t('add_contragent')}</h3>
-						<form onSubmit={handleSubmit}>
-							<div className={styles.modalFormGroup}>
-								<label>{t('title')}</label>
-								<input
-									type="text"
-									name="name"
-									value={form.name}
-									onChange={handleChange}
-									className={styles.modalInput}
-									required
-								/>
-							</div>
-							<div className={styles.modalFormGroup}>
-								<label>{t('identification_code')}</label>
-								<input
-									type="text"
-									name="identification_code"
-									value={form.identification_code}
-									onChange={handleChange}
-									className={styles.modalInput}
-									required
-								/>
-							</div>
-							{error && <div className={styles.modalError}>{error}</div>}
-							<div className={styles.modalActions}>
-								<button
-									type="button"
-									onClick={handleCloseModal}
-									className={`${styles.modalButton} ${styles.modalButtonCancel}`}
-								>
-									{t('cancel')}
-								</button>
-								<button
-									type="submit"
-									className={`${styles.modalButton} ${styles.modalButtonSubmit}`}
-								>
-									{t('add')}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
+				<AddContragentModal
+					open={modalOpen}
+					onClose={handleCloseModal}
+					onSubmit={handleSubmit}
+					form={form}
+					onChange={handleChange}
+					error={error}
+					t={t}
+				/>
 			)}
 			<div className="table-wrapper">
 				<SortableTable
