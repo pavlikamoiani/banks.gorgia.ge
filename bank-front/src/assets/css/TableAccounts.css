@@ -117,3 +117,40 @@
 		font-size: 1.2rem;
 	}
 }
+
+@media screen and (max-width: 480px) {
+	.table-accounts-container {
+		margin: 1.5% 0.5%;
+	}
+
+	.table-accounts-header {
+		flex-direction: column;
+		align-items: flex-start;
+		padding: 0 2px;
+	}
+
+	.table-heading {
+		font-size: 1rem;
+	}
+
+	.table-wrapper {
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	.accounts-table {
+		font-size: 0.95rem;
+	}
+
+	.accounts-table th,
+	.accounts-table td {
+		padding: 8px 4px;
+		font-size: 0.93rem;
+	}
+
+	.icon-btn {
+		width: 32px;
+		height: 32px;
+		font-size: 0.95rem;
+	}
+}

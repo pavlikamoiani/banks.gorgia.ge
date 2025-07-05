@@ -52,3 +52,21 @@
         font-size: 0.97rem;
     }
 }
+
+@media (max-width: 480px) {
+    .paginationContainer {
+        margin: 8px 0;
+        gap: 0;
+    }
+
+    .paginationBtn,
+    .paginationBtnActive {
+        padding: 6px 7px;
+        font-size: 0.93rem;
+        min-width: 32px;
+    }
+
+    .paginationDots {
+        font-size: 1rem;
+    }
+}

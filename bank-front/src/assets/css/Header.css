@@ -207,40 +207,45 @@
 
 	.logo {
 		height: 38px;
-		margin-right: 12px;
 	}
 
-	.nav-menu {
-		flex-wrap: wrap;
-	}
 
-	.nav-item {
-		margin-right: 15px;
-		margin-bottom: 5px;
-	}
-
-	.nav-link {
-		font-size: 14px;
-	}
-
-	.profile-icon {
-		font-size: 20px;
-		width: 36px;
-		height: 36px;
-	}
 }
 
 @media (max-width: 480px) {
-	.main-header {
-		padding: 12px 0;
-	}
 
 	.logo {
-		height: 32px;
-		margin-right: 10px;
+		height: 28px;
+		margin-right: 8px;
 	}
 
-	.site-name {
-		font-size: 1.2rem;
+	.header-nav {
+		display: none;
+	}
+
+	.right-header {
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	.profile-icon {
+		font-size: 18px;
+		width: 32px;
+		height: 32px;
+	}
+
+	.profile-dropdown {
+		right: 0;
+		left: auto;
+		min-width: 110px;
+	}
+
+	.lang-btn {
+		font-size: 11px;
+	}
+
+	.lang-dropdown-list {
+		min-width: 80px;
+		left: 0;
 	}
 }

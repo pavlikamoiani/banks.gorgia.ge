@@ -121,8 +121,6 @@
     color: #fff;
 }
 
-
-
 @media (max-width: 600px) {
     .filterDrawer {
         padding: 12px 6px 10px 6px;
@@ -142,5 +140,40 @@
     .filterToggleBtn {
         font-size: 0.97rem;
         padding: 8px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .filterDrawer {
+        padding: 8px 2px 6px 2px;
+        border-radius: 6px;
+    }
+
+    .filterForm {
+        gap: 10px 0;
+    }
+
+    .filterFieldsRow {
+        gap: 8px;
+    }
+
+    .filterField {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .filterLabel {
+        font-size: 0.93rem;
+    }
+
+    .filterInput {
+        font-size: 0.93rem;
+        padding: 8px 8px;
+    }
+
+    .filterButton,
+    .filterToggleBtn {
+        font-size: 0.93rem;
+        padding: 7px 10px;
     }
 }

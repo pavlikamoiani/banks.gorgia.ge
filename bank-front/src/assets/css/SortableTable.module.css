@@ -78,3 +78,16 @@
         font-size: 0.9rem;
     }
 }
+
+@media screen and (max-width: 480px) {
+
+    .sortableTable th,
+    .sortableTable td {
+        padding: 8px 4px;
+        font-size: 0.93rem;
+    }
+
+    .sort-icons {
+        margin-left: 8px;
+    }
+}
