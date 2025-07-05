@@ -73,8 +73,10 @@ const Header = () => {
 		try {
 			await defaultInstance.post('/logout');
 		} catch (e) {
-			// Ignore errors, proceed with logout
+			console.error('Logout error:', e);
 		}
+		// Очищаем все данные на клиенте только после запроса
+		dispatch(setUser(null));
 		localStorage.removeItem('authToken');
 		localStorage.removeItem('isLoggedIn');
 		localStorage.removeItem('userEmail');
@@ -85,7 +87,6 @@ const Header = () => {
 		sessionStorage.removeItem('userEmail');
 		sessionStorage.removeItem('role');
 		sessionStorage.removeItem('department_id');
-		dispatch(setUser(null)); // Clear user in Redux
 		navigate('/login');
 	};
 

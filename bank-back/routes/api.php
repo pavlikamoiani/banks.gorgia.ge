@@ -22,21 +22,19 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 // Route::get('/bog/allActivities/{accountNumber}/{currency}/{startDate}/{endDate}/{includeToday}/{orderByDate}', [BOGStatementController::class, 'allActivities']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+
+Route::middleware('redirect.if.unauthenticated.api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('redirect.if.unauthenticated.api')->group(function () {
     Route::get('/contragents', [ContragentController::class, 'index']);
     Route::post('/contragents', [ContragentController::class, 'store']);
-    Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
     Route::post('/users', [AuthController::class, 'store']);
     Route::get('/users', function () {
         return \App\Models\User::orderBy('created_at', 'desc')->get();
     });
     Route::put('/users/{id}', [AuthController::class, 'update']);
     Route::delete('/users/{id}', [AuthController::class, 'destroy']);
-
-
 });
-
