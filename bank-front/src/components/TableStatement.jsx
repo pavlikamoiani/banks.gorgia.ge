@@ -34,12 +34,16 @@ const TableStatement = () => {
 		bank: '',
 		amount: '',
 		transferDate: '',
-		purpose: ''
+		purpose: '',
+		startDate: '',
+		endDate: ''
 	});
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
 	const [statementLoading, setStatementLoading] = useState(false);
-	const [dbLoading, setDbLoading] = useState(false); // new state for db loading
+	const [dbLoading, setDbLoading] = useState(false);
+
+	const [dbData, setDbData] = useState([]); // хранит данные из базы для фильтрации
 
 	const bankOptions = useMemo(() => {
 		const setBanks = new Set();
@@ -49,18 +53,85 @@ const TableStatement = () => {
 		return Array.from(setBanks);
 	}, [data]);
 
+	// Загружаем todayactivities при первом заходе и при сбросе фильтра
+	const loadTodayActivities = () => {
+		setLoading(true);
+		setError(null);
+		defaultInstance.get('/bog/todayactivities')
+			.then(res => {
+				const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
+					id: idx + 1,
+					contragent: item.Sender?.Name || '',
+					bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
+					amount: item.Amount || '',
+					transferDate: item.PostDate || item.ValueDate || '',
+					purpose: item.EntryComment || '',
+					syncDate: item.syncDate || '',
+				}));
+				setData(rows);
+			})
+			.catch(() => {
+				setError(t('no_data_found'));
+			})
+			.finally(() => setLoading(false));
+	};
+
+	// Загружаем данные из базы (используется только для фильтрации)
+	const loadDbData = () => {
+		setDbLoading(true);
+		setError(null);
+		defaultInstance.get('/gorgia-bog-transactions')
+			.then(res => {
+				const rows = (res.data || []).map((item, idx) => ({
+					id: item.id || idx + 1,
+					contragent: item.sender_name || item.beneficiary_name || '-',
+					bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
+					amount: item.amount ?? 0,
+					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+					purpose: item.entry_comment || '-',
+					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-',
+				}));
+				setDbData(rows);
+				setData(rows);
+			})
+			.catch(() => {
+				setError(t('no_data_found'));
+			})
+			.finally(() => setDbLoading(false));
+	};
+
+	// При первом рендере — только todayactivities
+	useEffect(() => {
+		loadTodayActivities();
+	}, []);
+
+	// При изменении фильтра — если есть хотя бы одно непустое поле, грузим из базы и фильтруем
+	useEffect(() => {
+		const hasFilter = Object.values(filters).some(val => val && val !== '');
+		if (hasFilter) {
+			loadDbData();
+		} else {
+			loadTodayActivities();
+		}
+		// eslint-disable-next-line
+	}, [filters]);
+
 	const handleFilterChange = (e) => {
 		setFilters({ ...filters, [e.target.name]: e.target.value });
 	};
+
 	const handleFilterReset = () => {
 		setFilters({
 			contragent: '',
 			bank: '',
 			amount: '',
 			transferDate: '',
-			purpose: ''
+			purpose: '',
+			startDate: '',
+			endDate: ''
 		});
 	};
+
 	const handleBankSelect = (bank) => {
 		setFilters(f => ({ ...f, bank }));
 		setBankDropdownOpen(false);
@@ -77,8 +148,11 @@ const TableStatement = () => {
 		return () => document.removeEventListener('mousedown', handler);
 	}, [bankDropdownOpen]);
 
+	// Фильтруем только если есть фильтр и dbData не пустой
 	const filteredData = useMemo(() => {
-		let filtered = data;
+		const hasFilter = Object.values(filters).some(val => val && val !== '');
+		let source = hasFilter ? dbData : data;
+		let filtered = source;
 		if (filters.contragent) {
 			filtered = filtered.filter(row =>
 				row.contragent && row.contragent.toLowerCase().includes(filters.contragent.toLowerCase())
@@ -104,114 +178,21 @@ const TableStatement = () => {
 				row.purpose && row.purpose.toLowerCase().includes(filters.purpose.toLowerCase())
 			);
 		}
+		// Фильтрация по диапазону дат
+		if (filters.startDate) {
+			filtered = filtered.filter(row =>
+				row.transferDate && row.transferDate >= filters.startDate
+			);
+		}
+		if (filters.endDate) {
+			filtered = filtered.filter(row =>
+				row.transferDate && row.transferDate <= filters.endDate
+			);
+		}
 		return filtered;
-	}, [data, filters]);
+	}, [data, dbData, filters]);
 
 	const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
-
-	useEffect(() => {
-		setLoading(true);
-		defaultInstance.get('/bog/todayactivities')
-			.then(res => {
-				const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
-					id: idx + 1,
-					contragent:
-						item.Sender?.Name ||
-						'',
-					bank:
-						item.Sender?.BankName ||
-						'ბანკი არ არის მითითებული',
-					amount:
-						item.Amount ||
-						'',
-					transferDate:
-						item.PostDate ||
-						item.ValueDate ||
-						'',
-					purpose:
-						item.EntryComment ||
-						'',
-					syncDate: item.syncDate || '',
-				}));
-				setData(rows);
-			})
-			.catch(() => {
-				setError(t('no_data_found'));
-			})
-			.finally(() => setLoading(false));
-	}, []);
-
-	useEffect(() => {
-		setPage(1);
-	}, [filters]);
-
-	const parseStatementRecords = (records = []) => {
-		return records.map((item, idx) => ({
-			id: idx + 1,
-			contragent: item.SenderDetails?.Name || '',
-			bank: item.SenderDetails?.BankName || item.DocumentCorrespondentBankName || '',
-			amount: item.EntryAmount || item.EntryAmountDebit || item.EntryAmountCredit || item.DocumentSourceAmount || '',
-			transferDate: item.EntryDate ? item.EntryDate.slice(0, 10) : '',
-			purpose: item.EntryComment || item.DocumentInformation || '',
-			syncDate: item.DocumentReceiveDate ? item.DocumentReceiveDate.slice(0, 19).replace('T', ' ') : '',
-		}));
-	};
-
-	const fetchStatement = () => {
-		setStatementLoading(true);
-		setError(null);
-		const account = 'GE07BG0000000967345600';
-		const currency = 'GEL';
-		const today = new Date();
-		const endDate = today.toISOString().slice(0, 10);
-		const startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-		const includeToday = 'true';
-		const orderByDate = 'false';
-		defaultInstance.get(`/bog/statement/${account}/${currency}/${startDate}/${endDate}/${includeToday}/${orderByDate}`)
-			.then(res => {
-				let rows = [];
-				if (res.data?.data && Array.isArray(res.data.data)) {
-					rows = res.data.data.map((item, idx) => ({
-						id: item.id || idx + 1,
-						contragent: item.contragent || '',
-						bank: item.bank || '',
-						amount: item.amount || '',
-						transferDate: item.transferDate || '',
-						purpose: item.purpose || '',
-						syncDate: item.syncDate || '',
-					}));
-				} else if (res.data?.Records && Array.isArray(res.data.Records)) {
-					rows = parseStatementRecords(res.data.Records);
-				}
-				setData(rows);
-			})
-			.catch(() => {
-				setError(t('no_data_found'));
-			})
-			.finally(() => setStatementLoading(false));
-	};
-
-	const fetchFromDb = () => {
-		setDbLoading(true);
-		setError(null);
-		defaultInstance.get('/gorgia-bog-transactions')
-			.then(res => {
-				const rows = (res.data || []).map((item, idx) => ({
-					id: item.id || idx + 1,
-					contragent: item.sender_name || item.beneficiary_name || '-',
-					bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
-					amount: item.amount ?? 0,
-					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-					purpose: item.entry_comment || '-',
-					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-',
-				}));
-				setData(rows);
-			})
-			.catch(() => {
-				setError(t('no_data_found'));
-			})
-			.finally(() => setDbLoading(false));
-	};
 
 	return (
 		<div className="table-accounts-container">
@@ -229,22 +210,7 @@ const TableStatement = () => {
 							<FontAwesomeIcon icon={faFilter} />
 						)}
 					</button>
-					<button
-						style={{ padding: '0 10px' }}
-						onClick={fetchStatement}
-						disabled={statementLoading}
-						type="button"
-					>
-						{statementLoading ? t('loading') : t('get_statement')}
-					</button>
-					<button
-						style={{ padding: '0 10px' }}
-						onClick={fetchFromDb}
-						disabled={dbLoading}
-						type="button"
-					>
-						{dbLoading ? t('loading') : 'DB'}
-					</button>
+					{/* Кнопки get_statement и DB больше не нужны, фильтрация теперь автоматическая */}
 				</div>
 			</div>
 			{filterOpen && (
@@ -263,7 +229,9 @@ const TableStatement = () => {
 							},
 							{ name: 'amount', label: t('amount'), placeholder: t('search_by_amount') },
 							{ name: 'transferDate', label: t('transferDate'), placeholder: t('search_by_transferDate') },
-							{ name: 'purpose', label: t('purpose'), placeholder: t('search_by_purpose') }
+							{ name: 'purpose', label: t('purpose'), placeholder: t('search_by_purpose') },
+							{ name: 'startDate', label: t('Start Date'), type: 'date' },
+							{ name: 'endDate', label: t('End Date'), type: 'date' }
 						]}
 						bankOptions={bankOptions}
 						bankDropdownOpen={bankDropdownOpen}
@@ -279,7 +247,7 @@ const TableStatement = () => {
 				<SortableTable
 					columns={columns}
 					data={pagedData}
-					loading={loading}
+					loading={loading || dbLoading}
 					emptyText="ამონაწერი არ მოიძებნა"
 				/>
 			</div>
