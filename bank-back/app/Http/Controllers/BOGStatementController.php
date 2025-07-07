@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\BOG\BOGService;
@@ -27,19 +28,4 @@ class BOGStatementController extends Controller
 
         return response()->json($data);
     }
-
-    // public function allActivities(Request $request, BOGService $bog)
-    // {
-    //     $account = $request->input('accountNumber', env('BOG_ACCOUNT'));
-    //     $currency = $request->input('currency', env('BOG_CURRENCY', 'GEL'));
-    //     $startDate = $request->input('startDate', now()->subMonth()->format('Y-m-d'));
-    //     $endDate = $request->input('endDate', now()->format('Y-m-d'));
-    //     $includeToday = $request->boolean('includeToday', false);
-    //     $orderByDate = $request->boolean('orderByDate', false);
-
-    //     $data = $bog->getAllActivities($account, $currency, $startDate, $endDate, $includeToday, $orderByDate);
-
-    //     return response()->json($data);
-    // }
-
 }

@@ -22,7 +22,6 @@ const Header = () => {
 	const { t, i18n } = useTranslation();
 	const currentVersion = getCurrentVersion(location.pathname);
 	const dispatch = useDispatch();
-	// Use Redux selector instead of useCurrentUser
 	const user = useSelector(state => state.user.user);
 
 	useEffect(() => {
@@ -85,7 +84,7 @@ const Header = () => {
 		sessionStorage.removeItem('userEmail');
 		sessionStorage.removeItem('role');
 		sessionStorage.removeItem('department_id');
-		dispatch(setUser(null)); // Clear user in Redux
+		dispatch(setUser(null));
 		navigate('/login');
 	};
 

@@ -30,22 +30,4 @@ class BOGService
         \Log::info('BOG API raw response', ['body' => $response->body()]);
         return $response->json();
     }
-
-    // public function getAllActivities($accountNumber, $currency, $startDate = null, $endDate = null, $includeToday = false, $orderByDate = false)
-    // {
-    //     // For testing: initialize startDate and endDate if not provided
-    //     if (!$startDate) {
-    //         $startDate = now()->subDay()->format('Y-m-d');
-    //     }
-    //     if (!$endDate) {
-    //         $endDate = now()->format('Y-m-d');
-    //     }
-    //     $token = $this->getToken();
-    //     \Log::info('BOG token', ['token' => $token]);
-    //     $url = env('BOG_BASE_URL') . "/documents/todayactivities/$accountNumber/$currency/$startDate/$endDate/$includeToday/$orderByDate";
-    //     $response = Http::withToken($token)->get($url);
-    //     \Log::info('BOG API status', ['status' => $response->status()]);
-    //     \Log::info('BOG API raw response', ['body' => $response->body()]);
-    //     return $response->json();
-    // }
 }
