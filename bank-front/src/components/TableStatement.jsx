@@ -38,6 +38,8 @@ const TableStatement = () => {
 	});
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
+	const [statementLoading, setStatementLoading] = useState(false);
+	const [dbLoading, setDbLoading] = useState(false); // new state for db loading
 
 	const bankOptions = useMemo(() => {
 		const setBanks = new Set();
@@ -143,6 +145,74 @@ const TableStatement = () => {
 		setPage(1);
 	}, [filters]);
 
+	const parseStatementRecords = (records = []) => {
+		return records.map((item, idx) => ({
+			id: idx + 1,
+			contragent: item.SenderDetails?.Name || '',
+			bank: item.SenderDetails?.BankName || item.DocumentCorrespondentBankName || '',
+			amount: item.EntryAmount || item.EntryAmountDebit || item.EntryAmountCredit || item.DocumentSourceAmount || '',
+			transferDate: item.EntryDate ? item.EntryDate.slice(0, 10) : '',
+			purpose: item.EntryComment || item.DocumentInformation || '',
+			syncDate: item.DocumentReceiveDate ? item.DocumentReceiveDate.slice(0, 19).replace('T', ' ') : '',
+		}));
+	};
+
+	const fetchStatement = () => {
+		setStatementLoading(true);
+		setError(null);
+		const account = 'GE07BG0000000967345600';
+		const currency = 'GEL';
+		const today = new Date();
+		const endDate = today.toISOString().slice(0, 10);
+		const startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+		const includeToday = 'true';
+		const orderByDate = 'false';
+		defaultInstance.get(`/bog/statement/${account}/${currency}/${startDate}/${endDate}/${includeToday}/${orderByDate}`)
+			.then(res => {
+				let rows = [];
+				if (res.data?.data && Array.isArray(res.data.data)) {
+					rows = res.data.data.map((item, idx) => ({
+						id: item.id || idx + 1,
+						contragent: item.contragent || '',
+						bank: item.bank || '',
+						amount: item.amount || '',
+						transferDate: item.transferDate || '',
+						purpose: item.purpose || '',
+						syncDate: item.syncDate || '',
+					}));
+				} else if (res.data?.Records && Array.isArray(res.data.Records)) {
+					rows = parseStatementRecords(res.data.Records);
+				}
+				setData(rows);
+			})
+			.catch(() => {
+				setError(t('no_data_found'));
+			})
+			.finally(() => setStatementLoading(false));
+	};
+
+	const fetchFromDb = () => {
+		setDbLoading(true);
+		setError(null);
+		defaultInstance.get('/gorgia-bog-transactions')
+			.then(res => {
+				const rows = (res.data || []).map((item, idx) => ({
+					id: item.id || idx + 1,
+					contragent: item.sender_name || item.beneficiary_name || '-',
+					bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
+					amount: item.amount ?? 0,
+					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+					purpose: item.entry_comment || '-',
+					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-',
+				}));
+				setData(rows);
+			})
+			.catch(() => {
+				setError(t('no_data_found'));
+			})
+			.finally(() => setDbLoading(false));
+	};
+
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header">
@@ -158,6 +228,22 @@ const TableStatement = () => {
 						) : (
 							<FontAwesomeIcon icon={faFilter} />
 						)}
+					</button>
+					<button
+						style={{ padding: '0 10px' }}
+						onClick={fetchStatement}
+						disabled={statementLoading}
+						type="button"
+					>
+						{statementLoading ? t('loading') : t('get_statement')}
+					</button>
+					<button
+						style={{ padding: '0 10px' }}
+						onClick={fetchFromDb}
+						disabled={dbLoading}
+						type="button"
+					>
+						{dbLoading ? t('loading') : 'DB'}
 					</button>
 				</div>
 			</div>

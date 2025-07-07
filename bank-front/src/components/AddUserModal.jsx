@@ -94,10 +94,10 @@ const UserModal = ({
                             required
                         >
                             <option value="">{t('select_bank')}</option>
-                            {user && user.bank === 'gorgia' && (
+                            {user && user.bank === 'gorgia' || user.role === 'super_admin' && (
                                 <option value="gorgia">gorgia</option>
                             )}
-                            {user && user.bank === 'anta' && (
+                            {user && user.bank === 'anta' || user.role === 'super_admin' && (
                                 <option value="anta">anta</option>
                             )}
                         </select>

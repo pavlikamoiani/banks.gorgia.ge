@@ -46,7 +46,19 @@ const userSlice = createSlice({
             })
             .addCase(fetchUsers.fulfilled, (state, action) => {
                 state.loading = false;
-                state.users = action.payload;
+                // Фильтрация по банку для администратора
+                const currentUser = state.user;
+                if (
+                    currentUser &&
+                    currentUser.role === 'admin' &&
+                    currentUser.bank
+                ) {
+                    state.users = action.payload.filter(
+                        u => u.bank === currentUser.bank
+                    );
+                } else {
+                    state.users = action.payload;
+                }
             })
             .addCase(fetchUsers.rejected, (state, action) => {
                 state.loading = false;
