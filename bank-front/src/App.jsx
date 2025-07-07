@@ -16,11 +16,9 @@ import defaultInstance from './api/defaultInstance';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faTrash, faUserPen } from '@fortawesome/free-solid-svg-icons';
 
-// Import i18n
 import './assets/i18n/translation';
 
 library.add(faTrash, faUserPen);
-
 
 function ProtectedRoute({ children, bank, requireAdmin }) {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -54,7 +52,7 @@ function AppContent() {
       fetchedRef.current = true;
       defaultInstance.get('/user')
         .then(res => {
-          dispatch(setUser(res.data));  // автоматически сохранится в localStorage
+          dispatch(setUser(res.data));
         })
         .catch(() => {
           dispatch(setUser(null));
@@ -62,14 +60,12 @@ function AppContent() {
     }
   }, [dispatch, user]);
 
-
   return (
     <div className="app-container">
       {!isLoginPage && <Header />}
       <div className="main-content">
         <Routes>
           <Route path="/login" element={<Login />} />
-          {/* Protect all other routes */}
           <Route path="/gorgia/statement" element={
             <ProtectedRoute bank="gorgia"><StatementPage /></ProtectedRoute>
           } />

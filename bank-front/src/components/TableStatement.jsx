@@ -43,7 +43,7 @@ const TableStatement = () => {
 	const [statementLoading, setStatementLoading] = useState(false);
 	const [dbLoading, setDbLoading] = useState(false);
 
-	const [dbData, setDbData] = useState([]); // хранит данные из базы для фильтрации
+	const [dbData, setDbData] = useState([]);
 
 	const bankOptions = useMemo(() => {
 		const setBanks = new Set();
@@ -53,7 +53,8 @@ const TableStatement = () => {
 		return Array.from(setBanks);
 	}, [data]);
 
-	// Загружаем todayactivities при первом заходе и при сбросе фильтра
+	const initialLoadedRef = useRef(false);
+
 	const loadTodayActivities = () => {
 		setLoading(true);
 		setError(null);
@@ -76,7 +77,6 @@ const TableStatement = () => {
 			.finally(() => setLoading(false));
 	};
 
-	// Загружаем данные из базы (используется только для фильтрации)
 	const loadDbData = () => {
 		setDbLoading(true);
 		setError(null);
@@ -100,20 +100,20 @@ const TableStatement = () => {
 			.finally(() => setDbLoading(false));
 	};
 
-	// При первом рендере — только todayactivities
 	useEffect(() => {
-		loadTodayActivities();
+		if (!initialLoadedRef.current) {
+			loadTodayActivities();
+			initialLoadedRef.current = true;
+		}
 	}, []);
 
-	// При изменении фильтра — если есть хотя бы одно непустое поле, грузим из базы и фильтруем
 	useEffect(() => {
 		const hasFilter = Object.values(filters).some(val => val && val !== '');
 		if (hasFilter) {
 			loadDbData();
 		} else {
-			loadTodayActivities();
+			setData(prev => prev);
 		}
-		// eslint-disable-next-line
 	}, [filters]);
 
 	const handleFilterChange = (e) => {
@@ -148,7 +148,6 @@ const TableStatement = () => {
 		return () => document.removeEventListener('mousedown', handler);
 	}, [bankDropdownOpen]);
 
-	// Фильтруем только если есть фильтр и dbData не пустой
 	const filteredData = useMemo(() => {
 		const hasFilter = Object.values(filters).some(val => val && val !== '');
 		let source = hasFilter ? dbData : data;
@@ -178,7 +177,6 @@ const TableStatement = () => {
 				row.purpose && row.purpose.toLowerCase().includes(filters.purpose.toLowerCase())
 			);
 		}
-		// Фильтрация по диапазону дат
 		if (filters.startDate) {
 			filtered = filtered.filter(row =>
 				row.transferDate && row.transferDate >= filters.startDate
@@ -210,7 +208,6 @@ const TableStatement = () => {
 							<FontAwesomeIcon icon={faFilter} />
 						)}
 					</button>
-					{/* Кнопки get_statement и DB больше не нужны, фильтрация теперь автоматическая */}
 				</div>
 			</div>
 			{filterOpen && (

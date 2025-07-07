@@ -28,7 +28,7 @@ class AuthController extends Controller
                 'email'         => $user->email,
                 'role'          => $user->role,
                 'department_id' => $user->department_id,
-                'bank'          => $user->bank, // add bank to response
+                'bank'          => $user->bank,
             ]
         ]);
     }
