@@ -1,8 +1,8 @@
 import '../assets/css/TableAccounts.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserPlus, faUserPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faUserPen, faTrash, faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
 import SortableTable from './SortableTable';
@@ -10,13 +10,15 @@ import defaultInstance from '../api/defaultInstance';
 import UserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 
-// Import Redux actions
-import { fetchUsers, setUsers } from '../store/userSlice';
+import { fetchUsers } from '../store/userSlice';
+
+import filterStyles from '../assets/css/filter.module.css';
+import TableFilter from './TableFilter';
 
 const TableUsers = () => {
 	const { t } = useTranslation();
 	const dispatch = useDispatch();
-	const users = useSelector(state => state.user.users); // users from redux
+	const users = useSelector(state => state.user.users);
 	const [userModalOpen, setUserModalOpen] = useState(false);
 	const [userForm, setUserForm] = useState({
 		name: '',
@@ -37,6 +39,42 @@ const TableUsers = () => {
 	});
 	const [editError, setEditError] = useState('');
 	const [loading, setLoading] = useState(false);
+
+	const [filterOpen, setFilterOpen] = useState(false);
+	const [filters, setFilters] = useState({ name: '', email: '', role: '', bank: '' });
+	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
+	const bankDropdownRef = useRef(null);
+
+	const filteredNonSuperAdmins = useMemo(() => users.filter(u => u.role !== 'super_admin'), [users]);
+	const bankOptions = useMemo(() => {
+		const banks = filteredNonSuperAdmins.map(u => u.bank).filter(Boolean);
+		return [...new Set(banks)];
+	}, [filteredNonSuperAdmins]);
+	const roleOptions = useMemo(() => {
+		const roles = filteredNonSuperAdmins.map(u => u.role).filter(Boolean);
+		return [...new Set(roles)];
+	}, [filteredNonSuperAdmins]);
+
+	const filteredUsers = useMemo(() => {
+		let filtered = filteredNonSuperAdmins;
+		if (filters.name) {
+			filtered = filtered.filter(u =>
+				u.name && u.name.toLowerCase().includes(filters.name.toLowerCase())
+			);
+		}
+		if (filters.email) {
+			filtered = filtered.filter(u =>
+				u.email && u.email.toLowerCase().includes(filters.email.toLowerCase())
+			);
+		}
+		if (filters.role) {
+			filtered = filtered.filter(u => u.role === filters.role);
+		}
+		if (filters.bank) {
+			filtered = filtered.filter(u => u.bank === filters.bank);
+		}
+		return filtered;
+	}, [filteredNonSuperAdmins, filters]);
 
 	useEffect(() => {
 		setLoading(true);
@@ -73,7 +111,7 @@ const TableUsers = () => {
 				bank: userForm.bank
 			});
 			handleCloseUserModal();
-			dispatch(fetchUsers()); // fetch after add
+			dispatch(fetchUsers());
 		} catch (err) {
 			setUserError(t('error_adding'));
 		}
@@ -116,7 +154,7 @@ const TableUsers = () => {
 			});
 			handleCloseEditModal();
 			setUserModalOpen(false);
-			dispatch(fetchUsers()); // fetch after edit
+			dispatch(fetchUsers());
 		} catch (err) {
 			setEditError(t('error_editing'));
 		}
@@ -126,10 +164,24 @@ const TableUsers = () => {
 		if (!window.confirm(t('delete_user_confirm'))) return;
 		try {
 			await defaultInstance.delete(`/users/${userId}`);
-			dispatch(fetchUsers()); // fetch after delete
+			dispatch(fetchUsers());
 		} catch (err) {
 			alert(t('error_deleting'));
 		}
+	};
+
+	const handleFilterChange = (e) => {
+		setFilters({ ...filters, [e.target.name]: e.target.value });
+	};
+	const handleFilterReset = () => {
+		setFilters({ name: '', email: '', role: '', bank: '' });
+	};
+	const handleBankSelect = (bank) => {
+		setFilters(f => ({ ...f, bank }));
+		setBankDropdownOpen(false);
+	};
+	const handleRoleSelect = (role) => {
+		setFilters(f => ({ ...f, role }));
 	};
 
 	const columns = [
@@ -183,23 +235,84 @@ const TableUsers = () => {
 		<div className="table-accounts-container">
 			<div className="table-accounts-header">
 				<h2 className="table-heading">{t('users_title')}</h2>
-				<button
-					style={{
-						textAlign: "center",
-						textJustify: "center",
-						background: "#0173b1",
-						color: "#fff",
-						border: "none",
-						borderRadius: 6,
-						padding: "12px 14px",
-						cursor: "pointer",
-						fontWeight: 500,
-					}}
-					onClick={handleOpenUserModal}
-				>
-					<FontAwesomeIcon icon={faUserPlus} color='#fff' fontSize={'18px'} />
-				</button>
+				<div style={{ display: 'flex', gap: 10 }}>
+					<button
+						style={{
+							textAlign: "center",
+							textJustify: "center",
+							background: "#0173b1",
+							color: "#fff",
+							border: "none",
+							borderRadius: 6,
+							padding: "12px 14px",
+							cursor: "pointer",
+							fontWeight: 500,
+						}}
+						onClick={handleOpenUserModal}
+					>
+						<FontAwesomeIcon icon={faUserPlus} color='#fff' fontSize={'18px'} />
+					</button>
+					<button
+						className={filterStyles.filterToggleBtn}
+						onClick={() => setFilterOpen(open => !open)}
+						type="button"
+					>
+						{filterOpen ? (
+							<FontAwesomeIcon icon={faXmark} />
+						) : (
+							<FontAwesomeIcon icon={faFilter} />
+						)}
+					</button>
+				</div>
 			</div>
+			{filterOpen && (
+				<div className={filterStyles.filterDrawer}>
+					<TableFilter
+						filters={filters}
+						onChange={handleFilterChange}
+						onReset={handleFilterReset}
+						fields={[
+							{ name: 'name', label: t('name'), placeholder: t('name') },
+							{ name: 'email', label: t('email'), placeholder: t('email') },
+							{
+								name: 'role',
+								label: t('role'),
+								placeholder: t('select_role'),
+								type: 'select',
+								options: [
+									{ value: '', label: t('all') },
+									...roleOptions.map(role => ({
+										value: role,
+										label:
+											role === 'super_admin'
+												? 'მთავარი ადმინი'
+												: role === 'admin'
+													? 'ადმინისტრატორი'
+													: role === 'distribution_operator'
+														? 'დისტრიბუციის ოპერატორი'
+														: role === 'corporate_sales_manager'
+															? 'კორპორატიული გაყიდვების მენეჯერი'
+															: role
+									}))
+								]
+							},
+							{
+								name: 'bank',
+								label: t('bank'),
+								placeholder: t('search_by_bank'),
+								type: 'bankDropdown'
+							}
+						]}
+						bankOptions={bankOptions}
+						bankDropdownOpen={bankDropdownOpen}
+						setBankDropdownOpen={setBankDropdownOpen}
+						bankDropdownRef={bankDropdownRef}
+						onBankSelect={handleBankSelect}
+						onRoleSelect={handleRoleSelect}
+						t={t}
+					/>
+				</div>
+			)}
 			<UserModal
 				open={userModalOpen}
 				onClose={handleCloseUserModal}
@@ -221,7 +334,7 @@ const TableUsers = () => {
 			<div className="table-wrapper">
 				<SortableTable
 					columns={columns}
-					data={users}
+					data={filteredUsers}
 					loading={loading}
 					emptyText={t('no_data')}
 				/>

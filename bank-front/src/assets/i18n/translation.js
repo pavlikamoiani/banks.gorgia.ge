@@ -16,7 +16,6 @@ const resources = {
       "bank": "Bank",
       "no_data_found": "No data found",
 
-
       // Table users
       "users_title": "Users",
       "add_user": "Add User",
@@ -54,6 +53,14 @@ const resources = {
       "transferDate": "Transfer Date",
       "purpose": "Purpose",
       "syncDate": "Sync Date",
+
+      // Statement filter
+      "search_by_contragent": "Search by contragent",
+      "search_by_bank": "Search by bank",
+      "search_by_amount": "Search by amount",
+      "search_by_transferDate": "Search by date",
+      "search_by_purpose": "Search by purpose",
+      "all": "All",
     }
   },
   ru: {
@@ -69,7 +76,6 @@ const resources = {
       "reset": "Сбросить",
       "bank": "Банк",
       "no_data_found": "Данные не найдены",
-
 
       // Table users
       "users_title": "Пользователи",
@@ -102,13 +108,20 @@ const resources = {
       "search_by_title": "Поиск по названию",
       "search_by_code": "Поиск по коду",
 
-
       // table statement
       "contragent": "Контрагент",
       "amount": "Сумма",
       "transferDate": "Дата перевода",
       "purpose": "Назначение",
       "syncDate": "Дата синхронизации",
+
+      // Statement filter
+      "search_by_contragent": "Поиск по контрагенту",
+      "search_by_bank": "Поиск по банку",
+      "search_by_amount": "Поиск по сумме",
+      "search_by_transferDate": "Поиск по дате",
+      "search_by_purpose": "Поиск по назначению",
+      "all": "Все",
     }
   },
   ka: {
@@ -156,13 +169,20 @@ const resources = {
       "search_by_title": "ძებნა დასახელებით",
       "search_by_code": "ძებნა კოდით",
 
-
       // table statement
       "contragent": "კონტრაგენტი",
       "amount": "თანხა",
       "transferDate": "გადმორიცხვის თარიღი",
       "purpose": "დანიშნულება",
       "syncDate": "სინქრონიზაციის თარიღი",
+
+      // Statement filter
+      "search_by_contragent": "ძებნა კონტრაგენტით",
+      "search_by_bank": "ძებნა ბანკით",
+      "search_by_amount": "ძებნა თანხით",
+      "search_by_transferDate": "ძებნა თარიღით",
+      "search_by_purpose": "ძებნა დანიშნულებით",
+      "all": "ყველა",
     }
   }
 };
@@ -171,7 +191,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem('language') || 'ka', // Default language is Georgian
+    lng: localStorage.getItem('language') || 'ka',
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,

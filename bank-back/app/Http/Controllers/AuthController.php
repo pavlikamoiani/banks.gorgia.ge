@@ -16,7 +16,7 @@ class AuthController extends Controller
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json(['message' => 'არასწორი ავტორიზაციის მონაცემები'], 401);
         }
 
         $user = Auth::user();
