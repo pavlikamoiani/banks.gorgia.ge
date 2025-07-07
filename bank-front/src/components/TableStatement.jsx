@@ -167,6 +167,18 @@ const TableStatement = () => {
 						filters={filters}
 						onChange={handleFilterChange}
 						onReset={handleFilterReset}
+						fields={[
+							{ name: 'contragent', label: t('contragent'), placeholder: t('search_by_contragent') },
+							{
+								name: 'bank',
+								label: t('bank'),
+								placeholder: t('search_by_bank'),
+								type: 'bankDropdown'
+							},
+							{ name: 'amount', label: t('amount'), placeholder: t('search_by_amount') },
+							{ name: 'transferDate', label: t('transferDate'), placeholder: t('search_by_transferDate') },
+							{ name: 'purpose', label: t('purpose'), placeholder: t('search_by_purpose') }
+						]}
 						bankOptions={bankOptions}
 						bankDropdownOpen={bankDropdownOpen}
 						setBankDropdownOpen={setBankDropdownOpen}
