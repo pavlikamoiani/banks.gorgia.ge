@@ -1,3 +1,5 @@
+import { useSelector } from 'react-redux';
+
 import '../assets/css/TableAccounts.css';
 import SortableTable from './SortableTable';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +21,8 @@ const TableStatement = () => {
 	const { t } = useTranslation();
 
 	const [expandedRows, setExpandedRows] = useState({});
+
+	const user = useSelector(state => state.user);
 
 	const columns = [
 		{ key: 'contragent', label: t('contragent') },
@@ -81,7 +85,7 @@ const TableStatement = () => {
 	});
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
-	const [statementLoading, setStatementLoading] = useState(false);
+	// const [statementLoading, setStatementLoading] = useState(false);
 	const [dbLoading, setDbLoading] = useState(false);
 
 	const [dbData, setDbData] = useState([]);
@@ -125,17 +129,30 @@ const TableStatement = () => {
 	const loadDbData = () => {
 		setDbLoading(true);
 		setError(null);
-		defaultInstance.get('/gorgia-bog-transactions')
+		defaultInstance.get(user.bank === 'gorgia' ? '/gorgia-bog-transactions' : '/anta-transactions')
 			.then(res => {
-				const rows = (res.data || []).map((item, idx) => ({
-					id: item.id || idx + 1,
-					contragent: item.sender_name || item.beneficiary_name || '-',
-					bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
-					amount: (item.amount ?? 0) + ' ₾',
-					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-					purpose: item.entry_comment || '-',
-					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-',
-				}));
+				let rows;
+				if (user.bank === 'gorgia') {
+					rows = (res.data || []).map((item, idx) => ({
+						id: item.id || idx + 1,
+						contragent: item.sender_name || item.beneficiary_name || '-',
+						bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
+						amount: (item.amount ?? 0) + ' ₾',
+						transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+						purpose: item.entry_comment || '-',
+						syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-',
+					}));
+				} else if (user.bank === 'anta') {
+					rows = (res.data || []).map((item, idx) => ({
+						id: item.id || idx + 1,
+						contragent: item.anta_contragent || '-',
+						bank: item.anta_bank || '-',
+						amount: (item.anta_amount ?? 0) + ' ₾',
+						transferDate: item.anta_date ? item.anta_date.slice(0, 10) : '-',
+						purpose: item.anta_purpose || '-',
+						syncDate: item.anta_created_at ? item.anta_created_at.slice(0, 19).replace('T', ' ') : '-',
+					}));
+				}
 				setDbData(rows);
 				setData(rows);
 			})

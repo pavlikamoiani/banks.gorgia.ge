@@ -34,6 +34,10 @@ class BogMigrateJob extends Command
             $this->info("  - $acc");
         }
 
+
+        $maxRetries = 3;
+        $retryDelay = 2; // секунд
+
         foreach ($accounts as $account) {
             $current = $start->copy();
             while ($current->lessThanOrEqualTo($end)) {
@@ -45,13 +49,25 @@ class BogMigrateJob extends Command
                 $statementId = null;
                 $orderByDate = false; // или true, если нужно сортировать по дате
 
-                try {
-                    // Первый запрос — обычный, получаем statementId
-                    $data = $bog->getStatement($account, $currency, $dayStart, $dayEnd, false, $orderByDate);
-                } catch (\Exception $e) {
-                    $this->error("Ошибка для $account $dayStart: " . $e->getMessage());
-                    Log::error("BOG MIGRATION ERROR for $account $dayStart: " . $e->getMessage());
+                $retries = 0;
+                $success = false;
+                while ($retries < $maxRetries && !$success) {
+                    try {
+                        $data = $bog->getStatement($account, $currency, $dayStart, $dayEnd, false, $orderByDate);
+                        $success = true;
+                    } catch (\Exception $e) {
+                        $retries++;
+                        $this->error("Ошибка для $account $dayStart (попытка $retries): " . $e->getMessage());
+                        Log::error("BOG MIGRATION ERROR for $account $dayStart (try $retries): " . $e->getMessage());
+                        if ($retries < $maxRetries) {
+                            sleep($retryDelay);
+                        }
+                    }
+                }
+                if (!$success) {
+                    $this->error("Не удалось получить выписку для $account $dayStart после $maxRetries попыток.");
                     $current->addDay();
+                    sleep(1);
                     continue;
                 }
 
@@ -102,7 +118,6 @@ class BogMigrateJob extends Command
                 $page = 2;
                 while ($statementId && count($activities) === 1000) {
                     try {
-                        // Реализуйте этот метод в BOGService
                         $pagedData = $bog->getStatementPage($account, $currency, $statementId, $page, $orderByDate);
                     } catch (\Exception $e) {
                         $this->error("Ошибка (страница $page) для $account $dayStart: " . $e->getMessage());
@@ -210,6 +225,7 @@ class BogMigrateJob extends Command
                 }
                 $this->info("  -> Вставлено: $inserted, пропущено (дубликаты): $skipped");
                 $current->addDay();
+                sleep(1);
             }
         }
 
