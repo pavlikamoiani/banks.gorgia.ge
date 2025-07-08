@@ -9,16 +9,71 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
 import filterStyles from '../assets/css/filter.module.css';
 
+const MAX_PURPOSE_LENGTH = 20;
+
 const TableStatement = () => {
 
 	const { t } = useTranslation();
+
+	const [expandedRows, setExpandedRows] = useState({});
 
 	const columns = [
 		{ key: 'contragent', label: t('contragent') },
 		{ key: 'bank', label: t('bank') },
 		{ key: 'amount', label: t('amount') },
 		{ key: 'transferDate', label: t('transferDate') },
-		{ key: 'purpose', label: t('purpose') },
+		{
+			key: 'purpose',
+			label: t('purpose'),
+			render: (value, row) => {
+				if (!value) return '';
+				const isExpanded = expandedRows[row.id];
+				if (value.length <= MAX_PURPOSE_LENGTH) return value;
+				return (
+					<span style={{ display: 'inline-block', maxWidth: 350, verticalAlign: 'middle', wordBreak: 'break-word' }}>
+						{isExpanded ? (
+							<>
+								<span>{value}</span>
+								<button
+									style={{
+										background: 'none',
+										border: 'none',
+										color: '#0173b1',
+										cursor: 'pointer',
+										marginLeft: 8,
+										fontSize: 13,
+										padding: 0,
+										textDecoration: 'underline'
+									}}
+									onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: false }))}
+								>
+									{t('show_less')}
+								</button>
+							</>
+						) : (
+							<>
+								<span>{value.slice(0, MAX_PURPOSE_LENGTH)}...</span>
+								<button
+									style={{
+										background: 'none',
+										border: 'none',
+										color: '#0173b1',
+										cursor: 'pointer',
+										marginLeft: 8,
+										fontSize: 13,
+										padding: 0,
+										textDecoration: 'underline'
+									}}
+									onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: true }))}
+								>
+									{t('show_more')}
+								</button>
+							</>
+						)}
+					</span>
+				);
+			}
+		},
 		{ key: 'syncDate', label: t('syncDate') }
 	];
 

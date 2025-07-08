@@ -61,6 +61,8 @@ const resources = {
       "search_by_transferDate": "Search by date",
       "search_by_purpose": "Search by purpose",
       "all": "All",
+      "show_more": "Show more",
+      "show_less": "Show less"
     }
   },
   ru: {
@@ -122,6 +124,8 @@ const resources = {
       "search_by_transferDate": "Поиск по дате",
       "search_by_purpose": "Поиск по назначению",
       "all": "Все",
+      "show_more": "Показать больше",
+      "show_less": "Показать меньше"
     }
   },
   ka: {
@@ -183,6 +187,8 @@ const resources = {
       "search_by_transferDate": "ძებნა თარიღით",
       "search_by_purpose": "ძებნა დანიშნულებით",
       "all": "ყველა",
+      "show_more": "მეტის ნახვა",
+      "show_less": "ნაკლების ნახვა"
     }
   }
 };
