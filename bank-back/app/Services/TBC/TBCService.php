@@ -17,60 +17,100 @@ class TBCService
         $this->baseUrl = env('TBC_BASE_URL');
     }
 
-    public function getAccountMovements($accountNumber, $currency, $periodFrom, $periodTo, $pageIndex = 0, $pageSize = 700)
+    public function getAllAccountMovements($periodFrom, $periodTo)
     {
-        $soapBody = $this->buildSoapRequest($accountNumber, $currency, $periodFrom, $periodTo, $pageIndex, $pageSize);
-        $headers = [
-            'Content-Type: text/xml; charset=utf-8',
-            'SOAPAction: "http://www.mygemini.com/schemas/mygemini/GetAccountMovements"',
-        ];
+        $allMovements = [];
+        $pageIndex = 1;
+        $pageSize = 700;
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->baseUrl);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $soapBody);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        if (curl_error($ch)) {
-            Log::error('TBC SOAP error: ' . curl_error($ch));
-        }
-        curl_close($ch);
-        Log::debug('TBC SOAP request: ' . $soapBody);
-        Log::debug('TBC SOAP response: ' . $response);
-        return $this->parseMovementsResponse($response);
+        do {
+            $soapBody = $this->buildSoapRequest($periodFrom, $periodTo, $pageIndex, $pageSize);
+            $headers = [
+                'Content-Type: text/xml; charset=utf-8',
+                'SOAPAction: "http://www.mygemini.com/schemas/mygemini/GetAccountMovements"',
+            ];
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $this->baseUrl);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $soapBody);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HEADER, true); // get headers + body
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($response === false) {
+                Log::error('TBC SOAP: No response from server');
+                throw new \Exception('No response from TBC server');
+            }
+
+            // Separate headers and body
+            $headerSize = strpos($response, "\r\n\r\n");
+            $body = $headerSize !== false ? substr($response, $headerSize + 4) : $response;
+
+            // Check for HTTP error
+            if ($httpCode < 200 || $httpCode >= 300) {
+                Log::error('TBC SOAP: HTTP error', ['http_code' => $httpCode, 'body' => $body]);
+                throw new \Exception('TBC SOAP HTTP error: ' . $httpCode);
+            }
+
+            // Check for HTML error page
+            if (stripos($body, '<html') !== false || stripos($body, '<body') !== false) {
+                Log::error('TBC SOAP: HTML error response', ['body' => $body]);
+                throw new \Exception('TBC SOAP returned HTML error page');
+            }
+
+            // Парсим XML-ответ
+            $xml = @simplexml_load_string($body);
+            if ($xml === false) {
+                Log::error('TBC SOAP: Invalid XML response', ['body' => $body]);
+                throw new \Exception('TBC SOAP invalid XML response');
+            }
+            $json = json_decode(json_encode($xml), true);
+
+            // Извлекаем транзакции
+            $movements = $json['SOAP-ENV:Body']['ns2:GetAccountMovementsResponseIo']['ns2:accountMovement'] ?? [];
+            if (isset($movements['ns2:movementId'])) {
+                $movements = [$movements];
+            }
+            $allMovements = array_merge($allMovements, $movements);
+
+            $result = $json['SOAP-ENV:Body']['ns2:GetAccountMovementsResponseIo']['ns2:result'] ?? [];
+            $totalCount = $result['ns2:totalCount'] ?? 0;
+            $pageIndex++;
+        } while ($pageIndex * $pageSize < $totalCount);
+
+        return $allMovements;
     }
 
-    private function buildSoapRequest($accountNumber, $currency, $periodFrom, $periodTo, $pageIndex, $pageSize)
+    private function buildSoapRequest($periodFrom, $periodTo, $pageIndex, $pageSize)
     {
-        return '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
-            . ' xmlns:myg="http://www.mygemini.com/schemas/mygemini"'
-            . ' xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">'
-            . '<soapenv:Header>'
-            . '<wsse:Security>'
-            . '<wsse:UsernameToken>'
-            . '<wsse:Username>' . $this->id . '</wsse:Username>'
-            . '<wsse:Password>' . $this->password . '</wsse:Password>'
-            . '<wsse:Nonce>111111</wsse:Nonce>'
-            . '</wsse:UsernameToken>'
-            . '</wsse:Security>'
-            . '</soapenv:Header>'
-            . '<soapenv:Body>'
-            . '<myg:GetAccountMovementsRequestIo>'
-            . '<myg:accountMovementFilterIo>'
-            . '<myg:pager>'
-            . '<myg:pageIndex>' . $pageIndex . '</myg:pageIndex>'
-            . '<myg:pageSize>' . $pageSize . '</myg:pageSize>'
-            . '</myg:pager>'
-            . '<myg:accountNumber>' . $accountNumber . '</myg:accountNumber>'
-            . '<myg:accountCurrencyCode>' . $currency . '</myg:accountCurrencyCode>'
-            . '<myg:periodFrom>' . $periodFrom . '</myg:periodFrom>'
-            . '<myg:periodTo>' . $periodTo . '</myg:periodTo>'
-            . '</myg:accountMovementFilterIo>'
-            . '</myg:GetAccountMovementsRequestIo>'
-            . '</soapenv:Body>'
-            . '</soapenv:Envelope>';
+        return '
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:myg="http://www.mygemini.com/schemas/mygemini" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+            <soapenv:Header>
+                <wsse:Security>
+                <wsse:UsernameToken>
+                    <wsse:Username>' . $this->id . '</wsse:Username>
+                    <wsse:Password>' . $this->password . '</wsse:Password>
+                </wsse:UsernameToken>
+                </wsse:Security>
+            </soapenv:Header>
+            <soapenv:Body>
+                <myg:GetAccountMovementsRequestIo>
+                <myg:accountMovementFilterIo>
+                    <myg:pager>
+                    <myg:pageIndex>' . $pageIndex . '</myg:pageIndex>
+                    <myg:pageSize>' . $pageSize . '</myg:pageSize>
+                    </myg:pager>
+                    <myg:periodFrom>' . $periodFrom . '</myg:periodFrom>
+                    <myg:periodTo>' . $periodTo . '</myg:periodTo>
+                </myg:accountMovementFilterIo>
+                </myg:GetAccountMovementsRequestIo>
+            </soapenv:Body>
+            </soapenv:Envelope>
+        ';
     }
 
     private function parseMovementsResponse($xml)

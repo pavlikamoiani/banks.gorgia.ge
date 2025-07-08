@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Models\User;
 use \App\Models\GorgiaBogTransaction;
+use App\Http\Controllers\TBCStatementController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -16,6 +17,10 @@ Route::get('/bog/statement/{accountNumber}/{currency}/{startDate}/{endDate}/{inc
 Route::get('/gorgia-bog-transactions', function () {
     return GorgiaBogTransaction::orderBy('transaction_date', 'desc')->get();
 });
+
+
+// TBC Statements
+Route::get('/tbc/statement', [TBCStatementController::class, 'statement']);
 
 
 // Users

@@ -101,30 +101,30 @@ const TableStatement = () => {
 
 	const initialLoadedRef = useRef(false);
 
-	const loadTodayActivities = () => {
-		setLoading(true);
-		setError(null);
-		const now = new Date();
-		const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
-		setLastSyncDate(formattedNow);
-		defaultInstance.get('/bog/todayactivities')
-			.then(res => {
-				const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
-					id: idx + 1,
-					contragent: item.Sender?.Name || '',
-					bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
-					amount: (item.Amount || '') + ' ₾',
-					transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-					purpose: item.EntryComment || '',
-					syncDate: formattedNow,
-				}));
-				setData(rows);
-			})
-			.catch(() => {
-				setError(t('no_data_found'));
-			})
-			.finally(() => setLoading(false));
-	};
+	// const loadTodayActivities = () => {
+	// 	setLoading(true);
+	// 	setError(null);
+	// 	const now = new Date();
+	// 	const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
+	// 	setLastSyncDate(formattedNow);
+	// 	defaultInstance.get('/bog/todayactivities')
+	// 		.then(res => {
+	// 			const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
+	// 				id: idx + 1,
+	// 				contragent: item.Sender?.Name || '',
+	// 				bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
+	// 				amount: (item.Amount || '') + ' ₾',
+	// 				transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
+	// 				purpose: item.EntryComment || '',
+	// 				syncDate: formattedNow,
+	// 			}));
+	// 			setData(rows);
+	// 		})
+	// 		.catch(() => {
+	// 			setError(t('no_data_found'));
+	// 		})
+	// 		.finally(() => setLoading(false));
+	// };
 
 	const loadDbData = () => {
 		setDbLoading(true);
@@ -162,12 +162,41 @@ const TableStatement = () => {
 			.finally(() => setDbLoading(false));
 	};
 
-	useEffect(() => {
-		if (!initialLoadedRef.current) {
-			loadTodayActivities();
-			initialLoadedRef.current = true;
-		}
-	}, []);
+	const loadTbcData = () => {
+		setDbLoading(true);
+		setError(null);
+		defaultInstance.get('/tbc/statement', {
+			params: {
+				startDate: filters.startDate || '2025-07-01T00:00:00',
+				endDate: filters.endDate || '2025-07-08T23:59:59'
+			}
+		})
+			.then(res => {
+				const rows = (res.data || []).map((item, idx) => ({
+					id: item.id || idx + 1,
+					contragent: item.contragent || '-',
+					bank: item.bank || '-',
+					amount: item.amount || '0 ₾',
+					transferDate: item.transferDate || '-',
+					purpose: item.purpose || '-',
+					syncDate: item.syncDate || '-',
+				}));
+				console.log('TBC Data:', rows);
+				setDbData(rows);
+				setData(rows);
+			})
+			.catch(() => {
+				setError(t('no_data_found'));
+			})
+			.finally(() => setDbLoading(false));
+	};
+
+	// useEffect(() => {
+	// 	if (!initialLoadedRef.current) {
+	// 		loadTodayActivities();
+	// 		initialLoadedRef.current = true;
+	// 	}
+	// }, []);
 
 	useEffect(() => {
 		const hasFilter = Object.values(filters).some(val => val && val !== '');
@@ -264,6 +293,10 @@ const TableStatement = () => {
 		document.addEventListener('mousedown', handler);
 		return () => document.removeEventListener('mousedown', handler);
 	}, [pageSizeDropdownOpen]);
+
+	useEffect(() => {
+		loadTbcData(); // call immediately on mount
+	}, []);
 
 	return (
 		<div className="table-accounts-container">
