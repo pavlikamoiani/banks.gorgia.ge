@@ -44,6 +44,7 @@ const TableStatement = () => {
 	const [dbLoading, setDbLoading] = useState(false);
 
 	const [dbData, setDbData] = useState([]);
+	const [lastSyncDate, setLastSyncDate] = useState('');
 
 	const bankOptions = useMemo(() => {
 		const setBanks = new Set();
@@ -58,16 +59,19 @@ const TableStatement = () => {
 	const loadTodayActivities = () => {
 		setLoading(true);
 		setError(null);
+		const now = new Date();
+		const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
+		setLastSyncDate(formattedNow);
 		defaultInstance.get('/bog/todayactivities')
 			.then(res => {
 				const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
 					id: idx + 1,
 					contragent: item.Sender?.Name || '',
 					bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
-					amount: item.Amount || '',
-					transferDate: item.PostDate || item.ValueDate || '',
+					amount: (item.Amount || '') + '₾',
+					transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
 					purpose: item.EntryComment || '',
-					syncDate: item.syncDate || '',
+					syncDate: formattedNow,
 				}));
 				setData(rows);
 			})
