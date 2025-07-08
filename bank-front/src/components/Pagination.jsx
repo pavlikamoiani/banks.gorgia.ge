@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from '../assets/css/Pagination.module.css';
 
 const getPageNumbers = (page, totalPages) => {

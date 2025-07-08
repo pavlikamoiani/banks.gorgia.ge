@@ -8,8 +8,11 @@ import TableFilter from './TableFilter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
 import filterStyles from '../assets/css/filter.module.css';
+import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
 const MAX_PURPOSE_LENGTH = 20;
+
+const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 
 const TableStatement = () => {
 
@@ -34,17 +37,7 @@ const TableStatement = () => {
 						{isExpanded ? (
 							<>
 								<span>{value}</span>
-								<button
-									style={{
-										background: 'none',
-										border: 'none',
-										color: '#0173b1',
-										cursor: 'pointer',
-										marginLeft: 8,
-										fontSize: 13,
-										padding: 0,
-										textDecoration: 'underline'
-									}}
+								<button className={(tableStatementStyles.showLessBtn)}
 									onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: false }))}
 								>
 									{t('show_less')}
@@ -53,17 +46,8 @@ const TableStatement = () => {
 						) : (
 							<>
 								<span>{value.slice(0, MAX_PURPOSE_LENGTH)}...</span>
-								<button
-									style={{
-										background: 'none',
-										border: 'none',
-										color: '#0173b1',
-										cursor: 'pointer',
-										marginLeft: 8,
-										fontSize: 13,
-										padding: 0,
-										textDecoration: 'underline'
-									}}
+								<button className={(tableStatementStyles.showoreBtn)}
+
 									onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: true }))}
 								>
 									{t('show_more')}
@@ -81,7 +65,9 @@ const TableStatement = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [page, setPage] = useState(1);
-	const pageSize = 20;
+	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+	const [pageSizeDropdownOpen, setPageSizeDropdownOpen] = useState(false);
+	const pageSizeDropdownRef = useRef(null);
 
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({
@@ -251,11 +237,53 @@ const TableStatement = () => {
 
 	const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
+	useEffect(() => {
+		if (!pageSizeDropdownOpen) return;
+		const handler = (e) => {
+			if (pageSizeDropdownRef.current && !pageSizeDropdownRef.current.contains(e.target)) {
+				setPageSizeDropdownOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handler);
+		return () => document.removeEventListener('mousedown', handler);
+	}, [pageSizeDropdownOpen]);
+
 	return (
 		<div className="table-accounts-container">
-			<div className="table-accounts-header">
+			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">{t('statement')}</h2>
-				<div style={{ display: 'flex', gap: 10 }}>
+				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+					<div className={tableStatementStyles.pageSizeDropdownWrapper} ref={pageSizeDropdownRef}>
+						<button
+							type="button"
+							className={tableStatementStyles.pageSizeBtn}
+							onClick={() => setPageSizeDropdownOpen(open => !open)}
+							aria-haspopup="listbox"
+							aria-expanded={pageSizeDropdownOpen}
+						>
+							{pageSize} <span className={tableStatementStyles.pageSizeArrow}>▼</span>
+						</button>
+						{pageSizeDropdownOpen && (
+							<ul className={tableStatementStyles.pageSizeDropdown} role="listbox">
+								{PAGE_SIZE_OPTIONS.map(opt => (
+									<li key={opt} className={tableStatementStyles.pageSizeDropdownItem}>
+										<button
+											type="button"
+											className={opt === pageSize ? tableStatementStyles.pageSizeDropdownBtnActive : tableStatementStyles.pageSizeDropdownBtn}
+											onClick={() => {
+												setPageSize(opt);
+												setPage(1);
+												setPageSizeDropdownOpen(false);
+											}}
+											aria-current={opt === pageSize ? 'true' : undefined}
+										>
+											{opt}
+										</button>
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
 					<button
 						className={filterStyles.filterToggleBtn}
 						onClick={() => setFilterOpen(open => !open)}

@@ -100,7 +100,6 @@ class BOGService
     {
         $token = $this->getToken();
 
-        // orderByDate должен быть только true/false, не 'desc'/'asc'
         $url = sprintf(
             "%s/statement/%s/%s/%s/%s/%s/%s",
             env('BOG_BASE_URL'),
@@ -124,6 +123,37 @@ class BOGService
         if (!$response->ok()) {
             \Log::error('Ошибка получения выписки BOG', ['response' => $response->body()]);
             throw new \Exception('Ошибка при получении выписки');
+        }
+
+        return $response->json();
+    }
+
+    public function getStatementPage($accountNumber, $currency, $statementId, $page, $orderByDate = false)
+    {
+        $token = $this->getToken();
+
+        $url = sprintf(
+            "%s/statement/%s/%s/%s/%d/%s",
+            env('BOG_BASE_URL'),
+            $accountNumber,
+            $currency,
+            $statementId,
+            $page,
+            $orderByDate ? 'true' : 'false'
+        );
+
+        \Log::info('BOG statement page URL', ['url' => $url]);
+
+        $response = Http::timeout(30)
+            ->withToken($token)
+            ->get($url);
+
+        \Log::info('BOG statement page status', ['status' => $response->status()]);
+        \Log::info('BOG statement page response', ['body' => $response->body()]);
+
+        if (!$response->ok()) {
+            \Log::error('Ошибка получения страницы выписки BOG', ['response' => $response->body()]);
+            throw new \Exception('Ошибка при получении страницы выписки');
         }
 
         return $response->json();
