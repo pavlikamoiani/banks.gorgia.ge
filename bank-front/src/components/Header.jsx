@@ -209,7 +209,7 @@ const Header = () => {
 									</svg>
 								)}
 							</span>
-							<span style={{ fontSize: 12, marginLeft: 2, transition: 'transform 0.3s', display: 'inline-block', transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+							<span style={{ fontSize: 12, marginLeft: 2, transition: 'transform 0.3s', display: 'inline-block', transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', color: '#000' }}>▼</span>
 						</button>
 						{langDropdownOpen && (
 							<ul className="lang-dropdown-list">

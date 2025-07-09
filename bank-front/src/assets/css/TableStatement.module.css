@@ -6,8 +6,8 @@
 
 
 .pageSizeBtn {
-    background: #fff;
-    color: #0173b1;
+    background: #0173b1;
+    color: #fff;
     border: 1.5px solid #0173b1;
     border-radius: 6px;
     padding: 8px 12px;
@@ -25,8 +25,8 @@
 }
 
 .pageSizeBtn:hover {
-    background: #0173b1;
-    color: #fff;
+    background: #fff;
+    color: #015a8c;
     border-color: #015a8c;
 }
 
@@ -37,7 +37,7 @@
 }
 
 .pageSizeBtn:hover .pageSizeArrow {
-    color: #fff;
+    color: #015a8c;
 }
 
 .pageSizeDropdown {
