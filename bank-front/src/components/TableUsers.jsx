@@ -44,6 +44,7 @@ const TableUsers = () => {
 	const [filters, setFilters] = useState({ name: '', email: '', role: '', bank: '' });
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
+	const didFetch = useRef(false);
 
 	const filteredNonSuperAdmins = useMemo(() => users.filter(u => u.role !== 'super_admin'), [users]);
 	const bankOptions = useMemo(() => {
@@ -77,6 +78,8 @@ const TableUsers = () => {
 	}, [filteredNonSuperAdmins, filters]);
 
 	useEffect(() => {
+		if (didFetch.current) return;
+		didFetch.current = true;
 		setLoading(true);
 		dispatch(fetchUsers()).finally(() => setLoading(false));
 	}, [dispatch]);
