@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use \App\Models\User;
 use \App\Models\GorgiaBogTransaction;
 use App\Http\Controllers\TBCStatementController;
+use App\Http\Controllers\TbcPasswordController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -50,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/users', [AuthController::class, 'store']);
     Route::put('/users/{id}', [AuthController::class, 'update']);
     Route::delete('/users/{id}', [AuthController::class, 'destroy']);
+
+    // TBC Password Management
+    Route::get('/tbc-password/info', [TbcPasswordController::class, 'info']);
+    Route::post('/tbc-password/update', [TbcPasswordController::class, 'update']);
 });
 
 

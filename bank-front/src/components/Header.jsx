@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../store/userSlice';
 import defaultInstance from '../api/defaultInstance';
+import Modal from './TbcPasswordModal';
 
 const getCurrentVersion = (pathname) => {
 	if (pathname.startsWith('/anta')) return 'Anta';
@@ -15,6 +16,9 @@ const getCurrentVersion = (pathname) => {
 const Header = () => {
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+	const [tbcPwInfo, setTbcPwInfo] = useState({ days_left: null, created_at: null });
+	const [tbcPwModalOpen, setTbcPwModalOpen] = useState(false);
+	const [tbcPwLoading, setTbcPwLoading] = useState(false);
 	const dropdownRef = useRef(null);
 	const langDropdownRef = useRef(null);
 	const navigate = useNavigate();
@@ -54,6 +58,14 @@ const Header = () => {
 		};
 	}, [langDropdownOpen]);
 
+	useEffect(() => {
+		if (user && user.role === 'super_admin') {
+			defaultInstance.get('/tbc-password/info').then(res => {
+				setTbcPwInfo(res.data);
+			});
+		}
+	}, [user]);
+
 	const handleDropdownClick = (version) => {
 		setDropdownOpen(false);
 		if (version === 'Gorgia') {
@@ -86,6 +98,18 @@ const Header = () => {
 		sessionStorage.removeItem('department_id');
 		dispatch(setUser(null));
 		navigate('/login');
+	};
+
+	const handleTbcPwModalOpen = () => setTbcPwModalOpen(true);
+	const handleTbcPwModalClose = () => setTbcPwModalOpen(false);
+
+	const handleTbcPwUpdated = () => {
+		setTbcPwModalOpen(false);
+		setTbcPwLoading(true);
+		defaultInstance.get('/tbc-password/info').then(res => {
+			setTbcPwInfo(res.data);
+			setTbcPwLoading(false);
+		});
 	};
 
 	return (
@@ -125,8 +149,10 @@ const Header = () => {
 											</Link>
 										</li>
 									)}
+
 								</>
 							)}
+
 							{user && (user.role === 'super_admin' || user.bank === 'anta') && currentVersion === 'Anta' && (
 								<>
 									<li className="nav-item">
@@ -159,6 +185,32 @@ const Header = () => {
 							)}
 						</ul>
 					</nav>
+				</div>
+				<div className="center-header">
+					{user && (user.role === 'super_admin') && (
+						<div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+							<p
+								className={
+									tbcPwInfo.days_left !== null && tbcPwInfo.days_left <= 3
+										? "blinking-warning"
+										: ""
+								}
+								style={{
+									color:
+										tbcPwInfo.days_left !== null && tbcPwInfo.days_left <= 3
+											? 'red'
+											: '#0173b1',
+									fontWeight: 700,
+									cursor: 'pointer',
+									margin: 0,
+								}}
+								onClick={handleTbcPwModalOpen}
+								title="Click to change TBC password"
+							>
+								TBC-ის პაროლის შეცვლა (დარჩა {tbcPwInfo.days_left !== null ? tbcPwInfo.days_left : '...'} დღე)
+							</p>
+						</div>
+					)}
 				</div>
 				<div className="right-header">
 					<div
@@ -312,6 +364,11 @@ const Header = () => {
 					</div>
 				</div>
 			</div>
+			<Modal
+				open={tbcPwModalOpen}
+				onClose={handleTbcPwModalClose}
+				onUpdated={handleTbcPwUpdated}
+			/>
 		</header>
 	);
 };
