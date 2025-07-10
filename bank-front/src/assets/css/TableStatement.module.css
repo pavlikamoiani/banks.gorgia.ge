@@ -17,7 +17,7 @@
     margin-left: 4px;
     transition: background 0.18s, color 0.18s, border 0.18s;
     box-shadow: 0 1.5px 4px rgba(1, 115, 177, 0.06);
-    min-width: 44px;
+    min-width: 40px;
     outline: none;
     display: flex;
     align-items: center;

@@ -40,8 +40,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Contragents
     Route::get('/contragents', [ContragentController::class, 'index']);
     Route::post('/contragents', [ContragentController::class, 'store']);
+    Route::put('/contragents/{id}', [ContragentController::class, 'update']);
+    Route::delete('/contragents/{id}', [ContragentController::class, 'destroy']);
+
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
     Route::post('/users', [AuthController::class, 'store']);
     Route::put('/users/{id}', [AuthController::class, 'update']);

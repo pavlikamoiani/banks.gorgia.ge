@@ -39,13 +39,18 @@
     gap: 20px;
     flex-wrap: wrap;
     margin-bottom: 0;
+    align-items: flex-end;
+    width: 100%;
 }
 
 .filterField {
     display: flex;
     flex-direction: column;
-    min-width: 220px;
+    min-width: 180px;
     margin-bottom: 0;
+    flex: 1 1 220px;
+    min-width: 0;
+    word-break: break-word;
 }
 
 .filterLabel {
@@ -67,6 +72,8 @@
     color: #1a2a36;
     box-sizing: border-box;
     margin-top: 5px;
+    min-width: 0;
+    word-break: break-word;
 }
 
 .filterInput:focus {
@@ -80,7 +87,8 @@
     flex-direction: column;
     gap: 0;
     align-items: stretch;
-    max-width: 10%;
+    max-width: 140px;
+    flex: 0 0 140px;
 }
 
 .filterButton {

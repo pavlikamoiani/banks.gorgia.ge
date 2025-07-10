@@ -1,15 +1,18 @@
 import '../assets/css/TableAccounts.css';
 import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faXmark, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faXmark, faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
 import defaultInstance from '../api/defaultInstance';
 import TableFilter from './TableFilter';
 import SortableTable from './SortableTable';
 import AddContragentModal from './AddContragentModal';
+import EditContragentModal from './EditContragentModal';
 
 import filterStyles from '../assets/css/filter.module.css';
+
+import { useSelector } from 'react-redux';
 
 const TableContragents = () => {
 	const [contragents, setContragents] = useState([]);
@@ -20,7 +23,13 @@ const TableContragents = () => {
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({ name: '', identification_code: '' });
 	const [filteredContragents, setFilteredContragents] = useState([]);
+	const [editModalOpen, setEditModalOpen] = useState(false);
+	const [editContragent, setEditContragent] = useState(null);
+	const [editForm, setEditForm] = useState({ name: '', identification_code: '' });
+	const [editError, setEditError] = useState('');
 	const didFetch = useRef(false);
+	const user = useSelector(state => state.user.user);
+
 
 	const { t } = useTranslation();
 
@@ -81,6 +90,64 @@ const TableContragents = () => {
 		}
 	};
 
+	const handleOpenEditModal = (contragent) => {
+		setEditContragent(contragent);
+		setEditForm({
+			name: contragent.name || '',
+			identification_code: contragent.identification_code || ''
+		});
+		setEditError('');
+		setEditModalOpen(true);
+	};
+	const handleCloseEditModal = () => {
+		setEditModalOpen(false);
+		setEditContragent(null);
+		setEditForm({ name: '', identification_code: '' });
+		setEditError('');
+	};
+	const handleEditChange = (e) => {
+		setEditForm({ ...editForm, [e.target.name]: e.target.value });
+	};
+	const handleEditSubmit = async (e) => {
+		e.preventDefault();
+		if (!editForm.name.trim() || !editForm.identification_code.trim()) {
+			setEditError(t('all_fields_required'));
+			return;
+		}
+		try {
+			await defaultInstance.put(`/contragents/${editContragent.id}`, {
+				name: editForm.name,
+				identification_code: editForm.identification_code
+			});
+			handleCloseEditModal();
+			setLoading(true);
+			defaultInstance.get(`/contragents`)
+				.then(res => {
+					setContragents(res.data);
+					setLoading(false);
+				})
+				.catch(() => setLoading(false));
+		} catch (err) {
+			setEditError(t('error_editing'));
+		}
+	};
+
+	const handleDeleteContragent = async (contragentId) => {
+		if (!window.confirm(t('delete_user_confirm'))) return;
+		try {
+			await defaultInstance.delete(`/contragents/${contragentId}`);
+			setLoading(true);
+			defaultInstance.get(`/contragents`)
+				.then(res => {
+					setContragents(res.data);
+					setLoading(false);
+				})
+				.catch(() => setLoading(false));
+		} catch (err) {
+			alert(t('error_deleting'));
+		}
+	};
+
 	const handleFilterChange = (e) => {
 		setFilters({ ...filters, [e.target.name]: e.target.value });
 	};
@@ -95,7 +162,31 @@ const TableContragents = () => {
 			key: 'created_at',
 			label: t('registration_date'),
 			render: (val) => new Date(val).toLocaleString()
-		}
+		},
+		...(user && (user.role === 'super_admin' || user.role === "admin") ? [
+			{
+				key: 'actions',
+				label: t('actions'),
+				render: (value, row) => (
+					<>
+						<button
+							className="icon-btn icon-btn-edit"
+							onClick={() => handleOpenEditModal(row)}
+							title={t('edit_user')}
+						>
+							<FontAwesomeIcon icon={faPencil} color="#fff" />
+						</button>
+						<button
+							className="icon-btn icon-btn-delete"
+							onClick={() => handleDeleteContragent(row.id)}
+							title={t('delete_user_confirm')}
+						>
+							<FontAwesomeIcon icon={faTrash} color="#fff" />
+						</button>
+					</>
+				)
+			}
+		] : [])
 	];
 
 	return (
@@ -150,6 +241,17 @@ const TableContragents = () => {
 					form={form}
 					onChange={handleChange}
 					error={error}
+					t={t}
+				/>
+			)}
+			{editModalOpen && (
+				<EditContragentModal
+					open={editModalOpen}
+					onClose={handleCloseEditModal}
+					onSubmit={handleEditSubmit}
+					form={editForm}
+					onChange={handleEditChange}
+					error={editError}
 					t={t}
 				/>
 			)}
