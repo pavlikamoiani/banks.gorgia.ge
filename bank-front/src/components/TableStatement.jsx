@@ -1,9 +1,10 @@
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import '../assets/css/TableAccounts.css';
 import SortableTable from './SortableTable';
-import { useTranslation } from 'react-i18next';
-import { useEffect, useState, useMemo, useRef } from 'react';
 import defaultInstance from '../api/defaultInstance';
 import Pagination from './Pagination';
 import TableFilter from './TableFilter';
@@ -13,16 +14,20 @@ import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
 const MAX_PURPOSE_LENGTH = 20;
-
 const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 
 const TableStatement = () => {
-
 	const { t } = useTranslation();
+	const location = useLocation();
 
 	const [expandedRows, setExpandedRows] = useState({});
 
-	const user = useSelector(state => state.user);
+	const user = useSelector(state => state.user.user);
+
+	const currentBank = useMemo(() => {
+		if (location.pathname.startsWith('/anta')) return 'anta';
+		return 'gorgia';
+	}, [location.pathname]);
 
 	const columns = [
 		{ key: 'contragent', label: t('contragent') },
@@ -85,7 +90,6 @@ const TableStatement = () => {
 	});
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
-	// const [statementLoading, setStatementLoading] = useState(false);
 	const [dbLoading, setDbLoading] = useState(false);
 
 	const [dbData, setDbData] = useState([]);
@@ -93,7 +97,7 @@ const TableStatement = () => {
 
 	const bankOptions = useMemo(() => {
 		const setBanks = new Set();
-		data.forEach(row => {
+		(data || []).forEach(row => {
 			if (row.bank) setBanks.add(row.bank);
 		});
 		return Array.from(setBanks);
@@ -101,48 +105,78 @@ const TableStatement = () => {
 
 	const initialLoadedRef = useRef(false);
 
-	// const loadTodayActivities = () => {
-	// 	setLoading(true);
-	// 	setError(null);
-	// 	const now = new Date();
-	// 	const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
-	// 	setLastSyncDate(formattedNow);
-	// 	defaultInstance.get('/bog/todayactivities')
-	// 		.then(res => {
-	// 			const rows = (res.data?.activities || res.data || []).map((item, idx) => ({
-	// 				id: idx + 1,
-	// 				contragent: item.Sender?.Name || '',
-	// 				bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
-	// 				amount: (item.Amount || '') + ' ₾',
-	// 				transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-	// 				purpose: item.EntryComment || '',
-	// 				syncDate: formattedNow,
-	// 			}));
-	// 			setData(rows);
-	// 		})
-	// 		.catch(() => {
-	// 			setError(t('no_data_found'));
-	// 		})
-	// 		.finally(() => setLoading(false));
-	// };
+	const loadTodayActivities = () => {
+		setLoading(true);
+		setError(null);
+		const now = new Date();
+		const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
+		setLastSyncDate(formattedNow);
+		defaultInstance.get(
+			currentBank === 'gorgia'
+				? '/gorgia/bog/todayactivities'
+				: '/anta/bog/todayactivities'
+		)
+			.then(res => {
+				let rows;
+				if (currentBank === 'gorgia') {
+					rows = (res.data?.activities || res.data || []).map((item, idx) => ({
+						id: idx + 1,
+						contragent: item.Sender?.Name || '',
+						bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
+						amount: (item.Amount || '') + ' ₾',
+						transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
+						purpose: item.EntryComment || '',
+						syncDate: formattedNow,
+					}));
+				} else if (currentBank === 'anta') {
+					rows = (res.data?.activities || res.data || []).map((item, idx) => ({
+						id: idx + 1,
+						contragent: item.Sender?.Name || '',
+						bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
+						amount: (item.Amount || '') + ' ₾',
+						transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
+						purpose: item.EntryComment || '',
+						syncDate: formattedNow,
+					}));
+				} else {
+					rows = [];
+				}
+				setData(rows);
+			})
+			.catch(() => {
+				setError(t('no_data_found'));
+			})
+			.finally(() => setLoading(false));
+	};
+
+	useEffect(() => {
+		if (!initialLoadedRef.current) {
+			loadTodayActivities();
+			initialLoadedRef.current = true;
+		}
+	}, [currentBank]);
 
 	const loadDbData = () => {
 		setDbLoading(true);
 		setError(null);
-		defaultInstance.get(user.bank === 'gorgia' ? '/gorgia-bog-transactions' : '/anta-transactions')
+		defaultInstance.get(
+			currentBank === 'gorgia'
+				? '/gorgia-bog-transactions'
+				: '/anta-bog-transactions'
+		)
 			.then(res => {
 				let rows;
-				if (user.bank === 'gorgia') {
+				if (currentBank === 'gorgia') {
 					rows = (res.data || []).map((item, idx) => ({
 						id: item.id || idx + 1,
 						contragent: item.sender_name || item.beneficiary_name || '-',
 						bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
 						amount: (item.amount ?? 0) + ' ₾',
 						transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-						purpose: item.entry_comment || '-',
+						purpose: item.entry_comment || item.entry_comment_en || '-',
 						syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-',
 					}));
-				} else if (user.bank === 'anta') {
+				} else if (currentBank === 'anta') {
 					rows = (res.data || []).map((item, idx) => ({
 						id: item.id || idx + 1,
 						contragent: item.anta_contragent || '-',
@@ -152,6 +186,8 @@ const TableStatement = () => {
 						purpose: item.anta_purpose || '-',
 						syncDate: item.anta_created_at ? item.anta_created_at.slice(0, 19).replace('T', ' ') : '-',
 					}));
+				} else {
+					rows = [];
 				}
 				setDbData(rows);
 				setData(rows);
@@ -162,40 +198,50 @@ const TableStatement = () => {
 			.finally(() => setDbLoading(false));
 	};
 
-	const loadTbcData = () => {
-		setDbLoading(true);
-		setError(null);
-		defaultInstance.get('/tbc/statement', {
-			params: {
-				startDate: filters.startDate || '2025-07-01T00:00:00',
-				endDate: filters.endDate || '2025-07-08T23:59:59'
-			}
-		})
-			.then(res => {
-				const rows = (res.data || []).map((item, idx) => ({
-					id: item.id || idx + 1,
-					contragent: item.contragent || '-',
-					bank: item.bank || '-',
-					amount: item.amount || '0 ₾',
-					transferDate: item.transferDate || '-',
-					purpose: item.purpose || '-',
-					syncDate: item.syncDate || '-',
-				}));
-				console.log('TBC Data:', rows);
-				setDbData(rows);
-				setData(rows);
-			})
-			.catch(() => {
-				setError(t('no_data_found'));
-			})
-			.finally(() => setDbLoading(false));
-	};
+	// const loadTbcData = () => {
+	// 	setDbLoading(true);
+	// 	setError(null);
+	// 	defaultInstance.get(user.bank === 'gorgia' ? '/gorgia/tbc/statement' : '/anta/tbc/statment', {
+	// 		params: {
+	// 			startDate: filters.startDate || '2025-07-01T00:00:00',
+	// 			endDate: filters.endDate || '2025-07-08T23:59:59'
+	// 		}
+	// 	})
+	// 		.then(res => {
+	// 			let rows;
+	// 			if (user.bank === 'gorgia') {
+	// 				rows = (res.data || []).map((item, idx) => ({
+	// 					id: item.id || idx + 1,
+	// 					contragent: item.contragent || '-',
+	// 					bank: item.bank || '-',
+	// 					amount: item.amount || '0 ₾',
+	// 					transferDate: item.transferDate || '-',
+	// 					purpose: item.purpose || '-',
+	// 					syncDate: item.syncDate || '-',
+	// 				}));
+	// 			} else if (user.bank === 'anta') {
+	// 				rows = (res.data || []).map((item, idx) => ({
+	// 					id: item.id || idx + 1,
+	// 					contragent: item.contragent || '-',
+	// 					bank: item.bank || '-',
+	// 					amount: item.amount || '0 ₾',
+	// 					transferDate: item.transferDate || '-',
+	// 					purpose: item.purpose || '-',
+	// 					syncDate: item.syncDate || '-',
+	// 				}));
+	// 			}
+	// 			console.log('TBC Data:', rows);
+	// 			setDbData(rows);
+	// 			setData(rows);
+	// 		})
+	// 		.catch(() => {
+	// 			setError(t('no_data_found'));
+	// 		})
+	// 		.finally(() => setDbLoading(false));
+	// };
 
 	// useEffect(() => {
-	// 	if (!initialLoadedRef.current) {
-	// 		loadTodayActivities();
-	// 		initialLoadedRef.current = true;
-	// 	}
+	// 	loadTbcData(); // call immediately on mount
 	// }, []);
 
 	useEffect(() => {
@@ -205,7 +251,7 @@ const TableStatement = () => {
 		} else {
 			setData(prev => prev);
 		}
-	}, [filters]);
+	}, [filters, currentBank]);
 
 	const handleFilterChange = (e) => {
 		setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -294,9 +340,7 @@ const TableStatement = () => {
 		return () => document.removeEventListener('mousedown', handler);
 	}, [pageSizeDropdownOpen]);
 
-	useEffect(() => {
-		loadTbcData(); // call immediately on mount
-	}, []);
+
 
 	return (
 		<div className="table-accounts-container">

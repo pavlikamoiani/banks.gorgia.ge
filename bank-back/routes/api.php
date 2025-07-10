@@ -11,16 +11,23 @@ use App\Http\Controllers\TBCStatementController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// BOG Statements
-Route::get('/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
+// BOG Gorgia Statements
+Route::get('/gorgia/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 Route::get('/bog/statement/{accountNumber}/{currency}/{startDate}/{endDate}/{includeToday?}/{orderByDate?}', [BOGStatementController::class, 'statement']);
 Route::get('/gorgia-bog-transactions', function () {
     return GorgiaBogTransaction::orderBy('transaction_date', 'desc')->get();
 });
+// BOG Anta Statements
+Route::get('/anta/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
+Route::get('/anta-bog-transactions', function () {
+    return GorgiaBogTransaction::orderBy('transaction_date', 'desc')->get();
+});
 
 
-// TBC Statements
-Route::get('/tbc/statement', [TBCStatementController::class, 'statement']);
+// TBC Gorgia Statements
+Route::get('/gorgia/tbc/statement', [TBCStatementController::class, 'statement']);
+// TBC Anta Statements
+Route::get('/anta/tbc/statement', [TBCStatementController::class, 'statement']);
 
 
 // Users

@@ -1,5 +1,5 @@
 import '../assets/css/TableAccounts.css';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faXmark, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
@@ -26,10 +26,13 @@ const TableContragents = () => {
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({ name: '', identification_code: '' });
 	const [filteredContragents, setFilteredContragents] = useState([]);
+	const didFetch = useRef(false);
 
 	const { t } = useTranslation();
 
-	const fetchContragents = useCallback(() => {
+	useEffect(() => {
+		if (didFetch.current) return;
+		didFetch.current = true;
 		setLoading(true);
 		defaultInstance.get(`/contragents?company=${company}`)
 			.then(res => {
@@ -39,11 +42,6 @@ const TableContragents = () => {
 			.catch(() => setLoading(false));
 	}, []);
 
-	useEffect(() => {
-		fetchContragents();
-	}, [fetchContragents]);
-
-	// Фильтрация контрагентов
 	useEffect(() => {
 		let filtered = contragents;
 		if (filters.name) {
@@ -78,13 +76,18 @@ const TableContragents = () => {
 				company
 			});
 			handleCloseModal();
-			fetchContragents(); // Fetch only after successful add
+			setLoading(true);
+			defaultInstance.get(`/contragents?company=${company}`)
+				.then(res => {
+					setContragents(res.data);
+					setLoading(false);
+				})
+				.catch(() => setLoading(false));
 		} catch (err) {
 			setError('შეცდომა დამატებისას');
 		}
 	};
 
-	// Фильтр: обработчики
 	const handleFilterChange = (e) => {
 		setFilters({ ...filters, [e.target.name]: e.target.value });
 	};
