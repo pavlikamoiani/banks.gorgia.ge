@@ -68,7 +68,12 @@ const resources = {
       "search_by_purpose": "Search by purpose",
       "all": "All",
       "show_more": "Show more",
-      "show_less": "Show less"
+      "show_less": "Show less",
+
+      // Delete confirmation modal
+      "delete": "Delete",
+      "delete_title": "Delete Confirmation",
+      "delete_confirm_text": "Are you sure you want to delete this item?",
     }
   },
   ru: {
@@ -137,7 +142,12 @@ const resources = {
       "search_by_purpose": "Поиск по назначению",
       "all": "Все",
       "show_more": "Показать больше",
-      "show_less": "Показать меньше"
+      "show_less": "Показать меньше",
+
+      // Delete confirmation modal
+      "delete": "Удалить",
+      "delete_title": "Подтверждение удаления",
+      "delete_confirm_text": "Вы уверены, что хотите удалить этот элемент?",
     }
   },
   ka: {
@@ -206,7 +216,13 @@ const resources = {
       "search_by_purpose": "ძებნა დანიშნულებით",
       "all": "ყველა",
       "show_more": "მეტის ნახვა",
-      "show_less": "ნაკლების ნახვა"
+      "show_less": "ნაკლების ნახვა",
+
+      // Delete confirmation modal
+      "delete": "წაშლა",
+      "delete_title": "წაშლის დადასტურება",
+      "delete_confirm_text": "ნამდვილად გსურთ ამ ელემენტის წაშლა?",
+
     }
   }
 };

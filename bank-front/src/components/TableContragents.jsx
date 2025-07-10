@@ -11,6 +11,7 @@ import AddContragentModal from './AddContragentModal';
 import EditContragentModal from './EditContragentModal';
 import Pagination from './Pagination';
 import HideRoleModal from './HideRoleModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
@@ -42,6 +43,9 @@ const TableContragents = () => {
 	const [selectedIds, setSelectedIds] = useState([]);
 	const [hideRolesModalOpen, setHideRolesModalOpen] = useState(false);
 	const [hideRoles, setHideRoles] = useState([]);
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [deleteId, setDeleteId] = useState(null);
+	const [deleteError, setDeleteError] = useState('');
 	const roleOptions = [
 		{ value: 'admin', label: t('administrator') || 'ადმინისტრატორი' },
 		{ value: 'distribution_operator', label: t('distribution_operator') || 'დისტრიბუციის ოპერატორი' },
@@ -194,10 +198,17 @@ const TableContragents = () => {
 		}
 	};
 
-	const handleDeleteContragent = async (contragentId) => {
-		if (!window.confirm(t('delete_user_confirm'))) return;
+	const handleDeleteContragent = (contragentId) => {
+		setDeleteId(contragentId);
+		setDeleteError('');
+		setDeleteModalOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
 		try {
-			await defaultInstance.delete(`/contragents/${contragentId}`);
+			await defaultInstance.delete(`/contragents/${deleteId}`);
+			setDeleteModalOpen(false);
+			setDeleteId(null);
 			setLoading(true);
 			defaultInstance.get(`/contragents`)
 				.then(res => {
@@ -206,7 +217,7 @@ const TableContragents = () => {
 				})
 				.catch(() => setLoading(false));
 		} catch (err) {
-			alert(t('error_deleting'));
+			setDeleteError(t('error_deleting'));
 		}
 	};
 
@@ -479,6 +490,16 @@ const TableContragents = () => {
 					loading={loading}
 					emptyText={t('no_data_found') || 'მონაცემები არ მოიძებნა'}
 				/>
+				<DeleteConfirmModal
+					open={deleteModalOpen}
+					onClose={() => { setDeleteModalOpen(false); setDeleteId(null); }}
+					onConfirm={handleDeleteConfirm}
+					title={t('delete_title') || 'წაშლა'}
+					text={t('delete_confirm_text') || 'დარწმუნებული ხართ, რომ გსურთ წაშლა?'}
+					t={t}
+				/>
+				{/* Можно вывести ошибку удаления, если нужно */}
+				{deleteError && <div style={{ color: 'red', marginTop: 10 }}>{deleteError}</div>}
 			</div>
 			<Pagination
 				total={filteredContragents.length}

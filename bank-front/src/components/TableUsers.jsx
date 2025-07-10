@@ -9,6 +9,7 @@ import SortableTable from './SortableTable';
 import defaultInstance from '../api/defaultInstance';
 import UserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 import { fetchUsers } from '../store/userSlice';
 
@@ -39,6 +40,9 @@ const TableUsers = () => {
 	});
 	const [editError, setEditError] = useState('');
 	const [loading, setLoading] = useState(false);
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [deleteId, setDeleteId] = useState(null);
+	const [deleteError, setDeleteError] = useState('');
 
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({ name: '', email: '', role: '', bank: '' });
@@ -163,13 +167,20 @@ const TableUsers = () => {
 		}
 	};
 
-	const handleDeleteUser = async (userId) => {
-		if (!window.confirm(t('delete_user_confirm'))) return;
+	const handleDeleteUser = (userId) => {
+		setDeleteId(userId);
+		setDeleteError('');
+		setDeleteModalOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
 		try {
-			await defaultInstance.delete(`/users/${userId}`);
+			await defaultInstance.delete(`/users/${deleteId}`);
+			setDeleteModalOpen(false);
+			setDeleteId(null);
 			dispatch(fetchUsers());
 		} catch (err) {
-			alert(t('error_deleting'));
+			setDeleteError(t('error_deleting'));
 		}
 	};
 
@@ -341,6 +352,15 @@ const TableUsers = () => {
 					loading={loading}
 					emptyText={t('no_data')}
 				/>
+				<DeleteConfirmModal
+					open={deleteModalOpen}
+					onClose={() => { setDeleteModalOpen(false); setDeleteId(null); }}
+					onConfirm={handleDeleteConfirm}
+					title={t('delete_title') || 'წაშლა'}
+					text={t('delete_confirm_text') || 'დარწმუნებული ხართ, რომ გსურთ წაშლა?'}
+					t={t}
+				/>
+				{deleteError && <div style={{ color: 'red', marginTop: 10 }}>{deleteError}</div>}
 			</div>
 		</div>
 	);
