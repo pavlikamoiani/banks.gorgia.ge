@@ -13,5 +13,10 @@ class Contragent extends Model
         'name',
         'identification_code',
         'company',
+        'hidden_for_roles',
+    ];
+
+    protected $casts = [
+        'hidden_for_roles' => 'array',
     ];
 }

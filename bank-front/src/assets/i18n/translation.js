@@ -16,6 +16,11 @@ const resources = {
       "bank": "Bank",
       "no_data_found": "No data found",
 
+      // Hide roles
+      "hide_for_roles": "Hide for roles",
+      "select_roles_to_hide": "Select roles to hide for",
+      "allow_view": "Allow view",
+
       // Table users
       "users_title": "Users",
       "add_user": "Add User",
@@ -79,6 +84,11 @@ const resources = {
       "bank": "Банк",
       "no_data_found": "Данные не найдены",
 
+      // Hide roles
+      "hide_for_roles": "Скрыть для ролей",
+      "select_roles_to_hide": "Выберите роли для скрытия",
+      "allow_view": "Разрешить просмотр",
+
       // Table users
       "users_title": "Пользователи",
       "add_user": "Добавить пользователя",
@@ -140,6 +150,11 @@ const resources = {
       "reset": "გაუქმება",
       "bank": "დანიშნული ბანკი",
       "no_data_found": "მონაცემები არ მოიძებნა",
+
+      // Hide roles
+      "hide_for_roles": "მომხმარებლის როლის დამალვა",
+      "select_roles_to_hide": "აირჩიეთ როლიები, რომლებსაც უნდა დაემალოს",
+      "allow_view": "დაშვება ნახვისთვის",
 
       // Table users
       "users_title": "მომხმარებლები",

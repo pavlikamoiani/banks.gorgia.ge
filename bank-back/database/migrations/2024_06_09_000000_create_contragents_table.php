@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('identification_code');
+            $table->json('hidden_for_roles')->nullable();
             $table->timestamps();
         });
     }

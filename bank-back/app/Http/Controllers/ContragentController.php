@@ -10,7 +10,17 @@ class ContragentController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(Contragent::orderBy('created_at', 'desc')->get());
+        $user = $request->user();
+        $contragents = Contragent::orderBy('created_at', 'desc')->get();
+
+        if ($user && $user->role !== 'super_admin') {
+            $contragents = $contragents->filter(function ($contragent) use ($user) {
+                $hidden = $contragent->hidden_for_roles ?? [];
+                return !in_array($user->role, $hidden);
+            })->values();
+        }
+
+        return response()->json($contragents);
     }
 
     public function store(Request $request)
@@ -18,6 +28,7 @@ class ContragentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identification_code' => 'required|string|max:255',
+            'hidden_for_roles' => 'nullable|array',
         ]);
         $contragent = Contragent::create($validated);
         return response()->json($contragent, 201);
@@ -41,6 +52,7 @@ class ContragentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identification_code' => 'required|string|max:255',
+            'hidden_for_roles' => 'nullable|array',
         ]);
         $contragent->update($validated);
         return response()->json($contragent);
