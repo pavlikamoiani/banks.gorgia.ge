@@ -104,6 +104,93 @@
 	background: #b52b27;
 }
 
+.pageSizeBtn {
+	background: #0173b1;
+	color: #fff;
+	border: 1.5px solid #0173b1;
+	border-radius: 6px;
+	padding: 8px 12px;
+	font-weight: 600;
+	font-size: 1rem;
+	cursor: pointer;
+	margin-left: 4px;
+	transition: background 0.18s, color 0.18s, border 0.18s;
+	box-shadow: 0 1.5px 4px rgba(1, 115, 177, 0.06);
+	min-width: 40px;
+	outline: none;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.pageSizeBtn:hover {
+	background: #fff;
+	color: #015a8c;
+	border-color: #015a8c;
+}
+
+.pageSizeArrow {
+	font-size: 0.9em;
+	margin-left: 4px;
+	transition: background 0.18s, color 0.18s, border 0.18s;
+}
+
+.pageSizeBtn:hover .pageSizeArrow {
+	color: #015a8c;
+}
+
+.pageSizeDropdown {
+	position: absolute;
+	top: 110%;
+	left: 10%;
+	background: #fff;
+	border: 1px solid #cce3f6;
+	border-radius: 6px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	z-index: 10;
+	min-width: 60px;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.pageSizeDropdownItem {
+	list-style: none;
+}
+
+.pageSizeDropdownBtn {
+	width: 100%;
+	padding: 6px 12px;
+	background: #fff;
+	color: #0090e7;
+	font-weight: normal;
+	border: none;
+	text-align: left;
+	cursor: pointer;
+	border-radius: 0;
+	font-size: 1em;
+	transition: background 0.2s, color 0.2s;
+}
+
+.pageSizeDropdownBtn:hover {
+	background: #e6f0ff;
+	color: #007bff;
+}
+
+.pageSizeDropdownBtnActive {
+	width: 100%;
+	padding: 6px 12px;
+	background: #e6f0ff;
+	color: #007bff;
+	font-weight: bold;
+	border: none;
+	text-align: left;
+	cursor: pointer;
+	border-radius: 0;
+	font-size: 1em;
+}
+
 @media screen and (max-width: 600px) {
 
 	.accounts-table th,

@@ -9,10 +9,14 @@ import TableFilter from './TableFilter';
 import SortableTable from './SortableTable';
 import AddContragentModal from './AddContragentModal';
 import EditContragentModal from './EditContragentModal';
+import Pagination from './Pagination';
 
 import filterStyles from '../assets/css/filter.module.css';
+import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
 import { useSelector } from 'react-redux';
+
+const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 
 const TableContragents = () => {
 	const [contragents, setContragents] = useState([]);
@@ -27,6 +31,10 @@ const TableContragents = () => {
 	const [editContragent, setEditContragent] = useState(null);
 	const [editForm, setEditForm] = useState({ name: '', identification_code: '' });
 	const [editError, setEditError] = useState('');
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+	const [pageSizeDropdownOpen, setPageSizeDropdownOpen] = useState(false);
+	const pageSizeDropdownRef = useRef(null);
 	const didFetch = useRef(false);
 	const user = useSelector(state => state.user.user);
 
@@ -59,6 +67,23 @@ const TableContragents = () => {
 		}
 		setFilteredContragents(filtered);
 	}, [contragents, filters]);
+
+	useEffect(() => {
+		setPage(1); // Reset to first page on filter change
+	}, [contragents, filters]);
+
+	useEffect(() => {
+		if (!pageSizeDropdownOpen) return;
+		const handler = (e) => {
+			if (pageSizeDropdownRef.current && !pageSizeDropdownRef.current.contains(e.target)) {
+				setPageSizeDropdownOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handler);
+		return () => document.removeEventListener('mousedown', handler);
+	}, [pageSizeDropdownOpen]);
+
+	const pagedData = filteredContragents.slice((page - 1) * pageSize, page * pageSize);
 
 	const handleOpenModal = () => setModalOpen(true);
 	const handleCloseModal = () => {
@@ -191,9 +216,40 @@ const TableContragents = () => {
 
 	return (
 		<div className="table-accounts-container">
-			<div className="table-accounts-header">
+			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">{t('contragents')}</h2>
-				<div style={{ display: 'flex', gap: 10 }}>
+				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+					<div className={tableStatementStyles.pageSizeDropdownWrapper} ref={pageSizeDropdownRef}>
+						<button
+							type="button"
+							className={tableStatementStyles.pageSizeBtn}
+							onClick={() => setPageSizeDropdownOpen(open => !open)}
+							aria-haspopup="listbox"
+							aria-expanded={pageSizeDropdownOpen}
+						>
+							{pageSize} <span className={tableStatementStyles.pageSizeArrow}>▼</span>
+						</button>
+						{pageSizeDropdownOpen && (
+							<ul className={tableStatementStyles.pageSizeDropdown} role="listbox">
+								{PAGE_SIZE_OPTIONS.map(opt => (
+									<li key={opt} className={tableStatementStyles.pageSizeDropdownItem}>
+										<button
+											type="button"
+											className={opt === pageSize ? tableStatementStyles.pageSizeDropdownBtnActive : tableStatementStyles.pageSizeDropdownBtn}
+											onClick={() => {
+												setPageSize(opt);
+												setPage(1);
+												setPageSizeDropdownOpen(false);
+											}}
+											aria-current={opt === pageSize ? 'true' : undefined}
+										>
+											{opt}
+										</button>
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
 					<button
 						style={{
 							background: "#0173b1",
@@ -202,7 +258,8 @@ const TableContragents = () => {
 							borderRadius: 6,
 							padding: "8px 16px",
 							cursor: "pointer",
-							fontWeight: 500
+							fontWeight: 500,
+							minHeight: '40px',
 						}}
 						onClick={handleOpenModal}
 					>
@@ -258,11 +315,17 @@ const TableContragents = () => {
 			<div className="table-wrapper">
 				<SortableTable
 					columns={columns}
-					data={filteredContragents}
+					data={pagedData}
 					loading={loading}
 					emptyText={t('no_data_found') || 'მონაცემები არ მოიძებნა'}
 				/>
 			</div>
+			<Pagination
+				total={filteredContragents.length}
+				page={page}
+				pageSize={pageSize}
+				onChange={setPage}
+			/>
 		</div>
 	);
 };
