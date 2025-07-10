@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\BOG\BOGService;
 use App\Models\GorgiaBogTransaction;
+use App\Models\Contragent;
 use Carbon\Carbon;
 use Log;
 
@@ -170,6 +171,30 @@ class BogMigrateJob extends Command
                 $inserted = 0;
                 $skipped = 0;
                 foreach ($allActivities as $activity) {
+                    // CONTRAGENT LOGIC
+                    if (
+                        isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
+                        trim($activity['Sender']['Name']) !== '' &&
+                        trim($activity['Sender']['Inn']) !== ''
+                    ) {
+                        $inn = trim($activity['Sender']['Inn']);
+                        $name = trim($activity['Sender']['Name']);
+                        $existing = Contragent::where('identification_code', $inn)->get();
+                        $shouldInsert = true;
+                        foreach ($existing as $contragent) {
+                            if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
+                                $shouldInsert = false;
+                                break;
+                            }
+                        }
+                        if ($shouldInsert) {
+                            Contragent::create([
+                                'name' => $name,
+                                'identification_code' => $inn,
+                            ]);
+                        }
+                    }
+
                     // Проверяем дубликаты по bog_id, doc_key, doc_no
                     $query = GorgiaBogTransaction::query();
                     if (!empty($activity['Id'])) $query->orWhere('bog_id', $activity['Id']);

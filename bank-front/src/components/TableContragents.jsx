@@ -11,12 +11,6 @@ import AddContragentModal from './AddContragentModal';
 
 import filterStyles from '../assets/css/filter.module.css';
 
-let company = '';
-if (typeof window !== "undefined") {
-	if (window.location.pathname.startsWith('/anta')) company = 'anta';
-	else company = 'gorgia';
-}
-
 const TableContragents = () => {
 	const [contragents, setContragents] = useState([]);
 	const [modalOpen, setModalOpen] = useState(false);
@@ -34,7 +28,7 @@ const TableContragents = () => {
 		if (didFetch.current) return;
 		didFetch.current = true;
 		setLoading(true);
-		defaultInstance.get(`/contragents?company=${company}`)
+		defaultInstance.get(`/contragents`)
 			.then(res => {
 				setContragents(res.data);
 				setLoading(false);
@@ -73,11 +67,10 @@ const TableContragents = () => {
 			await defaultInstance.post('/contragents', {
 				name: form.name,
 				identification_code: form.identification_code,
-				company
 			});
 			handleCloseModal();
 			setLoading(true);
-			defaultInstance.get(`/contragents?company=${company}`)
+			defaultInstance.get(`/contragents`)
 				.then(res => {
 					setContragents(res.data);
 					setLoading(false);

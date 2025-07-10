@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\BOG\BOGService;
 use App\Models\GorgiaBogTransaction;
+use App\Models\Contragent;
 use Log;
 use Carbon\Carbon;
 
@@ -17,6 +18,33 @@ class BOGStatementController extends Controller
         $currency = $request->input('currency', env('BOG_CURRENCY', 'GEL'));
 
         $data = $bog->getTodayActivities($account, $currency);
+
+        // CONTRAGENT LOGIC for todayActivities
+        $activities = $data['activities'] ?? (is_array($data) ? $data : []);
+        foreach ($activities as $activity) {
+            if (
+                isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
+                trim($activity['Sender']['Name']) !== '' &&
+                trim($activity['Sender']['Inn']) !== ''
+            ) {
+                $inn = trim($activity['Sender']['Inn']);
+                $name = trim($activity['Sender']['Name']);
+                $existing = \App\Models\Contragent::where('identification_code', $inn)->get();
+                $shouldInsert = true;
+                foreach ($existing as $contragent) {
+                    if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
+                        $shouldInsert = false;
+                        break;
+                    }
+                }
+                if ($shouldInsert) {
+                    \App\Models\Contragent::create([
+                        'name' => $name,
+                        'identification_code' => $inn,
+                    ]);
+                }
+            }
+        }
 
         return response()->json($data);
     }
@@ -94,6 +122,32 @@ class BOGStatementController extends Controller
                 }
             } else {
                 $activities = $data ?? [];
+            }
+
+            // CONTRAGENT LOGIC
+            foreach ($activities as $activity) {
+                if (
+                    isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
+                    trim($activity['Sender']['Name']) !== '' &&
+                    trim($activity['Sender']['Inn']) !== ''
+                ) {
+                    $inn = trim($activity['Sender']['Inn']);
+                    $name = trim($activity['Sender']['Name']);
+                    $existing = Contragent::where('identification_code', $inn)->get();
+                    $shouldInsert = true;
+                    foreach ($existing as $contragent) {
+                        if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
+                            $shouldInsert = false;
+                            break;
+                        }
+                    }
+                    if ($shouldInsert) {
+                        Contragent::create([
+                            'name' => $name,
+                            'identification_code' => $inn,
+                        ]);
+                    }
+                }
             }
 
             Log::info('BOG activities', [

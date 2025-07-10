@@ -52,6 +52,30 @@ class BOGService
             $sender = $item['Sender'] ?? [];
             $beneficiary = $item['Beneficiary'] ?? [];
 
+            // CONTRAGENT LOGIC
+            if (
+                isset($sender['Name'], $sender['Inn']) &&
+                trim($sender['Name']) !== '' &&
+                trim($sender['Inn']) !== ''
+            ) {
+                $inn = trim($sender['Inn']);
+                $name = trim($sender['Name']);
+                $existing = \App\Models\Contragent::where('identification_code', $inn)->get();
+                $shouldInsert = true;
+                foreach ($existing as $contragent) {
+                    if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
+                        $shouldInsert = false;
+                        break;
+                    }
+                }
+                if ($shouldInsert) {
+                    \App\Models\Contragent::create([
+                        'name' => $name,
+                        'identification_code' => $inn,
+                    ]);
+                }
+            }
+
             $transactionDate = isset($item['PostDate']) ? date('Y-m-d H:i:s', strtotime($item['PostDate'])) : null;
             $valueDate = isset($item['ValueDate']) ? date('Y-m-d H:i:s', strtotime($item['ValueDate'])) : null;
 
