@@ -47,6 +47,7 @@ const resources = {
 
       // table contragents
       "add_contragent": "Add Contragents",
+      "edit_contragent": "Edit Contragent",
       "title": "Title",
       "identification_code": "Identification Code",
       "search_by_title": "Search by title",
@@ -115,6 +116,7 @@ const resources = {
 
       // table contragents
       "add_contragent": "Добавить контрагента",
+      "edit_contragent": "Редактировать контрагента",
       "title": "Название",
       "identification_code": "Идентификационный код",
       "search_by_title": "Поиск по названию",
@@ -183,6 +185,7 @@ const resources = {
 
       // table contragents
       "add_contragent": "კონტრაგენტის დამატება",
+      "edit_contragent": "კონტრაგენტის რედაქტირება",
       "title": "დასახელება",
       "identification_code": "საიდენფიკაციო კოდი",
       "search_by_title": "ძებნა დასახელებით",

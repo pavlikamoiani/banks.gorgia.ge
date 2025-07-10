@@ -41,6 +41,8 @@ const checkmarkStyle = {
     justifyContent: 'center'
 };
 
+const ANIMATION_DURATION = 220; // ms, match CSS
+
 const HideRoleModal = ({
     open,
     onClose,
@@ -50,10 +52,14 @@ const HideRoleModal = ({
 }) => {
     const _t = typeof t === 'function' ? t : (s) => s;
     const [hideRoles, setHideRoles] = useState([]);
+    const [show, setShow] = useState(open);
+    const [closing, setClosing] = useState(false);
 
     // При открытии модалки вычисляем объединение ролей
     useEffect(() => {
         if (open) {
+            setShow(true);
+            setClosing(false);
             const allHiddenRoles = selectedContragents.reduce((acc, c) => {
                 if (Array.isArray(c.hidden_for_roles)) {
                     c.hidden_for_roles.forEach(role => {
@@ -63,8 +69,15 @@ const HideRoleModal = ({
                 return acc;
             }, []);
             setHideRoles(allHiddenRoles);
+        } else if (show) {
+            setClosing(true);
+            const timer = setTimeout(() => {
+                setShow(false);
+                setClosing(false);
+            }, ANIMATION_DURATION);
+            return () => clearTimeout(timer);
         }
-    }, [open, selectedContragents]);
+    }, [open, selectedContragents, show]);
 
     const handleCheckboxChange = (e) => {
         const { value, checked } = e.target;
@@ -84,15 +97,26 @@ const HideRoleModal = ({
         }
     };
 
-    if (!open) return null;
+    const handleClose = () => {
+        setClosing(true);
+        setTimeout(() => {
+            setClosing(false);
+            onClose();
+        }, ANIMATION_DURATION);
+    };
+
+    if (!show) return null;
 
     return (
         <div className={styles.overlay}>
-            <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div
+                className={`${styles.modal} ${closing ? styles.modalClosing : ''}`}
+                onClick={e => e.stopPropagation()}
+            >
                 <button
                     type="button"
                     className={styles.modalClose}
-                    onClick={onClose}
+                    onClick={handleClose}
                     aria-label="Close"
                 >
                     &times;
@@ -172,7 +196,7 @@ const HideRoleModal = ({
                     <div className={styles.modalActions}>
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={handleClose}
                             className={`${styles.modalButton} ${styles.modalButtonCancel}`}
                         >
                             {_t('cancel')}

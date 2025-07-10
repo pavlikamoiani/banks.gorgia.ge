@@ -1,4 +1,7 @@
 import styles from '../assets/css/modal.module.css';
+import { useState, useEffect } from 'react';
+
+const ANIMATION_DURATION = 220; // ms, match CSS
 
 const AddContragentModal = ({
     open,
@@ -9,18 +12,43 @@ const AddContragentModal = ({
     error,
     t
 }) => {
-    if (!open) return null;
+    const [show, setShow] = useState(open);
+    const [closing, setClosing] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            setShow(true);
+            setClosing(false);
+        } else if (show) {
+            setClosing(true);
+            const timer = setTimeout(() => {
+                setShow(false);
+                setClosing(false);
+            }, ANIMATION_DURATION);
+            return () => clearTimeout(timer);
+        }
+    }, [open]);
+
+    const handleClose = () => {
+        setClosing(true);
+        setTimeout(() => {
+            setClosing(false);
+            onClose();
+        }, ANIMATION_DURATION);
+    };
+
+    if (!show) return null;
 
     return (
         <div className={styles.overlay}>
             <div
-                className={styles.modal}
+                className={`${styles.modal} ${closing ? styles.modalClosing : ''}`}
                 onClick={e => e.stopPropagation()}
             >
                 <button
                     type="button"
                     className={styles.modalClose}
-                    onClick={onClose}
+                    onClick={handleClose}
                     aria-label="Close"
                 >
                     &times;
@@ -53,7 +81,7 @@ const AddContragentModal = ({
                     <div className={styles.modalActions}>
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={handleClose}
                             className={`${styles.modalButton} ${styles.modalButtonCancel}`}
                         >
                             {t('cancel')}
