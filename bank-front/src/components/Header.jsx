@@ -21,6 +21,7 @@ const Header = () => {
 	const [tbcPwLoading, setTbcPwLoading] = useState(false);
 	const dropdownRef = useRef(null);
 	const langDropdownRef = useRef(null);
+	const tbcPwFetchedRef = useRef(false); // <-- add this ref
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { t, i18n } = useTranslation();
@@ -59,11 +60,17 @@ const Header = () => {
 	}, [langDropdownOpen]);
 
 	useEffect(() => {
-		if (user && user.role === 'super_admin') {
+		if (
+			user &&
+			user.role === 'super_admin' &&
+			!tbcPwFetchedRef.current
+		) {
+			tbcPwFetchedRef.current = true;
 			defaultInstance.get('/tbc-password/info').then(res => {
 				setTbcPwInfo(res.data);
 			});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
 
 	const handleDropdownClick = (version) => {

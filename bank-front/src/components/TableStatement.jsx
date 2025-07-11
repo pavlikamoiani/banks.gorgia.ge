@@ -143,9 +143,6 @@ const TableStatement = () => {
 				}
 				setData(rows);
 			})
-			.catch(() => {
-				setError(t('no_data_found'));
-			})
 			.finally(() => setLoading(false));
 	};
 
