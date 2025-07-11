@@ -74,6 +74,16 @@ const resources = {
       "delete": "Delete",
       "delete_title": "Delete Confirmation",
       "delete_confirm_text": "Are you sure you want to delete this item?",
+
+      // TBC Password Modal
+      "tbc_password_change": "TBC Password Change",
+      "new_password_label": "New Password",
+      "update": "Update",
+      "password_updated_successfully": "Password updated successfully",
+      "error_updating_password": "Error updating password",
+      "close": "Close",
+      "left": "Left",
+      "days": "days",
     }
   },
   ru: {
@@ -148,6 +158,16 @@ const resources = {
       "delete": "Удалить",
       "delete_title": "Подтверждение удаления",
       "delete_confirm_text": "Вы уверены, что хотите удалить этот элемент?",
+
+      // TBC Password Modal
+      "tbc_password_change": "Изменение пароля TBC",
+      "new_password_label": "Новый пароль",
+      "update": "Обновить",
+      "password_updated_successfully": "Пароль успешно обновлен",
+      "error_updating_password": "Ошибка при обновлении пароля",
+      "close": "Закрыть",
+      "left": "Осталось",
+      "days": "дней",
     }
   },
   ka: {
@@ -223,6 +243,15 @@ const resources = {
       "delete_title": "წაშლის დადასტურება",
       "delete_confirm_text": "ნამდვილად გსურთ ამ ელემენტის წაშლა?",
 
+      // TBC Password Modal
+      "tbc_password_change": "TBC-ის პაროლის შეცვლა",
+      "new_password_label": "ახალი პაროლი",
+      "update": "განახლება",
+      "password_updated_successfully": "პაროლი წარმატებით განახლდა",
+      "error_updating_password": "შეცდომა პაროლის განახლებისას",
+      "close": "დახურვა",
+      "left": "დარჩა",
+      "days": "დღე",
     }
   }
 };

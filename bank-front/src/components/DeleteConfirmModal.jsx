@@ -5,8 +5,8 @@ const DeleteConfirmModal = ({
     open,
     onClose,
     onConfirm,
-    title = 'Удалить?',
-    text = 'Вы уверены, что хотите удалить этот элемент?',
+    title = '',
+    text = '',
     t
 }) => {
     const [show, setShow] = useState(open);

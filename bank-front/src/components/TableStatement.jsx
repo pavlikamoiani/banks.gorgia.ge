@@ -1,4 +1,3 @@
-import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -21,8 +20,6 @@ const TableStatement = () => {
 	const location = useLocation();
 
 	const [expandedRows, setExpandedRows] = useState({});
-
-	const user = useSelector(state => state.user.user);
 
 	const currentBank = useMemo(() => {
 		if (location.pathname.startsWith('/anta')) return 'anta';
@@ -93,6 +90,7 @@ const TableStatement = () => {
 	const [dbLoading, setDbLoading] = useState(false);
 
 	const [dbData, setDbData] = useState([]);
+	// eslint-disable-next-line
 	const [lastSyncDate, setLastSyncDate] = useState('');
 
 	const bankOptions = useMemo(() => {

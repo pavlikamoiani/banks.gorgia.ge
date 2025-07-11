@@ -119,6 +119,7 @@ const TableUsers = () => {
 			});
 			handleCloseUserModal();
 			dispatch(fetchUsers());
+			// eslint-disable-next-line
 		} catch (err) {
 			setUserError(t('error_adding'));
 		}
@@ -162,6 +163,7 @@ const TableUsers = () => {
 			handleCloseEditModal();
 			setUserModalOpen(false);
 			dispatch(fetchUsers());
+			// eslint-disable-next-line
 		} catch (err) {
 			setEditError(t('error_editing'));
 		}
@@ -179,6 +181,7 @@ const TableUsers = () => {
 			setDeleteModalOpen(false);
 			setDeleteId(null);
 			dispatch(fetchUsers());
+			// eslint-disable-next-line
 		} catch (err) {
 			setDeleteError(t('error_deleting'));
 		}

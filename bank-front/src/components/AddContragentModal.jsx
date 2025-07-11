@@ -1,7 +1,7 @@
 import styles from '../assets/css/modal.module.css';
 import { useState, useEffect } from 'react';
 
-const ANIMATION_DURATION = 220; // ms, match CSS
+const ANIMATION_DURATION = 220;
 
 const AddContragentModal = ({
     open,

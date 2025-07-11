@@ -1,12 +1,14 @@
 import styles from '../assets/css/modal.module.css';
 import { useState } from 'react';
 import defaultInstance from '../api/defaultInstance';
+import { useTranslation } from 'react-i18next';
 
 const TbcPasswordModal = ({ open, onClose, onUpdated }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const { t } = useTranslation();
 
     if (!open) return null;
 
@@ -19,8 +21,9 @@ const TbcPasswordModal = ({ open, onClose, onUpdated }) => {
             setSuccess(true);
             setPassword('');
             if (onUpdated) onUpdated();
+            // eslint-disable-next-line
         } catch (err) {
-            setError('შეცდომა პაროლის განახლებაში');
+            setError(t('error_updating_password'));
         }
         setLoading(false);
     };
@@ -36,10 +39,10 @@ const TbcPasswordModal = ({ open, onClose, onUpdated }) => {
                 >
                     &times;
                 </button>
-                <h3 className={styles.modalTitle}>TBC-ის პაროლის შეცვლა</h3>
+                <h3 className={styles.modalTitle}>{t('tbc_password_change')}</h3>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.modalFormGroup}>
-                        <label>ახალი პაროლი</label>
+                        <label>{t('new_password_label')}</label>
                         <input
                             type="password"
                             name="password"
@@ -58,14 +61,14 @@ const TbcPasswordModal = ({ open, onClose, onUpdated }) => {
                             className={`${styles.modalButton} ${styles.modalButtonCancel}`}
                             disabled={loading}
                         >
-                            გაუქმება
+                            {t('close')}
                         </button>
                         <button
                             type="submit"
                             className={`${styles.modalButton} ${styles.modalButtonSubmit}`}
                             disabled={loading}
                         >
-                            {loading ? 'იტვირთება...' : 'განახლება'}
+                            {loading ? 'იტვირთება...' : t('update')}
                         </button>
                     </div>
                 </form>

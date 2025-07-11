@@ -18,10 +18,11 @@ const Header = () => {
 	const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 	const [tbcPwInfo, setTbcPwInfo] = useState({ days_left: null, created_at: null });
 	const [tbcPwModalOpen, setTbcPwModalOpen] = useState(false);
+	// eslint-disable-next-line
 	const [tbcPwLoading, setTbcPwLoading] = useState(false);
 	const dropdownRef = useRef(null);
 	const langDropdownRef = useRef(null);
-	const tbcPwFetchedRef = useRef(false); // <-- add this ref
+	const tbcPwFetchedRef = useRef(false);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { t, i18n } = useTranslation();
@@ -70,7 +71,7 @@ const Header = () => {
 				setTbcPwInfo(res.data);
 			});
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line
 	}, [user]);
 
 	const handleDropdownClick = (version) => {
@@ -90,6 +91,7 @@ const Header = () => {
 	const handleLogout = async () => {
 		try {
 			await defaultInstance.post('/logout');
+			// eslint-disable-next-line
 		} catch (e) {
 			// Ignore errors, proceed with logout
 		}
@@ -214,7 +216,7 @@ const Header = () => {
 								onClick={handleTbcPwModalOpen}
 								title="Click to change TBC password"
 							>
-								TBC-ის პაროლის შეცვლა (დარჩა {tbcPwInfo.days_left !== null ? tbcPwInfo.days_left : '...'} დღე)
+								{t('tbc_password_change')} ({t('')} {tbcPwInfo.days_left !== null ? tbcPwInfo.days_left : '...'} {t('days')})
 							</p>
 						</div>
 					)}

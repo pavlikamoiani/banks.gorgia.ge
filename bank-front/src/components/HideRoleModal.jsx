@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from '../assets/css/modal.module.css';
+import role from '../assets/css/HideRoleModal.module.css'; // используем role.*
 
 const roleOptions = [
     { value: 'admin', label: 'ადმინისტრატორი' },
@@ -7,41 +8,7 @@ const roleOptions = [
     { value: 'corporate_sales_manager', label: 'კორპორატიული გაყიდვების მენეჯერი' }
 ];
 
-const checkboxStyle = {
-    appearance: 'none',
-    width: 20,
-    height: 20,
-    border: '2px solid #b0b8c1',
-    borderRadius: 6,
-    background: '#f8fafc',
-    marginRight: 10,
-    outline: 'none',
-    cursor: 'pointer',
-    position: 'relative',
-    transition: 'border 0.18s, box-shadow 0.18s, background 0.18s'
-};
-
-const checkboxCheckedStyle = {
-    border: '2px solid #0173b1',
-    background: '#e6f2fa',
-};
-
-const checkmarkStyle = {
-    position: 'absolute',
-    left: 4,
-    top: 2,
-    width: 12,
-    height: 12,
-    pointerEvents: 'none',
-    color: '#0173b1',
-    fontSize: 16,
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-};
-
-const ANIMATION_DURATION = 220; // ms, match CSS
+const ANIMATION_DURATION = 220;
 
 const HideRoleModal = ({
     open,
@@ -55,7 +22,6 @@ const HideRoleModal = ({
     const [show, setShow] = useState(open);
     const [closing, setClosing] = useState(false);
 
-    // При открытии модалки вычисляем объединение ролей
     useEffect(() => {
         if (open) {
             setShow(true);
@@ -86,8 +52,8 @@ const HideRoleModal = ({
         );
     };
 
-    const handleAllowRole = (role) => {
-        setHideRoles(prev => prev.filter(r => r !== role));
+    const handleAllowRole = (roleValue) => {
+        setHideRoles(prev => prev.filter(r => r !== roleValue));
     };
 
     const handleSubmit = (e) => {
@@ -141,19 +107,16 @@ const HideRoleModal = ({
                                             fontSize: '1rem'
                                         }}
                                     >
-                                        <span style={{ position: 'relative', display: 'inline-block' }}>
+                                        <span className={role.checkboxWrapper}>
                                             <input
                                                 type="checkbox"
                                                 value={opt.value}
                                                 checked={checked}
                                                 onChange={handleCheckboxChange}
-                                                style={{
-                                                    ...checkboxStyle,
-                                                    ...(checked ? checkboxCheckedStyle : {})
-                                                }}
+                                                className={`${role.checkbox} ${checked ? role.checkboxChecked : ''}`}
                                             />
                                             {checked && (
-                                                <span style={checkmarkStyle}>
+                                                <span className={role.checkmark}>
                                                     <svg width="14" height="14" viewBox="0 0 14 14">
                                                         <polyline
                                                             points="3,7 6,10 11,4"
@@ -173,16 +136,7 @@ const HideRoleModal = ({
                                         {checked && (
                                             <button
                                                 type="button"
-                                                style={{
-                                                    marginLeft: 8,
-                                                    background: '#f3f6fa',
-                                                    color: '#0173b1',
-                                                    border: '1px solid #e6eaf0',
-                                                    borderRadius: 4,
-                                                    padding: '2px 8px',
-                                                    fontSize: 13,
-                                                    cursor: 'pointer'
-                                                }}
+                                                className={role.allowViewBtn}
                                                 onClick={() => handleAllowRole(opt.value)}
                                             >
                                                 {_t('allow_view') || 'ნებართვა ნახვაზე'}

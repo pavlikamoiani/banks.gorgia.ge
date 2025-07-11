@@ -13,7 +13,6 @@ const UserModal = ({
     t
 }) => {
 
-    // Use Redux selector instead of useCurrentUser
     const user = useSelector(state => state.user.user);
     if (!open) return null;
 
