@@ -103,45 +103,70 @@ const TableStatement = () => {
 
 	const initialLoadedRef = useRef(false);
 
-	const loadTodayActivities = () => {
+	const loadTodayActivities = async () => {
 		setLoading(true);
 		setError(null);
 		const now = new Date();
 		const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
 		setLastSyncDate(formattedNow);
-		defaultInstance.get(
-			currentBank === 'gorgia'
-				? '/gorgia/bog/todayactivities'
-				: '/anta/bog/todayactivities'
-		)
-			.then(res => {
-				let rows;
-				if (currentBank === 'gorgia') {
-					rows = (res.data?.activities || res.data || []).map((item, idx) => ({
-						id: idx + 1,
-						contragent: item.Sender?.Name || '',
-						bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
-						amount: (item.Amount || '') + ' ₾',
-						transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-						purpose: item.EntryComment || '',
-						syncDate: formattedNow,
-					}));
-				} else if (currentBank === 'anta') {
-					rows = (res.data?.activities || res.data || []).map((item, idx) => ({
-						id: idx + 1,
-						contragent: item.Sender?.Name || '',
-						bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
-						amount: (item.Amount || '') + ' ₾',
-						transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-						purpose: item.EntryComment || '',
-						syncDate: formattedNow,
-					}));
-				} else {
-					rows = [];
-				}
-				setData(rows);
-			})
-			.finally(() => setLoading(false));
+
+		try {
+			// Параллельно загружаем оба банка
+			const [tbcResponse, bogResponse] = await Promise.all([
+				defaultInstance.get(
+					currentBank === 'gorgia'
+						? '/gorgia/tbc/todayactivities'
+						: '/anta/tbc/todayactivities'
+				),
+				defaultInstance.get(
+					currentBank === 'gorgia'
+						? '/gorgia/bog/todayactivities'
+						: '/anta/bog/todayactivities'
+				)
+			]);
+
+			let combinedRows = [];
+
+			// TBC
+			if (tbcResponse.data?.activities) {
+				const tbcRows = (tbcResponse.data.activities || []).map((item, idx) => ({
+					id: `tbc-${idx + 1}`,
+					contragent: item.Sender?.Name || '',
+					bank: item.Sender?.BankName || 'TBC Bank',
+					amount: (item.Amount || '') + ' ₾',
+					transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
+					purpose: item.EntryComment || '',
+					syncDate: formattedNow
+				}));
+				combinedRows = [...combinedRows, ...tbcRows];
+			}
+
+			// BOG
+			if (bogResponse.data?.activities || bogResponse.data) {
+				const bogRows = (bogResponse.data?.activities || bogResponse.data || []).map((item, idx) => ({
+					id: `bog-${idx + 1}`,
+					contragent: item.Sender?.Name || '',
+					bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
+					amount: (item.Amount || '') + ' ₾',
+					transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
+					purpose: item.EntryComment || '',
+					syncDate: formattedNow
+				}));
+				combinedRows = [...combinedRows, ...bogRows];
+			}
+
+			// Сортировка по дате (новые сверху)
+			combinedRows.sort((a, b) => {
+				return new Date(b.transferDate) - new Date(a.transferDate);
+			});
+
+			setData(combinedRows);
+		} catch (err) {
+			console.error("Error loading transactions:", err);
+			setError(t('failed_to_load_transactions'));
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	useEffect(() => {
@@ -151,93 +176,72 @@ const TableStatement = () => {
 		}
 	}, [currentBank]);
 
-	const loadDbData = () => {
+	const loadDbData = async () => {
 		setDbLoading(true);
 		setError(null);
-		defaultInstance.get(
-			currentBank === 'gorgia'
-				? '/gorgia-bog-transactions'
-				: '/anta-bog-transactions'
-		)
-			.then(res => {
-				let rows;
-				if (currentBank === 'gorgia') {
-					rows = (res.data || []).map((item, idx) => ({
-						id: item.id || idx + 1,
-						contragent: item.sender_name || item.beneficiary_name || '-',
-						bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
-						amount: (item.amount ?? 0) + ' ₾',
-						transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-						purpose: item.entry_comment || item.entry_comment_en || '-',
-						syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-',
-					}));
-				} else if (currentBank === 'anta') {
-					rows = (res.data || []).map((item, idx) => ({
-						id: item.id || idx + 1,
-						contragent: item.anta_contragent || '-',
-						bank: item.anta_bank || '-',
-						amount: (item.anta_amount ?? 0) + ' ₾',
-						transferDate: item.anta_date ? item.anta_date.slice(0, 10) : '-',
-						purpose: item.anta_purpose || '-',
-						syncDate: item.anta_created_at ? item.anta_created_at.slice(0, 19).replace('T', ' ') : '-',
-					}));
-				} else {
-					rows = [];
-				}
-				setDbData(rows);
-				setData(rows);
-			})
-			.catch(() => {
-				setError(t('no_data_found'));
-			})
-			.finally(() => setDbLoading(false));
+
+		try {
+			// Параллельно загружаем оба банка
+			const [tbcResponse, bogResponse] = await Promise.all([
+				defaultInstance.get(
+					currentBank === 'gorgia'
+						? '/gorgia-tbc-transactions'
+						: '/anta-tbc-transactions'
+				),
+				defaultInstance.get(
+					currentBank === 'gorgia'
+						? '/gorgia-bog-transactions'
+						: '/anta-bog-transactions'
+				)
+			]);
+
+			let combinedRows = [];
+
+			// TBC
+			if (tbcResponse.data) {
+				const tbcRows = (tbcResponse.data || []).map((item, idx) => ({
+					id: `tbc-${item.id || idx + 1}`,
+					contragent: item.sender_name || '-',
+					bank: 'TBC Bank',
+					amount: (item.amount ?? 0) + ' ₾',
+					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+					purpose: item.description || '-',
+					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
+				}));
+				combinedRows = [...combinedRows, ...tbcRows];
+			}
+
+			// BOG
+			if (bogResponse.data) {
+				const bogRows = (bogResponse.data || []).map((item, idx) => ({
+					id: `bog-${item.id || idx + 1}`,
+					contragent: item.sender_name || item.beneficiary_name || '-',
+					bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
+					amount: (item.amount ?? 0) + ' ₾',
+					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+					purpose: item.entry_comment || item.entry_comment_en || '-',
+					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
+				}));
+				combinedRows = [...combinedRows, ...bogRows];
+			}
+
+			// Сортировка по дате (новые сверху)
+			combinedRows.sort((a, b) => {
+				if (a.transferDate === b.transferDate) return 0;
+				if (a.transferDate === '-') return 1;
+				if (b.transferDate === '-') return -1;
+				return new Date(b.transferDate) - new Date(a.transferDate);
+			});
+
+			setDbData(combinedRows);
+			setData(combinedRows);
+		} catch (err) {
+			console.error("Error loading DB transactions:", err);
+			setError(t('no_data_found'));
+		} finally {
+			setDbLoading(false);
+		}
 	};
-
-	// const loadTbcData = () => {
-	// 	setDbLoading(true);
-	// 	setError(null);
-	// 	defaultInstance.get(user.bank === 'gorgia' ? '/gorgia/tbc/statement' : '/anta/tbc/statment', {
-	// 		params: {
-	// 			startDate: filters.startDate || '2025-07-01T00:00:00',
-	// 			endDate: filters.endDate || '2025-07-08T23:59:59'
-	// 		}
-	// 	})
-	// 		.then(res => {
-	// 			let rows;
-	// 			if (user.bank === 'gorgia') {
-	// 				rows = (res.data || []).map((item, idx) => ({
-	// 					id: item.id || idx + 1,
-	// 					contragent: item.contragent || '-',
-	// 					bank: item.bank || '-',
-	// 					amount: item.amount || '0 ₾',
-	// 					transferDate: item.transferDate || '-',
-	// 					purpose: item.purpose || '-',
-	// 					syncDate: item.syncDate || '-',
-	// 				}));
-	// 			} else if (user.bank === 'anta') {
-	// 				rows = (res.data || []).map((item, idx) => ({
-	// 					id: item.id || idx + 1,
-	// 					contragent: item.contragent || '-',
-	// 					bank: item.bank || '-',
-	// 					amount: item.amount || '0 ₾',
-	// 					transferDate: item.transferDate || '-',
-	// 					purpose: item.purpose || '-',
-	// 					syncDate: item.syncDate || '-',
-	// 				}));
-	// 			}
-	// 			console.log('TBC Data:', rows);
-	// 			setDbData(rows);
-	// 			setData(rows);
-	// 		})
-	// 		.catch(() => {
-	// 			setError(t('no_data_found'));
-	// 		})
-	// 		.finally(() => setDbLoading(false));
-	// };
-
-	// useEffect(() => {
-	// 	loadTbcData(); // call immediately on mount
-	// }, []);
 
 	useEffect(() => {
 		const hasFilter = Object.values(filters).some(val => val && val !== '');

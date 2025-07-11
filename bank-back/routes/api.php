@@ -3,11 +3,12 @@
 use App\Http\Controllers\ContragentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BOGStatementController;
+use App\Http\Controllers\TBCStatementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Models\User;
 use \App\Models\GorgiaBogTransaction;
-use App\Http\Controllers\TBCStatementController;
+use \App\Models\Transaction;
 use App\Http\Controllers\TbcPasswordController;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -18,18 +19,27 @@ Route::get('/bog/statement/{accountNumber}/{currency}/{startDate}/{endDate}/{inc
 Route::get('/gorgia-bog-transactions', function () {
     return GorgiaBogTransaction::orderBy('transaction_date', 'desc')->get();
 });
+
 // BOG Anta Statements
 Route::get('/anta/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 Route::get('/anta-bog-transactions', function () {
     return GorgiaBogTransaction::orderBy('transaction_date', 'desc')->get();
 });
 
-
 // TBC Gorgia Statements
-Route::get('/gorgia/tbc/statement', [TBCStatementController::class, 'statement']);
-// TBC Anta Statements
-Route::get('/anta/tbc/statement', [TBCStatementController::class, 'statement']);
+Route::get('/gorgia/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
+Route::get('/gorgia-tbc-transactions', function () {
+    return Transaction::orderBy('transaction_date', 'desc')->get();
+});
 
+// TBC Anta Statements
+Route::get('/anta/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
+Route::get('/anta-tbc-transactions', function () {
+    return Transaction::orderBy('transaction_date', 'desc')->get();
+});
+
+// TBC Sync Today's Transactions
+Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);
 
 // Users
 Route::get('/users', function () {
