@@ -96,15 +96,37 @@ class TransactionRepository extends BaseRepository
      */
     private function saveInLocalDB($transactionData)
     {
-        // Only save transaction data, do not create contragents or accounts
+        $transactionDate = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
+        $reflectionDate = date('Y-m-d H:i:s', strtotime($transactionData->valueDate));
+        $bank = \App\Models\Bank::where('bank_code', 'TBC')->first();
+
+        $exists = Transaction::where([
+            ['bank_statement_id', $transactionData->movementId],
+            ['contragent_id', $transactionData->externalPaymentId ?? null],
+            ['bank_id', $bank ? $bank->id : null],
+            ['amount', $transactionData->amount->amount],
+            ['transaction_date', $transactionDate],
+            ['reflection_date', $reflectionDate],
+            ['status_code', $transactionData->statusCode],
+            ['description', $transactionData->description],
+        ])->exists();
+
+        if ($exists) {
+            // Skip if all values are the same
+            return;
+        }
+
         $transaction = new Transaction();
         $transaction->contragent_id = $transactionData->externalPaymentId ?? null;
+        $bank = \App\Models\Bank::where('bank_code', 'TBC')->first();
+        $transaction->bank_id = $bank ? $bank->id : null;
         $transaction->bank_statement_id = $transactionData->movementId;
         $transaction->amount = $transactionData->amount->amount;
         $transaction->transaction_date = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
         $transaction->reflection_date = date('Y-m-d H:i:s', strtotime($transactionData->valueDate));
         $transaction->status_code = $transactionData->statusCode;
         $transaction->description = $transactionData->description;
+        $transaction->sender_name = $transactionData->partnerName ?? null;
         $transaction->save();
     }
 

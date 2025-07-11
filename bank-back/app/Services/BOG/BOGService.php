@@ -32,7 +32,7 @@ class BOGService
         \Log::info('BOG token', ['token' => $token]);
 
         $response = Http::withToken($token)
-            ->timeout(10)
+            ->timeout(30)
             ->get(env('BOG_BASE_URL') . "/documents/todayactivities/$account/$currency");
 
         \Log::info('BOG API status', ['status' => $response->status()]);

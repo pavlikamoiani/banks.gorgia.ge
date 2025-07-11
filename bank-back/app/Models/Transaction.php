@@ -14,6 +14,7 @@ class Transaction extends Model
         'amount',
         'transaction_date',
         'reflection_date',
+        'sender_name',
         'description',
         'status_code'
     ];

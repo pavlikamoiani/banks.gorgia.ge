@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->decimal('amount', 20, 2)->nullable();
             $table->timestamp('transaction_date')->nullable();
             $table->timestamp('reflection_date')->nullable();
+            $table->string('sender_name')->nullable();
             $table->string('description')->nullable();
             $table->string('status_code')->nullable();
             $table->timestamps();
