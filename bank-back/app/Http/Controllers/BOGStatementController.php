@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\BOG\BOGService;
+use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\GorgiaBogTransaction;
 use App\Models\Contragent;
 use Log;

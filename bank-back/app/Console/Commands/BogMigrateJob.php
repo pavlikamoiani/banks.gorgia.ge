@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\BOG\BOGService;
+use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\GorgiaBogTransaction;
 use App\Models\Contragent;
 use Carbon\Carbon;

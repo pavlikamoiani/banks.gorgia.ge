@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Services\BOG\BOGService;
+use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\GorgiaBogTransaction;
 use App\Models\Contragent;
 use Carbon\Carbon;

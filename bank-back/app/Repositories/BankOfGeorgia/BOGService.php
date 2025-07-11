@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\BOG;
+namespace App\Repositories\BankOfGeorgia;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
