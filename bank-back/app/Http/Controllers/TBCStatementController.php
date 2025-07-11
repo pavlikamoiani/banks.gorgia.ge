@@ -16,7 +16,6 @@ class TBCStatementController extends Controller
             $service = new TBCService();
             $movements = $service->getAllAccountMovements($from, $to);
 
-            // Привести к единому формату для фронта
             $data = array_map(function ($item) {
                 return [
                     'contragent' => $item['ns2:partnerName'] ?? '-',

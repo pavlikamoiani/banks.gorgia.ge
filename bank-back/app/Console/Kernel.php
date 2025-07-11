@@ -37,5 +37,6 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\BogMigrateJob::class,
+        \App\Console\Commands\ImportTBCTransactions::class,
     ];
 }

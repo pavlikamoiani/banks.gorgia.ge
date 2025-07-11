@@ -36,7 +36,7 @@ class TBCService
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $soapBody);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HEADER, true); // get headers + body
+            curl_setopt($ch, CURLOPT_HEADER, true);
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
@@ -46,23 +46,19 @@ class TBCService
                 throw new \Exception('No response from TBC server');
             }
 
-            // Separate headers and body
             $headerSize = strpos($response, "\r\n\r\n");
             $body = $headerSize !== false ? substr($response, $headerSize + 4) : $response;
 
-            // Check for HTTP error
             if ($httpCode < 200 || $httpCode >= 300) {
                 Log::error('TBC SOAP: HTTP error', ['http_code' => $httpCode, 'body' => $body]);
                 throw new \Exception('TBC SOAP HTTP error: ' . $httpCode);
             }
 
-            // Check for HTML error page
             if (stripos($body, '<html') !== false || stripos($body, '<body') !== false) {
                 Log::error('TBC SOAP: HTML error response', ['body' => $body]);
                 throw new \Exception('TBC SOAP returned HTML error page');
             }
 
-            // Парсим XML-ответ
             $xml = @simplexml_load_string($body);
             if ($xml === false) {
                 Log::error('TBC SOAP: Invalid XML response', ['body' => $body]);
@@ -70,7 +66,6 @@ class TBCService
             }
             $json = json_decode(json_encode($xml), true);
 
-            // Извлекаем транзакции
             $movements = $json['SOAP-ENV:Body']['ns2:GetAccountMovementsResponseIo']['ns2:accountMovement'] ?? [];
             if (isset($movements['ns2:movementId'])) {
                 $movements = [$movements];
