@@ -84,11 +84,9 @@
 
 .filterActions {
     display: flex;
-    flex-direction: column;
-    gap: 0;
+    gap: 10px;
     align-items: stretch;
-    max-width: 140px;
-    flex: 0 0 140px;
+    flex: 0 0 40px;
 }
 
 .filterButton {

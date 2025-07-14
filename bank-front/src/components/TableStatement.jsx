@@ -85,6 +85,15 @@ const TableStatement = () => {
 		startDate: '',
 		endDate: ''
 	});
+	const [pendingFilters, setPendingFilters] = useState({
+		contragent: '',
+		bank: '',
+		amount: '',
+		transferDate: '',
+		purpose: '',
+		startDate: '',
+		endDate: ''
+	});
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
 	const [dbLoading, setDbLoading] = useState(false);
@@ -96,7 +105,9 @@ const TableStatement = () => {
 	const bankOptions = useMemo(() => {
 		const setBanks = new Set();
 		(data || []).forEach(row => {
-			if (row.bank) setBanks.add(row.bank);
+			if (row.bank) {
+				setBanks.add(row.bank);
+			}
 		});
 		return Array.from(setBanks);
 	}, [data]);
@@ -175,175 +186,89 @@ const TableStatement = () => {
 	// 	}
 	// }, [currentBank]);
 
-	const loadDbData = async () => {
-		setDbLoading(true);
-		setError(null);
+	// const loadDbData = async (filterParams = {}) => {
+	// 	setDbLoading(true);
+	// 	setError(null);
 
-		try {
-			// Параллельно загружаем оба банка
-			const [tbcResponse, bogResponse] = await Promise.all([
-				defaultInstance.get(
-					currentBank === 'gorgia'
-						? '/gorgia-tbc-transactions'
-						: '/anta-tbc-transactions'
-				),
-				defaultInstance.get(
-					currentBank === 'gorgia'
-						? '/gorgia-bog-transactions'
-						: '/anta-bog-transactions'
-				)
-			]);
+	// 	try {
+	// 		const params = { ...filterParams };
+	// 		const [tbcResponse, bogResponse] = await Promise.all([
+	// 			defaultInstance.get(
+	// 				currentBank === 'gorgia'
+	// 					? '/gorgia-tbc-transactions'
+	// 					: '/anta-tbc-transactions',
+	// 				{ params }
+	// 			),
+	// 			defaultInstance.get(
+	// 				currentBank === 'gorgia'
+	// 					? '/gorgia-bog-transactions'
+	// 					: '/anta-bog-transactions',
+	// 				{ params }
+	// 			)
+	// 		]);
 
-			let combinedRows = [];
+	// 		let combinedRows = [];
 
-			// TBC
-			if (tbcResponse.data) {
-				const tbcRows = (tbcResponse.data || []).map((item, idx) => ({
-					id: `tbc-${item.id || idx + 1}`,
-					contragent: item.sender_name || '-',
-					bank: 'TBC Bank',
-					amount: (item.amount ?? 0) + ' ₾',
-					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-					purpose: item.description || '-',
-					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
-				}));
-				combinedRows = [...combinedRows, ...tbcRows];
-			}
+	// 		// TBC
+	// 		if (tbcResponse.data) {
+	// 			const tbcRows = (tbcResponse.data || []).map((item, idx) => ({
+	// 				id: `tbc-${item.id || idx + 1}`,
+	// 				contragent: item.sender_name || '-',
+	// 				bank: 'TBC Bank',
+	// 				amount: (item.amount ?? 0) + ' ₾',
+	// 				transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+	// 				purpose: item.description || '-',
+	// 				syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
+	// 			}));
+	// 			combinedRows = [...combinedRows, ...tbcRows];
+	// 		}
 
-			// BOG
-			if (bogResponse.data) {
-				const bogRows = (bogResponse.data || []).map((item, idx) => ({
-					id: `bog-${item.id || idx + 1}`,
-					contragent: item.sender_name || item.beneficiary_name || '-',
-					bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
-					amount: (item.amount ?? 0) + ' ₾',
-					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-					purpose: item.entry_comment || item.entry_comment_en || '-',
-					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
-				}));
-				combinedRows = [...combinedRows, ...bogRows];
-			}
+	// 		// BOG
+	// 		if (bogResponse.data) {
+	// 			const bogRows = (bogResponse.data || []).map((item, idx) => ({
+	// 				id: `bog-${item.id || idx + 1}`,
+	// 				contragent: item.sender_name || item.beneficiary_name || '-',
+	// 				bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
+	// 				amount: (item.amount ?? 0) + ' ₾',
+	// 				transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+	// 				purpose: item.entry_comment || item.entry_comment_en || '-',
+	// 				syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
+	// 			}));
+	// 			combinedRows = [...combinedRows, ...bogRows];
+	// 		}
 
-			combinedRows.sort((a, b) => {
-				if (a.transferDate === b.transferDate) return 0;
-				if (a.transferDate === '-') return 1;
-				if (b.transferDate === '-') return -1;
-				return new Date(b.transferDate) - new Date(a.transferDate);
-			});
+	// 		combinedRows.sort((a, b) => {
+	// 			if (a.transferDate === b.transferDate) return 0;
+	// 			if (a.transferDate === '-') return 1;
+	// 			if (b.transferDate === '-') return -1;
+	// 			return new Date(b.transferDate) - new Date(a.transferDate);
+	// 		});
 
-			setDbData(combinedRows);
-			setData(combinedRows);
-		} catch (err) {
-			console.error("Error loading DB transactions:", err);
-			setError(t('no_data_found'));
-		} finally {
-			setDbLoading(false);
-		}
-	};
+	// 		setDbData(combinedRows);
+	// 		setData(combinedRows);
+	// 	} catch (err) {
+	// 		console.error("Error loading DB transactions:", err);
+	// 		setError(t('no_data_found'));
+	// 	} finally {
+	// 		setDbLoading(false);
+	// 	}
+	// };
 
-	useEffect(() => {
-		const hasFilter = Object.values(filters).some(val => val && val !== '');
-		if (hasFilter) {
-			loadDbData();
-		} else {
-			setData(prev => prev);
-		}
-	}, [filters, currentBank]);
+	// useEffect(() => {
+	// 	loadDbData(filters);
+	// }, [filters, currentBank]);
 
 	const handleFilterChange = (e) => {
-		setFilters({ ...filters, [e.target.name]: e.target.value });
+		setPendingFilters({ ...pendingFilters, [e.target.name]: e.target.value });
 	};
-
-	const handleFilterReset = () => {
-		setFilters({
-			contragent: '',
-			bank: '',
-			amount: '',
-			transferDate: '',
-			purpose: '',
-			startDate: '',
-			endDate: ''
-		});
-	};
-
-	const handleBankSelect = (bank) => {
-		setFilters(f => ({ ...f, bank }));
-		setBankDropdownOpen(false);
-	};
-
-	useEffect(() => {
-		if (!bankDropdownOpen) return;
-		const handler = (e) => {
-			if (bankDropdownRef.current && !bankDropdownRef.current.contains(e.target)) {
-				setBankDropdownOpen(false);
-			}
-		};
-		document.addEventListener('mousedown', handler);
-		return () => document.removeEventListener('mousedown', handler);
-	}, [bankDropdownOpen]);
-
-	const filteredData = useMemo(() => {
-		const hasFilter = Object.values(filters).some(val => val && val !== '');
-		let source = hasFilter ? dbData : data;
-		let filtered = source;
-		if (filters.contragent) {
-			filtered = filtered.filter(row =>
-				row.contragent && row.contragent.toLowerCase().includes(filters.contragent.toLowerCase())
-			);
-		}
-		if (filters.bank) {
-			filtered = filtered.filter(row =>
-				row.bank && row.bank === filters.bank
-			);
-		}
-		if (filters.amount) {
-			filtered = filtered.filter(row =>
-				String(row.amount).includes(filters.amount)
-			);
-		}
-		if (filters.transferDate) {
-			filtered = filtered.filter(row =>
-				row.transferDate && row.transferDate.includes(filters.transferDate)
-			);
-		}
-		if (filters.purpose) {
-			filtered = filtered.filter(row =>
-				row.purpose && row.purpose.toLowerCase().includes(filters.purpose.toLowerCase())
-			);
-		}
-		if (filters.startDate) {
-			filtered = filtered.filter(row =>
-				row.transferDate && row.transferDate >= filters.startDate
-			);
-		}
-		if (filters.endDate) {
-			filtered = filtered.filter(row =>
-				row.transferDate && row.transferDate <= filters.endDate
-			);
-		}
-		return filtered;
-	}, [data, dbData, filters]);
-
-	const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
-
-	useEffect(() => {
-		if (!pageSizeDropdownOpen) return;
-		const handler = (e) => {
-			if (pageSizeDropdownRef.current && !pageSizeDropdownRef.current.contains(e.target)) {
-				setPageSizeDropdownOpen(false);
-			}
-		};
-		document.addEventListener('mousedown', handler);
-		return () => document.removeEventListener('mousedown', handler);
-	}, [pageSizeDropdownOpen]);
 
 	const [liveMode, setLiveMode] = useState(false);
 
-	const loadLiveData = async () => {
+	const loadLiveData = async (filterParams = {}) => {
 		setLoading(true);
 		setError(null);
 		try {
-			const resp = await defaultInstance.get('/live/today-activities');
+			const resp = await defaultInstance.get('/live/today-activities', { params: filterParams });
 			const rows = (resp.data?.data || []).map(item => ({
 				...item,
 				amount: (item.amount ?? 0) + ' ₾'
@@ -358,6 +283,58 @@ const TableStatement = () => {
 		}
 	};
 
+	const handleApplyFilters = () => {
+		setFilters({ ...pendingFilters });
+		setPage(1);
+		if (liveMode) {
+			loadLiveData({ ...pendingFilters });
+		}
+	};
+
+	const handleFilterReset = () => {
+		setPendingFilters({
+			contragent: '',
+			bank: '',
+			amount: '',
+			transferDate: '',
+			purpose: '',
+			startDate: '',
+			endDate: ''
+		});
+		if (liveMode) {
+			loadLiveData({});
+		}
+	};
+
+	const handleBankSelect = (bank) => {
+		setPendingFilters(f => ({ ...f, bank }));
+		setBankDropdownOpen(false);
+	};
+
+	useEffect(() => {
+		if (!bankDropdownOpen) return;
+		const handler = (e) => {
+			if (bankDropdownRef.current && !bankDropdownRef.current.contains(e.target)) {
+				setBankDropdownOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handler);
+		return () => document.removeEventListener('mousedown', handler);
+	}, [bankDropdownOpen]);
+
+	const pagedData = dbData.slice((page - 1) * pageSize, page * pageSize);
+
+	useEffect(() => {
+		if (!pageSizeDropdownOpen) return;
+		const handler = (e) => {
+			if (pageSizeDropdownRef.current && !pageSizeDropdownRef.current.contains(e.target)) {
+				setPageSizeDropdownOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handler);
+		return () => document.removeEventListener('mousedown', handler);
+	}, [pageSizeDropdownOpen]);
+
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -366,7 +343,7 @@ const TableStatement = () => {
 					<button
 						type="button"
 						style={{
-							background: liveMode ? "#f39c12" : "#0173b1",
+							background: liveMode ? "#2E8B57" : "#0173b1",
 							color: "#fff",
 							border: "none",
 							borderRadius: 6,
@@ -379,7 +356,7 @@ const TableStatement = () => {
 						}}
 						onClick={async () => {
 							setLiveMode(true);
-							await loadLiveData();
+							await loadLiveData({ ...pendingFilters });
 						}}
 						title={t('live_today_transactions') || 'დღევანდელი ტრანზაქციები'}
 					>
@@ -433,9 +410,10 @@ const TableStatement = () => {
 			{filterOpen && (
 				<div className={filterStyles.filterDrawer}>
 					<TableFilter
-						filters={filters}
+						filters={pendingFilters}
 						onChange={handleFilterChange}
 						onReset={handleFilterReset}
+						onApply={handleApplyFilters}
 						fields={[
 							{ name: 'contragent', label: t('contragent'), placeholder: t('search_by_contragent') },
 							{
@@ -469,7 +447,7 @@ const TableStatement = () => {
 				/>
 			</div>
 			<Pagination
-				total={filteredData.length}
+				total={dbData.length}
 				page={page}
 				pageSize={pageSize}
 				onChange={setPage}

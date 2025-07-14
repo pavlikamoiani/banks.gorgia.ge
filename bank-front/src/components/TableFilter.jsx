@@ -14,7 +14,8 @@ const TableFilter = ({
     bankDropdownRef,
     onBankSelect,
     onRoleSelect,
-    t
+    t,
+    onApply
 }) => {
     const { t: tHook } = useTranslation();
     const translate = t || tHook;
@@ -146,7 +147,15 @@ const TableFilter = ({
                 <div className={styles.filterFieldsRow}>
                     {usedFields.map(renderField)}
                 </div>
-                <div className={styles.filterActions}>
+                <div className={styles.filterActions} style={{ display: 'flex' }}>
+                    <button
+                        type="button"
+                        className={styles.filterButton}
+                        style={{ marginLeft: 8 }}
+                        onClick={onApply}
+                    >
+                        {translate('apply') || 'Apply'}
+                    </button>
                     <button
                         type="button"
                         className={styles.filterButton}
