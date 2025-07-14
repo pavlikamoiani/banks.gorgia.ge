@@ -13,6 +13,9 @@ class TBCStatementController extends Controller
 {
     public function todayActivities(Request $request)
     {
+
+        set_time_limit(600);
+
         $company = $request->path() === 'api/gorgia/tbc/todayactivities' ? 'gorgia' : 'anta';
 
         $today = Carbon::now()->format('Y-m-d');

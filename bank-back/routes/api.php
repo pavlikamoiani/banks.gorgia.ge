@@ -4,6 +4,7 @@ use App\Http\Controllers\ContragentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BOGStatementController;
 use App\Http\Controllers\TBCStatementController;
+use App\Http\Controllers\LiveStatementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Models\User;
@@ -67,6 +68,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tbc-password/update', [TbcPasswordController::class, 'update']);
 });
 
+// Live Statement
+Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
 
 // BOG Statement Migration
 Route::get('/bog/migrate-all-statements', [BOGStatementController::class, 'migrateAllStatementsByMonth']);

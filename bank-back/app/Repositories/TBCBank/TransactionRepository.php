@@ -2,10 +2,8 @@
 
 namespace App\Repositories\TBCBank;
 
-use App\Models\Bank;
 use App\Models\Transaction;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TransactionRepository extends BaseRepository

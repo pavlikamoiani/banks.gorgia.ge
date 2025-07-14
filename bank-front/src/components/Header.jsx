@@ -112,14 +112,14 @@ const Header = () => {
 	const handleTbcPwModalOpen = () => setTbcPwModalOpen(true);
 	const handleTbcPwModalClose = () => setTbcPwModalOpen(false);
 
-	const handleTbcPwUpdated = () => {
-		setTbcPwModalOpen(false);
-		setTbcPwLoading(true);
-		defaultInstance.get('/tbc-password/info').then(res => {
-			setTbcPwInfo(res.data);
-			setTbcPwLoading(false);
-		});
-	};
+	// const handleTbcPwUpdated = () => {
+	// 	setTbcPwModalOpen(false);
+	// 	setTbcPwLoading(true);
+	// 	defaultInstance.get('/tbc-password/info').then(res => {
+	// 		setTbcPwInfo(res.data);
+	// 		setTbcPwLoading(false);
+	// 	});
+	// };
 
 	return (
 		<header className="main-header">
@@ -376,7 +376,7 @@ const Header = () => {
 			<Modal
 				open={tbcPwModalOpen}
 				onClose={handleTbcPwModalClose}
-				onUpdated={handleTbcPwUpdated}
+			// onUpdated={handleTbcPwUpdated}
 			/>
 		</header>
 	);

@@ -8,7 +8,7 @@ import defaultInstance from '../api/defaultInstance';
 import Pagination from './Pagination';
 import TableFilter from './TableFilter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faXmark, faBolt } from '@fortawesome/free-solid-svg-icons';
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
@@ -103,77 +103,77 @@ const TableStatement = () => {
 
 	const initialLoadedRef = useRef(false);
 
-	const loadTodayActivities = async () => {
-		setLoading(true);
-		setError(null);
-		const now = new Date();
-		const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
-		setLastSyncDate(formattedNow);
+	// const loadTodayActivities = async () => {
+	// 	setLoading(true);
+	// 	setError(null);
+	// 	const now = new Date();
+	// 	const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
+	// 	setLastSyncDate(formattedNow);
 
-		try {
-			// Параллельно загружаем оба банка
-			const [tbcResponse, bogResponse] = await Promise.all([
-				defaultInstance.get(
-					currentBank === 'gorgia'
-						? '/gorgia/tbc/todayactivities'
-						: '/anta/tbc/todayactivities'
-				),
-				defaultInstance.get(
-					currentBank === 'gorgia'
-						? '/gorgia/bog/todayactivities'
-						: '/anta/bog/todayactivities'
-				)
-			]);
+	// 	try {
+	// 		// Параллельно загружаем оба банка
+	// 		const [tbcResponse, bogResponse] = await Promise.all([
+	// 			defaultInstance.get(
+	// 				currentBank === 'gorgia'
+	// 					? '/gorgia/tbc/todayactivities'
+	// 					: '/anta/tbc/todayactivities'
+	// 			),
+	// 			defaultInstance.get(
+	// 				currentBank === 'gorgia'
+	// 					? '/gorgia/bog/todayactivities'
+	// 					: '/anta/bog/todayactivities'
+	// 			)
+	// 		]);
 
-			let combinedRows = [];
+	// 		let combinedRows = [];
 
-			// TBC
-			if (tbcResponse.data?.activities) {
-				const tbcRows = (tbcResponse.data.activities || []).map((item, idx) => ({
-					id: `tbc-${idx + 1}`,
-					contragent: item.Sender?.Name || '',
-					bank: item.Sender?.BankName || 'TBC Bank',
-					amount: (item.Amount || '') + ' ₾',
-					transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-					purpose: item.EntryComment || '',
-					syncDate: formattedNow
-				}));
-				combinedRows = [...combinedRows, ...tbcRows];
-			}
+	// 		// TBC
+	// 		if (tbcResponse.data?.activities) {
+	// 			const tbcRows = (tbcResponse.data.activities || []).map((item, idx) => ({
+	// 				id: `tbc-${idx + 1}`,
+	// 				contragent: item.Sender?.Name || '',
+	// 				bank: item.Sender?.BankName || 'TBC Bank',
+	// 				amount: (item.Amount || '') + ' ₾',
+	// 				transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
+	// 				purpose: item.EntryComment || '',
+	// 				syncDate: formattedNow
+	// 			}));
+	// 			combinedRows = [...combinedRows, ...tbcRows];
+	// 		}
 
-			// BOG
-			if (bogResponse.data?.activities || bogResponse.data) {
-				const bogRows = (bogResponse.data?.activities || bogResponse.data || []).map((item, idx) => ({
-					id: `bog-${idx + 1}`,
-					contragent: item.Sender?.Name || '',
-					bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
-					amount: (item.Amount || '') + ' ₾',
-					transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-					purpose: item.EntryComment || '',
-					syncDate: formattedNow
-				}));
-				combinedRows = [...combinedRows, ...bogRows];
-			}
+	// 		// BOG
+	// 		if (bogResponse.data?.activities || bogResponse.data) {
+	// 			const bogRows = (bogResponse.data?.activities || bogResponse.data || []).map((item, idx) => ({
+	// 				id: `bog-${idx + 1}`,
+	// 				contragent: item.Sender?.Name || '',
+	// 				bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
+	// 				amount: (item.Amount || '') + ' ₾',
+	// 				transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
+	// 				purpose: item.EntryComment || '',
+	// 				syncDate: formattedNow
+	// 			}));
+	// 			combinedRows = [...combinedRows, ...bogRows];
+	// 		}
 
-			combinedRows.sort((a, b) => {
-				return new Date(b.transferDate) - new Date(a.transferDate);
-			});
+	// 		combinedRows.sort((a, b) => {
+	// 			return new Date(b.transferDate) - new Date(a.transferDate);
+	// 		});
 
-			setData(combinedRows);
-		} catch (err) {
-			console.error("Error loading transactions:", err);
-			setError(t('failed_to_load_transactions'));
-		} finally {
-			setLoading(false);
-		}
-	};
+	// 		setData(combinedRows);
+	// 	} catch (err) {
+	// 		console.error("Error loading transactions:", err);
+	// 		setError(t('failed_to_load_transactions'));
+	// 	} finally {
+	// 		setLoading(false);
+	// 	}
+	// };
 
-	useEffect(() => {
-		if (!initialLoadedRef.current) {
-			loadTodayActivities();
-			initialLoadedRef.current = true;
-		}
-	}, [currentBank]);
+	// useEffect(() => {
+	// 	if (!initialLoadedRef.current) {
+	// 		loadTodayActivities();
+	// 		initialLoadedRef.current = true;
+	// 	}
+	// }, [currentBank]);
 
 	const loadDbData = async () => {
 		setDbLoading(true);
@@ -337,13 +337,55 @@ const TableStatement = () => {
 		return () => document.removeEventListener('mousedown', handler);
 	}, [pageSizeDropdownOpen]);
 
+	const [liveMode, setLiveMode] = useState(false);
 
+	const loadLiveData = async () => {
+		setLoading(true);
+		setError(null);
+		try {
+			const resp = await defaultInstance.get('/live/today-activities');
+			const rows = (resp.data?.data || []).map(item => ({
+				...item,
+				amount: (item.amount ?? 0) + ' ₾'
+			}));
+			setData(rows);
+			setDbData(rows);
+			setPage(1);
+		} catch (err) {
+			setError(t('failed_to_load_transactions'));
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">{t('statement')}</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+					<button
+						type="button"
+						style={{
+							background: liveMode ? "#f39c12" : "#0173b1",
+							color: "#fff",
+							border: "none",
+							borderRadius: 6,
+							padding: "8px 16px",
+							cursor: "pointer",
+							fontWeight: 500,
+							minHeight: '40px',
+							display: 'flex',
+							alignItems: 'center'
+						}}
+						onClick={async () => {
+							setLiveMode(true);
+							await loadLiveData();
+						}}
+						title={t('live_today_transactions') || 'დღევანდელი ტრანზაქციები'}
+					>
+						<FontAwesomeIcon icon={faBolt} style={{ marginRight: 6 }} />
+						{t('live') || 'Live'}
+					</button>
 					<div className={tableStatementStyles.pageSizeDropdownWrapper} ref={pageSizeDropdownRef}>
 						<button
 							type="button"
