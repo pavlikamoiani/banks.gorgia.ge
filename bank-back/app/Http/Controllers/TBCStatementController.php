@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Repositories\TBCBank\TransactionRepository;
 
 class TBCStatementController extends Controller
@@ -17,10 +18,22 @@ class TBCStatementController extends Controller
         // Get today's date in Y-m-d format
         $today = Carbon::now()->format('Y-m-d');
 
-        // Query transactions from today
+        // First sync today's transactions
+        try {
+            Log::info("Starting TBC transaction sync for today: {$today}");
+            $repository = new TransactionRepository();
+            $repository->transactionsByTimestamp(Carbon::today()->startOfDay());
+            Log::info("TBC transaction sync completed");
+        } catch (\Exception $e) {
+            Log::error('Error syncing TBC transactions: ' . $e->getMessage());
+        }
+
+        // Now query transactions from today
         $transactions = Transaction::whereDate('transaction_date', $today)
             ->orderBy('transaction_date', 'desc')
             ->get();
+
+        Log::info('TBC today transactions count: ' . $transactions->count());
 
         // Format the transactions to match the structure expected by the frontend
         $formattedTransactions = $transactions->map(function ($transaction) {

@@ -155,7 +155,6 @@ const TableStatement = () => {
 				combinedRows = [...combinedRows, ...bogRows];
 			}
 
-			// Сортировка по дате (новые сверху)
 			combinedRows.sort((a, b) => {
 				return new Date(b.transferDate) - new Date(a.transferDate);
 			});
@@ -225,7 +224,6 @@ const TableStatement = () => {
 				combinedRows = [...combinedRows, ...bogRows];
 			}
 
-			// Сортировка по дате (новые сверху)
 			combinedRows.sort((a, b) => {
 				if (a.transferDate === b.transferDate) return 0;
 				if (a.transferDate === '-') return 1;

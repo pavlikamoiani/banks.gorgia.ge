@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 class TransactionRepository extends BaseRepository
 {
     private $lastTimestamp;
+    private $endTimestamp;
     private $soapActionHeader;
 
     /**
@@ -31,6 +32,7 @@ class TransactionRepository extends BaseRepository
         }
 
         $this->lastTimestamp = $timestamp->format('Y-m-d\\TH:i:s');
+        $this->endTimestamp = Carbon::now()->format('Y-m-d\\T23:59:59');
 
         $this->saveNewTransactions();
     }
@@ -39,55 +41,61 @@ class TransactionRepository extends BaseRepository
     {
         $page = 0;
         $limit = 700;
+        $totalSaved = 0;
+        $totalSkipped = 0;
 
-        $gorgiaTaxCode = '245621288';
-
-
-        $response = $this->getTransactionsResponse($page, $limit);
-        \Log::debug('TBC SOAP RAW RESPONSE: ' . $response);
-        $responseAsObject = $this->responseAsObject($response);
-        if (!isset($responseAsObject->Body)) {
-            \Log::error('TBC SOAP: Body property missing in response', ['response' => $responseAsObject]);
-            throw new \Exception('TBC SOAP: Body property missing in response. Check logs for details.');
-        }
-        $total = $responseAsObject->Body->GetAccountMovementsResponseIo->result->totalCount;
-
-        while ($total >= ($page * $limit)) {
+        do {
             $response = $this->getTransactionsResponse($page, $limit);
-            \Log::debug('TBC SOAP RAW RESPONSE (page loop): ' . $response);
+            \Log::debug('TBC SOAP RAW RESPONSE (page loop): ' . substr($response, 0, 500) . '...');
             $responseAsObject = $this->responseAsObject($response);
+
             if (!isset($responseAsObject->Body)) {
-                \Log::error('TBC SOAP: Body property missing in response (page loop)', ['response' => $responseAsObject]);
+                \Log::error('TBC SOAP: Body property missing in response (page loop)', ['response' => substr(json_encode($responseAsObject), 0, 500)]);
                 throw new \Exception('TBC SOAP: Body property missing in response (page loop). Check logs for details.');
             }
+
+            $totalCount = $responseAsObject->Body->GetAccountMovementsResponseIo->result->totalCount ?? 0;
+            \Log::info("TBC transactions totalCount: {$totalCount}, page: {$page}");
+
+            $movements = $responseAsObject->Body->GetAccountMovementsResponseIo->accountMovement ?? [];
+            if (!is_array($movements) && !is_null($movements)) {
+                $movements = [$movements]; // Handle case when only one transaction is returned
+            }
+
+            // If no transactions are returned, break the loop
+            if (empty($movements)) {
+                \Log::info("No movements found on page {$page}, stopping.");
+                break;
+            }
+
             try {
-                foreach ($responseAsObject->Body->GetAccountMovementsResponseIo->accountMovement as $transaction) {
+                foreach ($movements as $transaction) {
+                    // Save all transactions without filtering by tax code
+                    try {
+                        if (property_exists($transaction, 'movementId') && !is_object($transaction->movementId)) {
+                            // Check if transaction already exists in DB
+                            $exists = Transaction::where('bank_statement_id', $transaction->movementId)->exists();
 
-                    $taxPayerCheck = property_exists($transaction, 'taxpayerCode')
-                        && !is_object($transaction->taxpayerCode)
-                        && ($transaction->taxpayerCode != $gorgiaTaxCode || $transaction->operationCode == "TBCPA");
-
-                    $partnerTaxCheck = property_exists($transaction, 'partnerTaxCode')
-                        && !is_object($transaction->partnerTaxCode)
-                        && ($transaction->partnerTaxCode != $gorgiaTaxCode || $transaction->operationCode == "TBCPA");
-
-                    $posCheck = mb_strpos('ინკასირებული', $transaction->description) === false
-                        && mb_strpos('ინკასაცია', $transaction->description) === false;
-
-                    if ($taxPayerCheck && $partnerTaxCheck && $posCheck) {
-                        try {
-                            if (property_exists($transaction, 'movementId') && !is_object($transaction->movementId) && Transaction::where('bank_statement_id', $transaction->movementId)->count() == 0)
+                            if (!$exists) {
                                 $this->saveInLocalDB($transaction);
-                        } catch (\Exception $e) {
-                            Log::error($e->getMessage());
-                            Log::debug(json_encode($transaction, JSON_UNESCAPED_UNICODE));
+                                $totalSaved++;
+                            } else {
+                                $totalSkipped++;
+                            }
                         }
+                    } catch (\Exception $e) {
+                        Log::error('Error saving transaction: ' . $e->getMessage());
+                        Log::debug(json_encode($transaction, JSON_UNESCAPED_UNICODE));
                     }
                 }
-            } catch (Exeption $e) {
+            } catch (\Exception $e) {
+                Log::error("Error processing TBC transactions: " . $e->getMessage());
             }
+
             $page++;
-        }
+        } while ($totalCount > ($page * $limit));
+
+        Log::info("TBC transactions sync completed. Total saved: {$totalSaved}, Total skipped: {$totalSkipped}");
     }
 
     /**
@@ -174,6 +182,7 @@ class TransactionRepository extends BaseRepository
                             <myg:pageSize>' . $limit . '</myg:pageSize>
                         </myg:pager>
                         <myg:periodFrom>' . $this->lastTimestamp . '</myg:periodFrom>
+                        <myg:periodTo>' . $this->endTimestamp . '</myg:periodTo>
                       </myg:accountMovementFilterIo>
                     </myg:GetAccountMovementsRequestIo>
                   </soapenv:Body>

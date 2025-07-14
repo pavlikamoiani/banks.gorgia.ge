@@ -17,5 +17,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/test-log', function () {
+    \Log::info('Это тестовая запись в лог');
+    return 'Готово';
+});
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
