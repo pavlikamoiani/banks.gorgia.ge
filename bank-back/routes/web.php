@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,11 +16,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
-
-Route::get('/test-log', function () {
-    \Log::info('Это тестовая запись в лог');
-    return 'Готово';
 });
 
 Route::post('/login', [AuthController::class, 'login']);

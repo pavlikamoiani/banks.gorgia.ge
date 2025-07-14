@@ -37,7 +37,13 @@ class TransactionRepository extends BaseRepository
         $this->saveNewTransactions();
     }
 
-    private function saveNewTransactions()
+    public function setPeriod($from, $to)
+    {
+        $this->lastTimestamp = $from->format('Y-m-d\TH:i:s');
+        $this->endTimestamp = $to->format('Y-m-d\T23:59:59');
+    }
+
+    public function saveNewTransactions()
     {
         $page = 0;
         $limit = 700;
@@ -59,10 +65,9 @@ class TransactionRepository extends BaseRepository
 
             $movements = $responseAsObject->Body->GetAccountMovementsResponseIo->accountMovement ?? [];
             if (!is_array($movements) && !is_null($movements)) {
-                $movements = [$movements]; // Handle case when only one transaction is returned
+                $movements = [$movements];
             }
 
-            // If no transactions are returned, break the loop
             if (empty($movements)) {
                 \Log::info("No movements found on page {$page}, stopping.");
                 break;
@@ -70,10 +75,8 @@ class TransactionRepository extends BaseRepository
 
             try {
                 foreach ($movements as $transaction) {
-                    // Save all transactions without filtering by tax code
                     try {
                         if (property_exists($transaction, 'movementId') && !is_object($transaction->movementId)) {
-                            // Check if transaction already exists in DB
                             $exists = Transaction::where('bank_statement_id', $transaction->movementId)->exists();
 
                             if (!$exists) {
@@ -120,7 +123,6 @@ class TransactionRepository extends BaseRepository
         ])->exists();
 
         if ($exists) {
-            // Skip if all values are the same
             return;
         }
 

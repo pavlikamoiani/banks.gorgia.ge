@@ -15,10 +15,8 @@ class TBCStatementController extends Controller
     {
         $company = $request->path() === 'api/gorgia/tbc/todayactivities' ? 'gorgia' : 'anta';
 
-        // Get today's date in Y-m-d format
         $today = Carbon::now()->format('Y-m-d');
 
-        // First sync today's transactions
         try {
             Log::info("Starting TBC transaction sync for today: {$today}");
             $repository = new TransactionRepository();
@@ -28,14 +26,12 @@ class TBCStatementController extends Controller
             Log::error('Error syncing TBC transactions: ' . $e->getMessage());
         }
 
-        // Now query transactions from today
         $transactions = Transaction::whereDate('transaction_date', $today)
             ->orderBy('transaction_date', 'desc')
             ->get();
 
         Log::info('TBC today transactions count: ' . $transactions->count());
 
-        // Format the transactions to match the structure expected by the frontend
         $formattedTransactions = $transactions->map(function ($transaction) {
             return [
                 'id' => $transaction->id,
@@ -56,8 +52,6 @@ class TBCStatementController extends Controller
 
     public function statement(Request $request)
     {
-        // Additional method that could be implemented to get historical statements
-        // Similar to BOGStatementController's statement method
         return response()->json(['message' => 'Not implemented yet']);
     }
 
