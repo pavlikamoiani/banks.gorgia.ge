@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Models\User;
 use App\Http\Controllers\TbcPasswordController;
-use App\Http\Controllers\GorgiaTransactionController;
+use App\Http\Controllers\TransactionController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -22,13 +22,10 @@ Route::get('/gorgia/bog/todayactivities', [BOGStatementController::class, 'today
 Route::get('/bog/statement/{accountNumber}/{currency}/{startDate}/{endDate}/{includeToday?}/{orderByDate?}', [BOGStatementController::class, 'statement']);
 
 // All Gorgia Transactions
-Route::get('/gorgia-transactions', [GorgiaTransactionController::class, 'index']);
+Route::get('/gorgia-transactions', [TransactionController::class, 'index']);
 
-// BOG Anta Statements
-Route::get('/anta/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
-
-// TBC Anta Statements
-Route::get('/anta/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
+// All Anta Statements
+Route::get('/anta-transactions', [TransactionController::class, 'index']);
 
 // TBC Sync Today's Transactions
 Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);

@@ -18,6 +18,13 @@ const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 const TableStatement = () => {
 	const { t } = useTranslation();
 	const location = useLocation();
+	const [data, setData] = useState([]);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(null);
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+	const [pageSizeDropdownOpen, setPageSizeDropdownOpen] = useState(false);
+	const pageSizeDropdownRef = useRef(null);
 
 	const [expandedRows, setExpandedRows] = useState({});
 
@@ -67,14 +74,6 @@ const TableStatement = () => {
 		{ key: 'syncDate', label: t('syncDate') }
 	];
 
-	const [data, setData] = useState([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState(null);
-	const [page, setPage] = useState(1);
-	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
-	const [pageSizeDropdownOpen, setPageSizeDropdownOpen] = useState(false);
-	const pageSizeDropdownRef = useRef(null);
-
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({
 		contragent: '',
@@ -99,9 +98,6 @@ const TableStatement = () => {
 	const [dbLoading, setDbLoading] = useState(false);
 
 	const [dbData, setDbData] = useState([]);
-	// eslint-disable-next-line
-	const [lastSyncDate, setLastSyncDate] = useState('');
-
 	const bankOptions = useMemo(() => {
 		const setBanks = new Set();
 		(data || []).forEach(row => {
@@ -112,79 +108,10 @@ const TableStatement = () => {
 		return Array.from(setBanks);
 	}, [data]);
 
-	const initialLoadedRef = useRef(false);
-
-	// const loadTodayActivities = async () => {
-	// 	setLoading(true);
-	// 	setError(null);
-	// 	const now = new Date();
-	// 	const formattedNow = now.toLocaleString({ hour12: false }).replace('T', ' ');
-	// 	setLastSyncDate(formattedNow);
-
-	// 	try {
-	// 		// Параллельно загружаем оба банка
-	// 		const [tbcResponse, bogResponse] = await Promise.all([
-	// 			defaultInstance.get(
-	// 				currentBank === 'gorgia'
-	// 					? '/gorgia/tbc/todayactivities'
-	// 					: '/anta/tbc/todayactivities'
-	// 			),
-	// 			defaultInstance.get(
-	// 				currentBank === 'gorgia'
-	// 					? '/gorgia/bog/todayactivities'
-	// 					: '/anta/bog/todayactivities'
-	// 			)
-	// 		]);
-
-	// 		let combinedRows = [];
-
-	// 		// TBC
-	// 		if (tbcResponse.data?.activities) {
-	// 			const tbcRows = (tbcResponse.data.activities || []).map((item, idx) => ({
-	// 				id: `tbc-${idx + 1}`,
-	// 				contragent: item.Sender?.Name || '',
-	// 				bank: item.Sender?.BankName || 'TBC Bank',
-	// 				amount: (item.Amount || '') + ' ₾',
-	// 				transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-	// 				purpose: item.EntryComment || '',
-	// 				syncDate: formattedNow
-	// 			}));
-	// 			combinedRows = [...combinedRows, ...tbcRows];
-	// 		}
-
-	// 		// BOG
-	// 		if (bogResponse.data?.activities || bogResponse.data) {
-	// 			const bogRows = (bogResponse.data?.activities || bogResponse.data || []).map((item, idx) => ({
-	// 				id: `bog-${idx + 1}`,
-	// 				contragent: item.Sender?.Name || '',
-	// 				bank: item.Sender?.BankName || 'ბანკი არ არის მითითებული',
-	// 				amount: (item.Amount || '') + ' ₾',
-	// 				transferDate: (item.PostDate || item.ValueDate || '').split('T')[0],
-	// 				purpose: item.EntryComment || '',
-	// 				syncDate: formattedNow
-	// 			}));
-	// 			combinedRows = [...combinedRows, ...bogRows];
-	// 		}
-
-	// 		combinedRows.sort((a, b) => {
-	// 			return new Date(b.transferDate) - new Date(a.transferDate);
-	// 		});
-
-	// 		setData(combinedRows);
-	// 	} catch (err) {
-	// 		console.error("Error loading transactions:", err);
-	// 		setError(t('failed_to_load_transactions'));
-	// 	} finally {
-	// 		setLoading(false);
-	// 	}
-	// };
-
-	// useEffect(() => {
-	// 	if (!initialLoadedRef.current) {
-	// 		loadTodayActivities();
-	// 		initialLoadedRef.current = true;
-	// 	}
-	// }, [currentBank]);
+	const getEndpoint = () => {
+		if (currentBank === 'anta') return '/anta-transactions';
+		return '/gorgia-transactions';
+	};
 
 	const loadDbData = async (filterParams = {}) => {
 		setDbLoading(true);
@@ -192,7 +119,8 @@ const TableStatement = () => {
 
 		try {
 			const params = { ...filterParams };
-			const response = await defaultInstance.get('/gorgia-transactions', { params });
+			const endpoint = getEndpoint(); // <-- используем динамический эндпоинт
+			const response = await defaultInstance.get(endpoint, { params });
 
 			let combinedRows = [];
 
@@ -227,6 +155,7 @@ const TableStatement = () => {
 
 	useEffect(() => {
 		loadDbData(filters);
+		// eslint-disable-next-line
 	}, [filters, currentBank]);
 
 	const handleFilterChange = (e) => {
@@ -247,6 +176,7 @@ const TableStatement = () => {
 			setData(rows);
 			setDbData(rows);
 			setPage(1);
+			// eslint-disable-next-line
 		} catch (err) {
 			setError(t('failed_to_load_transactions'));
 		} finally {

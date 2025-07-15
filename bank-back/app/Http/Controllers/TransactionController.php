@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Models\Bank;
 
-class GorgiaTransactionController extends Controller
+class TransactionController extends Controller
 {
     public function index(Request $request)
     {
@@ -19,8 +19,6 @@ class GorgiaTransactionController extends Controller
                 $query->where('bank_id', $bankId);
             }
         }
-
-        // Добавьте фильтрацию по другим полям, если нужно
 
         return $query->orderBy('transaction_date', 'desc')->get();
     }
