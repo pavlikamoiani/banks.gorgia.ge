@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\TBCStatementController;
 use App\Http\Controllers\BOGStatementController;
 use App\Repositories\BankOfGeorgia\BOGService;
-use Carbon\Carbon;
 
 class LiveStatementController extends Controller
 {
@@ -24,11 +23,19 @@ class LiveStatementController extends Controller
 
             if ($bankName === 'TBC Bank') {
                 $bankName = 'სს "თიბისი ბანკი"';
+            } else if ($bankName === 'სს "თიბისი ბანკი"') {
+                $bankName = 'სს "თიბისი ბანკი"';
             }
+
+            $contragent = $item['Sender']['Name'] ?? '-';
+            if (strpos($contragent, 'Wallet/domestic/') === 0) {
+                $contragent = substr($contragent, strlen('Wallet/domestic/'));
+            }
+
             $tbcRows[] = [
                 'id' => 'tbc-' . ($item['id'] ?? uniqid()),
                 'bankType' => 'TBC',
-                'contragent' => $item['Sender']['Name'] ?? '-',
+                'contragent' => $contragent,
                 'bank' => $bankName,
                 'amount' => $item['Amount'] ?? 0,
                 'transferDate' => isset($item['PostDate']) ? substr($item['PostDate'], 0, 10) : '-',
@@ -56,7 +63,6 @@ class LiveStatementController extends Controller
 
         $all = array_merge($tbcRows, $bogRows);
 
-        // Фильтрация по параметрам запроса
         $contragent = $request->input('contragent');
         $bank = $request->input('bank');
         $amount = $request->input('amount');
