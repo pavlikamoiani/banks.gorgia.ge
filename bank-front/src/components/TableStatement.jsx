@@ -340,19 +340,11 @@ const TableStatement = () => {
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">{t('statement')}</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-					<button
+					<button className={tableStatementStyles.liveBtn}
 						type="button"
 						style={{
 							background: liveMode ? "#2E8B57" : "#0173b1",
-							color: "#fff",
-							border: "none",
-							borderRadius: 6,
-							padding: "8px 16px",
 							cursor: loading ? "not-allowed" : "pointer",
-							fontWeight: 500,
-							minHeight: '40px',
-							display: 'flex',
-							alignItems: 'center'
 						}}
 						onClick={async () => {
 							if (loading) return;

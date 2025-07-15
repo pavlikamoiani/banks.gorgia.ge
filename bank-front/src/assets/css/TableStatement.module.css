@@ -4,6 +4,19 @@
     align-items: center;
 }
 
+.liveBtn {
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 500;
+    min-height: 40px;
+    min-width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 .pageSizeBtn {
     background: #0173b1;
@@ -14,7 +27,6 @@
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
-    margin-left: 4px;
     transition: background 0.18s, color 0.18s, border 0.18s;
     box-shadow: 0 1.5px 4px rgba(1, 115, 177, 0.06);
     min-width: 40px;
