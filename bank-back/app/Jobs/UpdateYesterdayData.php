@@ -8,7 +8,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Repositories\BankOfGeorgia\BOGService;
-use App\Models\GorgiaBogTransaction;
+use App\Models\Transaction;
+use App\Models\Bank;
 use App\Models\Contragent;
 use Carbon\Carbon;
 use Log;
@@ -42,6 +43,7 @@ class UpdateYesterdayData implements ShouldQueue
         ];
 
         $yesterday = Carbon::yesterday()->format('Y-m-d');
+        $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? null;
 
         foreach ($accounts as $account) {
             try {
@@ -120,47 +122,37 @@ class UpdateYesterdayData implements ShouldQueue
                     }
                 }
 
-                $exists = GorgiaBogTransaction::where(function ($q) use ($activity) {
-                    if (!empty($activity['Id'])) $q->orWhere('bog_id', $activity['Id']);
-                    if (!empty($activity['DocKey'])) $q->orWhere('doc_key', $activity['DocKey']);
-                    if (!empty($activity['DocNo'])) $q->orWhere('doc_no', $activity['DocNo']);
-                })->exists();
+                $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
+
+                if (!$bankStatementId) {
+                    $skipped++;
+                    continue;
+                }
+
+                $exists = Transaction::where('bank_statement_id', $bankStatementId)
+                    ->where('bank_id', $bogBankId)
+                    ->exists();
 
                 if ($exists) {
                     $skipped++;
                     continue;
                 }
 
-                GorgiaBogTransaction::create([
-                    'bog_id' => $activity['Id'] ?? null,
-                    'doc_key' => $activity['DocKey'] ?? null,
-                    'doc_no' => $activity['DocNo'] ?? null,
-                    'transaction_date' => $activity['PostDate'] ?? null,
-                    'value_date' => $activity['ValueDate'] ?? null,
-                    'entry_type' => $activity['EntryType'] ?? null,
-                    'entry_comment' => $activity['EntryComment'] ?? null,
-                    'entry_comment_en' => $activity['EntryCommentEn'] ?? null,
-                    'nomination' => $activity['Nomination'] ?? null,
-                    'credit' => $activity['Credit'] ?? null,
-                    'debit' => $activity['Debit'] ?? null,
-                    'amount' => $activity['Amount'] ?? null,
-                    'amount_base' => $activity['AmountBase'] ?? null,
-                    'payer_name' => $activity['PayerName'] ?? null,
-                    'payer_inn' => $activity['PayerInn'] ?? null,
-                    'sender_name' => $activity['Sender']['Name'] ?? null,
-                    'sender_inn' => $activity['Sender']['Inn'] ?? null,
-                    'sender_account_number' => $activity['Sender']['AccountNumber'] ?? null,
-                    'sender_bank_code' => $activity['Sender']['BankCode'] ?? null,
-                    'sender_bank_name' => $activity['Sender']['BankName'] ?? null,
-                    'beneficiary_name' => $activity['Beneficiary']['Name'] ?? null,
-                    'beneficiary_inn' => $activity['Beneficiary']['Inn'] ?? null,
-                    'beneficiary_account_number' => $activity['Beneficiary']['AccountNumber'] ?? null,
-                    'beneficiary_bank_code' => $activity['Beneficiary']['BankCode'] ?? null,
-                    'beneficiary_bank_name' => $activity['Beneficiary']['BankName'] ?? null,
-                    'raw' => $activity,
-                ]);
+                $transaction = new Transaction();
+                $transaction->bank_statement_id = $bankStatementId;
+                $transaction->bank_id = $bogBankId;
+                $transaction->contragent_id = $activity['Sender']['Inn'] ?? null;
+                $transaction->amount = $activity['Amount'] ?? null;
+                $transaction->transaction_date = $activity['PostDate'] ?? null;
+                $transaction->reflection_date = $activity['ValueDate'] ?? null;
+                $transaction->sender_name = $activity['Sender']['Name'] ?? null;
+                $transaction->description = $activity['EntryComment'] ?? $activity['EntryCommentEn'] ?? null;
+                $transaction->status_code = $activity['EntryType'] ?? null;
+                $transaction->save();
+
                 $inserted++;
             }
+
             Log::info("UpdateYesterdayData: $account $yesterday - inserted: $inserted, skipped: $skipped");
         }
     }

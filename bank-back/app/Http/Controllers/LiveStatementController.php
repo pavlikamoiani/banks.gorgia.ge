@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\TBCStatementController;
 use App\Repositories\BankOfGeorgia\BOGService;
+use App\Models\Transaction;
+use App\Models\Bank;
 
 class LiveStatementController extends Controller
 {
@@ -51,6 +53,7 @@ class LiveStatementController extends Controller
         $currency = $request->input('currency', env('BOG_CURRENCY', 'GEL'));
         $bogData = $bogService->getTodayActivities($account, $currency);
         $bogRows = [];
+        $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? 2;
         foreach (($bogData['activities'] ?? (is_array($bogData) ? $bogData : [])) as $item) {
             $syncDate = $item['PostDate'] ?? '-';
             if ($syncDate !== '-' && strlen($syncDate) >= 10) {
@@ -67,6 +70,25 @@ class LiveStatementController extends Controller
                 'purpose' => $item['EntryComment'] ?? '-',
                 'syncDate' => $syncDate,
             ];
+
+            $bankStatementId = $item['Id'] ?? $item['DocKey'] ?? null;
+            if (!$bankStatementId) continue;
+            $exists = Transaction::where('bank_statement_id', $bankStatementId)
+                ->where('bank_id', $bogBankId)
+                ->exists();
+            if (!$exists) {
+                Transaction::create([
+                    'contragent_id' => $item['Sender']['Inn'] ?? null,
+                    'bank_id' => $bogBankId,
+                    'bank_statement_id' => $bankStatementId,
+                    'amount' => $item['Amount'] ?? null,
+                    'transaction_date' => $item['PostDate'] ?? null,
+                    'reflection_date' => $item['ValueDate'] ?? null,
+                    'sender_name' => $item['Sender']['Name'] ?? null,
+                    'description' => $item['EntryComment'] ?? $item['EntryCommentEn'] ?? null,
+                    'status_code' => $item['EntryType'] ?? null,
+                ]);
+            }
         }
 
         $all = array_merge($tbcRows, $bogRows);

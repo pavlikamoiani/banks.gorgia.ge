@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\GorgiaBogTransaction;
 use App\Models\Contragent;
+use App\Models\Transaction;
+use App\Models\Bank;
 use Carbon\Carbon;
 use Log;
 
@@ -195,56 +197,33 @@ class BogMigrateJob extends Command
                         }
                     }
 
-                    // Проверяем дубликаты по bog_id, doc_key, doc_no
-                    $query = GorgiaBogTransaction::query();
-                    if (!empty($activity['Id'])) $query->orWhere('bog_id', $activity['Id']);
-                    if (!empty($activity['DocKey'])) $query->orWhere('doc_key', $activity['DocKey']);
-                    if (!empty($activity['DocNo'])) $query->orWhere('doc_no', $activity['DocNo']);
-                    $duplicates = $query->get();
-
-                    $hasExactPostDate = false;
-                    foreach ($duplicates as $dup) {
-                        if ($dup->transaction_date == ($activity['PostDate'] ?? null)) {
-                            $hasExactPostDate = true;
-                            // Удаляем дубликат с тем же PostDate
-                            $dup->delete();
-                        }
+                    // Проверяем дубликаты по bank_statement_id и bank_id
+                    $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? null;
+                    $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
+                    if (!$bankStatementId) {
+                        $skipped++;
+                        continue;
                     }
+                    $exists = Transaction::where('bank_statement_id', $bankStatementId)
+                        ->where('bank_id', $bogBankId)
+                        ->exists();
 
-                    if ($duplicates->count() > 0 && !$hasExactPostDate) {
-                        // Есть дубликаты, но нет совпадения по PostDate — оставляем старые, не вставляем новый
+                    if ($exists) {
                         $skipped++;
                         continue;
                     }
 
                     // Вставляем новую запись
-                    GorgiaBogTransaction::create([
-                        'bog_id' => $activity['Id'] ?? null,
-                        'doc_key' => $activity['DocKey'] ?? null,
-                        'doc_no' => $activity['DocNo'] ?? null,
-                        'transaction_date' => $activity['PostDate'] ?? null,
-                        'value_date' => $activity['ValueDate'] ?? null,
-                        'entry_type' => $activity['EntryType'] ?? null,
-                        'entry_comment' => $activity['EntryComment'] ?? null,
-                        'entry_comment_en' => $activity['EntryCommentEn'] ?? null,
-                        'nomination' => $activity['Nomination'] ?? null,
-                        'credit' => $activity['Credit'] ?? null,
-                        'debit' => $activity['Debit'] ?? null,
+                    Transaction::create([
+                        'contragent_id' => $activity['Sender']['Inn'] ?? null,
+                        'bank_id' => $bogBankId,
+                        'bank_statement_id' => $bankStatementId,
                         'amount' => $activity['Amount'] ?? null,
-                        'amount_base' => $activity['AmountBase'] ?? null,
-                        'payer_name' => $activity['PayerName'] ?? null,
-                        'payer_inn' => $activity['PayerInn'] ?? null,
+                        'transaction_date' => $activity['PostDate'] ?? null,
+                        'reflection_date' => $activity['ValueDate'] ?? null,
                         'sender_name' => $activity['Sender']['Name'] ?? null,
-                        'sender_inn' => $activity['Sender']['Inn'] ?? null,
-                        'sender_account_number' => $activity['Sender']['AccountNumber'] ?? null,
-                        'sender_bank_code' => $activity['Sender']['BankCode'] ?? null,
-                        'sender_bank_name' => $activity['Sender']['BankName'] ?? null,
-                        'beneficiary_name' => $activity['Beneficiary']['Name'] ?? null,
-                        'beneficiary_inn' => $activity['Beneficiary']['Inn'] ?? null,
-                        'beneficiary_account_number' => $activity['Beneficiary']['AccountNumber'] ?? null,
-                        'beneficiary_bank_code' => $activity['Beneficiary']['BankCode'] ?? null,
-                        'beneficiary_bank_name' => $activity['Beneficiary']['BankName'] ?? null,
-                        'raw' => $activity,
+                        'description' => $activity['EntryComment'] ?? $activity['EntryCommentEn'] ?? null,
+                        'status_code' => $activity['EntryType'] ?? null,
                     ]);
                     $inserted++;
                 }

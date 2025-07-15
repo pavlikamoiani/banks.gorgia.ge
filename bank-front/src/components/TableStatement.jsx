@@ -186,77 +186,48 @@ const TableStatement = () => {
 	// 	}
 	// }, [currentBank]);
 
-	// const loadDbData = async (filterParams = {}) => {
-	// 	setDbLoading(true);
-	// 	setError(null);
+	const loadDbData = async (filterParams = {}) => {
+		setDbLoading(true);
+		setError(null);
 
-	// 	try {
-	// 		const params = { ...filterParams };
-	// 		const [tbcResponse, bogResponse] = await Promise.all([
-	// 			defaultInstance.get(
-	// 				currentBank === 'gorgia'
-	// 					? '/gorgia-tbc-transactions'
-	// 					: '/anta-tbc-transactions',
-	// 				{ params }
-	// 			),
-	// 			defaultInstance.get(
-	// 				currentBank === 'gorgia'
-	// 					? '/gorgia-bog-transactions'
-	// 					: '/anta-bog-transactions',
-	// 				{ params }
-	// 			)
-	// 		]);
+		try {
+			const params = { ...filterParams };
+			const response = await defaultInstance.get('/gorgia-transactions', { params });
 
-	// 		let combinedRows = [];
+			let combinedRows = [];
 
-	// 		// TBC
-	// 		if (tbcResponse.data) {
-	// 			const tbcRows = (tbcResponse.data || []).map((item, idx) => ({
-	// 				id: `tbc-${item.id || idx + 1}`,
-	// 				contragent: item.sender_name || '-',
-	// 				bank: 'TBC Bank',
-	// 				amount: (item.amount ?? 0) + ' ₾',
-	// 				transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-	// 				purpose: item.description || '-',
-	// 				syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
-	// 			}));
-	// 			combinedRows = [...combinedRows, ...tbcRows];
-	// 		}
+			if (response.data) {
+				combinedRows = (response.data || []).map((item, idx) => ({
+					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
+					contragent: item.sender_name || '-',
+					bank: item.bank_id === 1 ? 'TBC Bank' : 'Bank of Georgia',
+					amount: (item.amount ?? 0) + ' ₾',
+					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+					purpose: item.description || '-',
+					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
+				}));
+			}
 
-	// 		// BOG
-	// 		if (bogResponse.data) {
-	// 			const bogRows = (bogResponse.data || []).map((item, idx) => ({
-	// 				id: `bog-${item.id || idx + 1}`,
-	// 				contragent: item.sender_name || item.beneficiary_name || '-',
-	// 				bank: item.sender_bank_name || item.beneficiary_bank_name || '-',
-	// 				amount: (item.amount ?? 0) + ' ₾',
-	// 				transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
-	// 				purpose: item.entry_comment || item.entry_comment_en || '-',
-	// 				syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
-	// 			}));
-	// 			combinedRows = [...combinedRows, ...bogRows];
-	// 		}
+			combinedRows.sort((a, b) => {
+				if (a.transferDate === b.transferDate) return 0;
+				if (a.transferDate === '-') return 1;
+				if (b.transferDate === '-') return -1;
+				return new Date(b.transferDate) - new Date(a.transferDate);
+			});
 
-	// 		combinedRows.sort((a, b) => {
-	// 			if (a.transferDate === b.transferDate) return 0;
-	// 			if (a.transferDate === '-') return 1;
-	// 			if (b.transferDate === '-') return -1;
-	// 			return new Date(b.transferDate) - new Date(a.transferDate);
-	// 		});
+			setDbData(combinedRows);
+			setData(combinedRows);
+		} catch (err) {
+			console.error("Error loading DB transactions:", err);
+			setError(t('no_data_found'));
+		} finally {
+			setDbLoading(false);
+		}
+	};
 
-	// 		setDbData(combinedRows);
-	// 		setData(combinedRows);
-	// 	} catch (err) {
-	// 		console.error("Error loading DB transactions:", err);
-	// 		setError(t('no_data_found'));
-	// 	} finally {
-	// 		setDbLoading(false);
-	// 	}
-	// };
-
-	// useEffect(() => {
-	// 	loadDbData(filters);
-	// }, [filters, currentBank]);
+	useEffect(() => {
+		loadDbData(filters);
+	}, [filters, currentBank]);
 
 	const handleFilterChange = (e) => {
 		setPendingFilters({ ...pendingFilters, [e.target.name]: e.target.value });

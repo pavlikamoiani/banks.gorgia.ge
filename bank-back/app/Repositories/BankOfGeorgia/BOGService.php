@@ -4,12 +4,13 @@ namespace App\Repositories\BankOfGeorgia;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Transaction;
+use App\Models\Bank;
 
 class BOGService
 {
     public function getToken()
     {
-        // Кэшируем токен на 50 минут (3000 секунд)
         return Cache::remember('bog_token', 3000, function () {
             $response = Http::asForm()->post(env('BOG_AUTH_URL'), [
                 'grant_type' => 'client_credentials',
@@ -79,44 +80,32 @@ class BOGService
             $transactionDate = isset($item['PostDate']) ? date('Y-m-d H:i:s', strtotime($item['PostDate'])) : null;
             $valueDate = isset($item['ValueDate']) ? date('Y-m-d H:i:s', strtotime($item['ValueDate'])) : null;
 
-            $saved = \App\Models\GorgiaBogTransaction::updateOrCreate(
-                [
-                    'bog_id' => $item['Id'] ?? null,
-                    'doc_key' => $item['DocKey'] ?? null,
-                ],
-                [
-                    'doc_no' => $item['DocNo'] ?? null,
-                    'transaction_date' => $transactionDate,
-                    'value_date' => $valueDate,
-                    'entry_type' => $item['EntryType'] ?? null,
-                    'entry_comment' => $item['EntryComment'] ?? null,
-                    'entry_comment_en' => $item['EntryCommentEn'] ?? null,
-                    'nomination' => $item['Nomination'] ?? null,
-                    'credit' => $item['Credit'] ?? null,
-                    'debit' => $item['Debit'] ?? null,
-                    'amount' => $item['Amount'] ?? null,
-                    'amount_base' => $item['AmountBase'] ?? null,
-                    'payer_name' => $item['PayerName'] ?? null,
-                    'payer_inn' => $item['PayerInn'] ?? null,
-                    'sender_name' => $sender['Name'] ?? null,
-                    'sender_inn' => $sender['Inn'] ?? null,
-                    'sender_account_number' => $sender['AccountNumber'] ?? null,
-                    'sender_bank_code' => $sender['BankCode'] ?? null,
-                    'sender_bank_name' => $sender['BankName'] ?? null,
-                    'beneficiary_name' => $beneficiary['Name'] ?? null,
-                    'beneficiary_inn' => $beneficiary['Inn'] ?? null,
-                    'beneficiary_account_number' => $beneficiary['AccountNumber'] ?? null,
-                    'beneficiary_bank_code' => $beneficiary['BankCode'] ?? null,
-                    'beneficiary_bank_name' => $beneficiary['BankName'] ?? null,
-                    'raw' => $item,
-                ]
-            );
+            $bank = Bank::where('bank_code', 'BOG')->first();
+            $bankId = $bank ? $bank->id : null;
 
-            \Log::info('Saved statement', [
-                'id' => $saved->id,
-                'bog_id' => $saved->bog_id,
-                'transaction_date' => $saved->transaction_date
-            ]);
+            $exists = Transaction::where('bank_statement_id', $item['Id'] ?? $item['DocKey'] ?? null)
+                ->where('bank_id', $bankId)
+                ->exists();
+
+            if (!$exists) {
+                $transaction = new Transaction();
+                $transaction->bank_statement_id = $item['Id'] ?? $item['DocKey'] ?? null;
+                $transaction->bank_id = $bankId;
+                $transaction->contragent_id = $sender['Inn'] ?? null;
+                $transaction->amount = $item['Amount'] ?? null;
+                $transaction->transaction_date = $transactionDate;
+                $transaction->reflection_date = $valueDate;
+                $transaction->sender_name = $sender['Name'] ?? null;
+                $transaction->description = $item['EntryComment'] ?? $item['EntryCommentEn'] ?? null;
+                $transaction->status_code = $item['EntryType'] ?? null;
+                $transaction->save();
+
+                \Log::info('Saved BOG transaction', [
+                    'id' => $transaction->id,
+                    'bank_statement_id' => $transaction->bank_statement_id,
+                    'transaction_date' => $transaction->transaction_date
+                ]);
+            }
         }
     }
 

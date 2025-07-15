@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Repositories\BankOfGeorgia\BOGService;
-use App\Models\GorgiaBogTransaction;
+use App\Models\Transaction;
+use App\Models\Bank;
 use App\Models\Contragent;
 use Log;
 use Carbon\Carbon;
@@ -19,7 +20,6 @@ class BOGStatementController extends Controller
 
         $data = $bog->getTodayActivities($account, $currency);
 
-        // CONTRAGENT LOGIC for todayActivities
         $activities = $data['activities'] ?? (is_array($data) ? $data : []);
         foreach ($activities as $activity) {
             if (
@@ -43,6 +43,25 @@ class BOGStatementController extends Controller
                         'identification_code' => $inn,
                     ]);
                 }
+            }
+            $bogBankId = \App\Models\Bank::where('bank_code', 'BOG')->first()->id ?? 2;
+            $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
+            if (!$bankStatementId) continue;
+            $exists = \App\Models\Transaction::where('bank_statement_id', $bankStatementId)
+                ->where('bank_id', $bogBankId)
+                ->exists();
+            if (!$exists) {
+                \App\Models\Transaction::create([
+                    'contragent_id' => $activity['Sender']['Inn'] ?? null,
+                    'bank_id' => $bogBankId,
+                    'bank_statement_id' => $bankStatementId,
+                    'amount' => $activity['Amount'] ?? null,
+                    'transaction_date' => $activity['PostDate'] ?? null,
+                    'reflection_date' => $activity['ValueDate'] ?? null,
+                    'sender_name' => $activity['Sender']['Name'] ?? null,
+                    'description' => $activity['EntryComment'] ?? $activity['EntryCommentEn'] ?? null,
+                    'status_code' => $activity['EntryType'] ?? null,
+                ]);
             }
         }
 
@@ -73,6 +92,7 @@ class BOGStatementController extends Controller
         }
 
         $allResults = collect();
+        $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? null;
 
         foreach ($accounts as $acc) {
             try {
@@ -124,7 +144,6 @@ class BOGStatementController extends Controller
                 $activities = $data ?? [];
             }
 
-            // CONTRAGENT LOGIC
             foreach ($activities as $activity) {
                 if (
                     isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
@@ -158,23 +177,20 @@ class BOGStatementController extends Controller
 
             $bog->saveStatementToDb($activities);
 
-            $statements = GorgiaBogTransaction::whereDate('transaction_date', '>=', $startDate)
+            $statements = Transaction::whereDate('transaction_date', '>=', $startDate)
                 ->whereDate('transaction_date', '<=', $endDate)
-                ->where(function ($q) use ($acc) {
-                    $q->where('sender_account_number', $acc)
-                        ->orWhere('beneficiary_account_number', $acc);
-                })
+                ->where('bank_id', $bogBankId)
                 ->orderBy('transaction_date', $orderByDate ? 'asc' : 'desc')
                 ->get();
 
             $result = $statements->map(function ($item) {
                 return [
                     'id' => $item->id,
-                    'contragent' => $item->sender_name ?: ($item->beneficiary_name ?: '-'),
-                    'bank' => $item->sender_bank_name ?: ($item->beneficiary_bank_name ?: '-'),
+                    'contragent' => $item->sender_name ?: '-',
+                    'bank' => 'Bank of Georgia',
                     'amount' => $item->amount ?? 0,
                     'transferDate' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
-                    'purpose' => $item->entry_comment ?? '-',
+                    'purpose' => $item->description ?? '-',
                     'syncDate' => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '-',
                 ];
             });
@@ -443,23 +459,20 @@ class BOGStatementController extends Controller
 
                 $bog->saveStatementToDb($activities);
 
-                $statements = GorgiaBogTransaction::whereDate('transaction_date', '>=', $monthStart)
+                $statements = Transaction::whereDate('transaction_date', '>=', $monthStart)
                     ->whereDate('transaction_date', '<=', $monthEnd)
-                    ->where(function ($q) use ($acc) {
-                        $q->where('sender_account_number', $acc)
-                            ->orWhere('beneficiary_account_number', $acc);
-                    })
+                    ->where('bank_id', $bogBankId)
                     ->orderBy('transaction_date', $orderByDate ? 'asc' : 'desc')
                     ->get();
 
                 $result = $statements->map(function ($item) {
                     return [
                         'id' => $item->id,
-                        'contragent' => $item->sender_name ?: ($item->beneficiary_name ?: '-'),
-                        'bank' => $item->sender_bank_name ?: ($item->beneficiary_bank_name ?: '-'),
+                        'contragent' => $item->sender_name ?: '-',
+                        'bank' => 'Bank of Georgia',
                         'amount' => $item->amount ?? 0,
                         'transferDate' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
-                        'purpose' => $item->entry_comment ?? '-',
+                        'purpose' => $item->description ?? '-',
                         'syncDate' => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '-',
                     ];
                 });
