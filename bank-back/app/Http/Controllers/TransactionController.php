@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Models\Bank;
+use GuzzleHttp\Promise\Create;
 
 class TransactionController extends Controller
 {
     public function index(Request $request)
     {
         $bankCode = $request->query('bank_code');
-        $query = Transaction::query();
+        $query = Transaction::query()->whereBetween('transaction_date', [now()->subDays(7), now()]);
 
         if ($bankCode) {
             $bankId = Bank::where('bank_code', $bankCode)->first()->id ?? null;
