@@ -151,7 +151,6 @@ const TableFilter = ({
                     <button
                         type="button"
                         className={styles.filterButton}
-                        style={{ marginLeft: 8 }}
                         onClick={onApply}
                     >
                         {translate('apply') || 'Apply'}
