@@ -68,7 +68,7 @@ const TableStatement = () => {
 	];
 
 	const [data, setData] = useState([]);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
@@ -348,17 +348,19 @@ const TableStatement = () => {
 							border: "none",
 							borderRadius: 6,
 							padding: "8px 16px",
-							cursor: "pointer",
+							cursor: loading ? "not-allowed" : "pointer",
 							fontWeight: 500,
 							minHeight: '40px',
 							display: 'flex',
 							alignItems: 'center'
 						}}
 						onClick={async () => {
+							if (loading) return;
 							setLiveMode(true);
 							await loadLiveData({ ...pendingFilters });
 						}}
 						title={t('live_today_transactions') || 'დღევანდელი ტრანზაქციები'}
+						disabled={loading}
 					>
 						<FontAwesomeIcon icon={faBolt} style={{ marginRight: 6 }} />
 						{t('live') || 'Live'}

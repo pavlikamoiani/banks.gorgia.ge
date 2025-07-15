@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\TBCStatementController;
-use App\Http\Controllers\BOGStatementController;
 use App\Repositories\BankOfGeorgia\BOGService;
 
 class LiveStatementController extends Controller
@@ -12,7 +11,6 @@ class LiveStatementController extends Controller
     public function todayActivities(Request $request)
     {
         $tbcController = new TBCStatementController();
-        $bogController = new BOGStatementController();
         $bogService = new BOGService();
 
         $tbcResponse = $tbcController->todayActivities($request);
@@ -32,6 +30,11 @@ class LiveStatementController extends Controller
                 $contragent = substr($contragent, strlen('Wallet/domestic/'));
             }
 
+            $syncDate = $item['PostDate'] ?? '-';
+            if ($syncDate !== '-' && strlen($syncDate) >= 10) {
+                $syncDate = substr($syncDate, 0, 10);
+            }
+
             $tbcRows[] = [
                 'id' => 'tbc-' . ($item['id'] ?? uniqid()),
                 'bankType' => 'TBC',
@@ -40,7 +43,7 @@ class LiveStatementController extends Controller
                 'amount' => $item['Amount'] ?? 0,
                 'transferDate' => isset($item['PostDate']) ? substr($item['PostDate'], 0, 10) : '-',
                 'purpose' => $item['EntryComment'] ?? '-',
-                'syncDate' => $item['PostDate'] ?? '-',
+                'syncDate' => $syncDate,
             ];
         }
 
@@ -49,6 +52,11 @@ class LiveStatementController extends Controller
         $bogData = $bogService->getTodayActivities($account, $currency);
         $bogRows = [];
         foreach (($bogData['activities'] ?? (is_array($bogData) ? $bogData : [])) as $item) {
+            $syncDate = $item['PostDate'] ?? '-';
+            if ($syncDate !== '-' && strlen($syncDate) >= 10) {
+                $syncDate = substr($syncDate, 0, 10);
+            }
+
             $bogRows[] = [
                 'id' => 'bog-' . ($item['Id'] ?? uniqid()),
                 'bankType' => 'BOG',
@@ -57,7 +65,7 @@ class LiveStatementController extends Controller
                 'amount' => $item['Amount'] ?? 0,
                 'transferDate' => isset($item['PostDate']) ? substr($item['PostDate'], 0, 10) : '-',
                 'purpose' => $item['EntryComment'] ?? '-',
-                'syncDate' => $item['PostDate'] ?? '-',
+                'syncDate' => $syncDate,
             ];
         }
 

@@ -69,6 +69,7 @@ const resources = {
       "all": "All",
       "show_more": "Show more",
       "show_less": "Show less",
+      "apply": "Apply",
 
       // Delete confirmation modal
       "delete": "Delete",
@@ -153,6 +154,7 @@ const resources = {
       "all": "Все",
       "show_more": "Показать больше",
       "show_less": "Показать меньше",
+      "apply": "Применить",
 
       // Delete confirmation modal
       "delete": "Удалить",
@@ -237,6 +239,7 @@ const resources = {
       "all": "ყველა",
       "show_more": "მეტის ნახვა",
       "show_less": "ნაკლების ნახვა",
+      "apply": "გამოყენება",
 
       // Delete confirmation modal
       "delete": "წაშლა",
