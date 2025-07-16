@@ -101,4 +101,26 @@ class AuthController extends Controller
         $user->delete();
         return response()->json(['message' => 'User deleted']);
     }
+
+    public function index(Request $request)
+    {
+        $query = User::query();
+
+        if ($request->has('name')) {
+            $query->where('name', 'like', '%' . $request->query('name') . '%');
+        }
+        if ($request->has('email')) {
+            $query->where('email', 'like', '%' . $request->query('email') . '%');
+        }
+        if ($request->has('role')) {
+            $query->where('role', $request->query('role'));
+        }
+        if ($request->has('bank')) {
+            $query->where('bank', $request->query('bank'));
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json($users);
+    }
 }

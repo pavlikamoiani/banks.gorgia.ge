@@ -1,6 +1,5 @@
 import '../assets/css/TableAccounts.css';
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus, faUserPen, faTrash, faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
@@ -11,15 +10,12 @@ import UserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
-import { fetchUsers } from '../store/userSlice';
-
 import filterStyles from '../assets/css/filter.module.css';
 import TableFilter from './TableFilter';
 
 const TableUsers = () => {
 	const { t } = useTranslation();
-	const dispatch = useDispatch();
-	const users = useSelector(state => state.user.users);
+	const [users, setUsers] = useState([]);
 	const [userModalOpen, setUserModalOpen] = useState(false);
 	const [userForm, setUserForm] = useState({
 		name: '',
@@ -46,47 +42,34 @@ const TableUsers = () => {
 
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({ name: '', email: '', role: '', bank: '' });
+	const [filterDrafts, setFilterDrafts] = useState({ name: '', email: '', role: '', bank: '' });
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
 	const didFetch = useRef(false);
 
-	const filteredNonSuperAdmins = useMemo(() => users.filter(u => u.role !== 'super_admin'), [users]);
 	const bankOptions = useMemo(() => {
-		const banks = filteredNonSuperAdmins.map(u => u.bank).filter(Boolean);
+		const banks = users.map(u => u.bank).filter(Boolean);
 		return [...new Set(banks)];
-	}, [filteredNonSuperAdmins]);
+	}, [users]);
 	const roleOptions = useMemo(() => {
-		const roles = filteredNonSuperAdmins.map(u => u.role).filter(Boolean);
+		const roles = users.map(u => u.role).filter(Boolean);
 		return [...new Set(roles)];
-	}, [filteredNonSuperAdmins]);
-
-	const filteredUsers = useMemo(() => {
-		let filtered = filteredNonSuperAdmins;
-		if (filters.name) {
-			filtered = filtered.filter(u =>
-				u.name && u.name.toLowerCase().includes(filters.name.toLowerCase())
-			);
-		}
-		if (filters.email) {
-			filtered = filtered.filter(u =>
-				u.email && u.email.toLowerCase().includes(filters.email.toLowerCase())
-			);
-		}
-		if (filters.role) {
-			filtered = filtered.filter(u => u.role === filters.role);
-		}
-		if (filters.bank) {
-			filtered = filtered.filter(u => u.bank === filters.bank);
-		}
-		return filtered;
-	}, [filteredNonSuperAdmins, filters]);
+	}, [users]);
 
 	useEffect(() => {
-		if (didFetch.current) return;
-		didFetch.current = true;
 		setLoading(true);
-		dispatch(fetchUsers()).finally(() => setLoading(false));
-	}, [dispatch]);
+		const params = {};
+		if (filters.name) params.name = filters.name;
+		if (filters.email) params.email = filters.email;
+		if (filters.role) params.role = filters.role;
+		if (filters.bank) params.bank = filters.bank;
+		defaultInstance.get('/users', { params })
+			.then(res => {
+				setUsers(res.data);
+				setLoading(false);
+			})
+			.catch(() => setLoading(false));
+	}, [filters]);
 
 	const handleOpenUserModal = () => setUserModalOpen(true);
 	const handleCloseUserModal = () => {
@@ -118,7 +101,6 @@ const TableUsers = () => {
 				bank: userForm.bank
 			});
 			handleCloseUserModal();
-			dispatch(fetchUsers());
 			// eslint-disable-next-line
 		} catch (err) {
 			setUserError(t('error_adding'));
@@ -162,7 +144,6 @@ const TableUsers = () => {
 			});
 			handleCloseEditModal();
 			setUserModalOpen(false);
-			dispatch(fetchUsers());
 			// eslint-disable-next-line
 		} catch (err) {
 			setEditError(t('error_editing'));
@@ -180,7 +161,6 @@ const TableUsers = () => {
 			await defaultInstance.delete(`/users/${deleteId}`);
 			setDeleteModalOpen(false);
 			setDeleteId(null);
-			dispatch(fetchUsers());
 			// eslint-disable-next-line
 		} catch (err) {
 			setDeleteError(t('error_deleting'));
@@ -188,17 +168,21 @@ const TableUsers = () => {
 	};
 
 	const handleFilterChange = (e) => {
-		setFilters({ ...filters, [e.target.name]: e.target.value });
+		setFilterDrafts({ ...filterDrafts, [e.target.name]: e.target.value });
 	};
 	const handleFilterReset = () => {
+		setFilterDrafts({ name: '', email: '', role: '', bank: '' });
 		setFilters({ name: '', email: '', role: '', bank: '' });
 	};
+	const handleFilterApply = () => {
+		setFilters({ ...filterDrafts });
+	};
 	const handleBankSelect = (bank) => {
-		setFilters(f => ({ ...f, bank }));
+		setFilterDrafts(f => ({ ...f, bank }));
 		setBankDropdownOpen(false);
 	};
 	const handleRoleSelect = (role) => {
-		setFilters(f => ({ ...f, role }));
+		setFilterDrafts(f => ({ ...f, role }));
 	};
 
 	const columns = [
@@ -285,9 +269,10 @@ const TableUsers = () => {
 			{filterOpen && (
 				<div className={filterStyles.filterDrawer}>
 					<TableFilter
-						filters={filters}
+						filters={filterDrafts}
 						onChange={handleFilterChange}
 						onReset={handleFilterReset}
+						onApply={handleFilterApply}
 						fields={[
 							{ name: 'name', label: t('name'), placeholder: t('name') },
 							{ name: 'email', label: t('email'), placeholder: t('email') },
@@ -351,7 +336,7 @@ const TableUsers = () => {
 			<div className="table-wrapper">
 				<SortableTable
 					columns={columns}
-					data={filteredUsers}
+					data={users}
 					loading={loading}
 					emptyText={t('no_data')}
 				/>

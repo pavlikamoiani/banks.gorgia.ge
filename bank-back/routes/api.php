@@ -7,7 +7,6 @@ use App\Http\Controllers\TBCStatementController;
 use App\Http\Controllers\LiveStatementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use \App\Models\User;
 use App\Http\Controllers\TbcPasswordController;
 use App\Http\Controllers\TransactionController;
 
@@ -15,9 +14,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Users
-    Route::get('/users', function () {
-        return User::orderBy('created_at', 'desc')->get();
-    });
+    Route::get('/users', [AuthController::class, 'index']);
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
@@ -58,5 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/bog/migrate-all-statements', [BOGStatementController::class, 'migrateAllStatementsByMonth']);
 Route::get('/bog/statement-by-month/{currency}/{startDate}/{endDate}/{includeToday?}/{orderByDate?}', [BOGStatementController::class, 'statementByMonthJob']);
 
+// TBC Sync Today's Transactions
+Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);
 // TBC Sync Today's Transactions
 Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);

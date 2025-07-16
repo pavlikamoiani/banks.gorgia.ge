@@ -11,7 +11,20 @@ class ContragentController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $contragents = Contragent::orderBy('created_at', 'desc')->get();
+
+        $name = $request->query('name');
+        $identification_code = $request->query('identification_code');
+
+        $query = Contragent::query();
+
+        if ($name) {
+            $query->where('name', 'like', '%' . $name . '%');
+        }
+        if ($identification_code) {
+            $query->where('identification_code', 'like', '%' . $identification_code . '%');
+        }
+
+        $contragents = $query->orderBy('created_at', 'desc')->get();
 
         if ($user && $user->role !== 'super_admin') {
             $contragents = $contragents->filter(function ($contragent) use ($user) {

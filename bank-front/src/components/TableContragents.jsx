@@ -28,7 +28,7 @@ const TableContragents = () => {
 	const [error, setError] = useState('');
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({ name: '', identification_code: '' });
-	const [filteredContragents, setFilteredContragents] = useState([]);
+	const [filterDrafts, setFilterDrafts] = useState({ name: '', identification_code: '' });
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [editContragent, setEditContragent] = useState(null);
 	const [editForm, setEditForm] = useState({ name: '', identification_code: '', hidden_for_roles: [] });
@@ -37,51 +37,26 @@ const TableContragents = () => {
 	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
 	const [pageSizeDropdownOpen, setPageSizeDropdownOpen] = useState(false);
 	const pageSizeDropdownRef = useRef(null);
-	const didFetch = useRef(false);
 	const user = useSelector(state => state.user.user);
 	const [selectedIds, setSelectedIds] = useState([]);
 	const [hideRolesModalOpen, setHideRolesModalOpen] = useState(false);
-	const [hideRoles, setHideRoles] = useState([]);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState(null);
 	const [deleteError, setDeleteError] = useState('');
-	const roleOptions = [
-		{ value: 'admin', label: t('administrator') || 'ადმინისტრატორი' },
-		{ value: 'distribution_operator', label: t('distribution_operator') || 'დისტრიბუციის ოპერატორი' },
-		{ value: 'corporate_sales_manager', label: t('corporate_sales_manager') || 'კორპორატიული გაყიდვების მენეჯერი' }
-	];
 
 	useEffect(() => {
-		if (didFetch.current) return;
-		didFetch.current = true;
+		const params = {};
+		if (filters.name) params.name = filters.name;
+		if (filters.identification_code) params.identification_code = filters.identification_code;
 		setLoading(true);
-		defaultInstance.get(`/contragents`)
+		defaultInstance.get('/contragents', { params })
 			.then(res => {
 				setContragents(res.data);
 				setLoading(false);
 			})
 			.catch(() => setLoading(false));
-	}, []);
-
-	useEffect(() => {
-		let filtered = contragents;
-		if (filters.name) {
-			filtered = filtered.filter(c =>
-				c.name && c.name.toLowerCase().includes(filters.name.toLowerCase())
-			);
-		}
-		if (filters.identification_code) {
-			filtered = filtered.filter(c =>
-				c.identification_code && c.identification_code.includes(filters.identification_code)
-			);
-		}
-		if (user && user.role !== 'super_admin') {
-			filtered = filtered.filter(c =>
-				!Array.isArray(c.hidden_for_roles) || !c.hidden_for_roles.includes(user.role)
-			);
-		}
-		setFilteredContragents(filtered);
-	}, [contragents, filters, user]);
+	}, [filters, user]);
+	const filteredContragents = contragents;
 
 	useEffect(() => {
 		setPage(1);
@@ -107,7 +82,7 @@ const TableContragents = () => {
 		setError('');
 	};
 	const handleChange = (e) => {
-		const { name, value, type, checked } = e.target;
+		const { name, value, checked } = e.target;
 		if (name === 'hidden_for_roles') {
 			let updated = [...form.hidden_for_roles];
 			if (checked) {
@@ -159,7 +134,7 @@ const TableContragents = () => {
 		setEditError('');
 	};
 	const handleEditChange = (e) => {
-		const { name, value, type, checked } = e.target;
+		const { name, value, checked } = e.target;
 		if (name === 'hidden_for_roles') {
 			let updated = [...editForm.hidden_for_roles];
 			if (checked) {
@@ -221,10 +196,14 @@ const TableContragents = () => {
 	};
 
 	const handleFilterChange = (e) => {
-		setFilters({ ...filters, [e.target.name]: e.target.value });
+		setFilterDrafts({ ...filterDrafts, [e.target.name]: e.target.value });
 	};
 	const handleFilterReset = () => {
+		setFilterDrafts({ name: '', identification_code: '' });
 		setFilters({ name: '', identification_code: '' });
+	};
+	const handleFilterApply = () => {
+		setFilters({ ...filterDrafts });
 	};
 
 	const handleSelectAll = (e) => {
@@ -241,44 +220,9 @@ const TableContragents = () => {
 	};
 
 	const openHideRolesModal = () => {
-		const selectedContragents = contragents.filter(c => selectedIds.includes(c.id));
 		setHideRolesModalOpen(true);
 	};
 	const closeHideRolesModal = () => setHideRolesModalOpen(false);
-
-	// const handleHideRolesChange = (e) => {
-	// 	const { value, checked } = e.target;
-	// 	setHideRoles(prev =>
-	// 		checked ? [...prev, value] : prev.filter(r => r !== value)
-	// 	);
-	// };
-
-	// const handleHideForRolesSubmit = async (e) => {
-	// 	e.preventDefault();
-	// 	try {
-	// 		await Promise.all(
-	// 			selectedIds.map(async (id) => {
-	// 				const contragent = contragents.find(c => c.id === id);
-	// 				const prevHidden = Array.isArray(contragent.hidden_for_roles) ? contragent.hidden_for_roles : [];
-	// 				const merged = Array.from(new Set([...prevHidden, ...hideRoles]));
-	// 				await defaultInstance.put(`/contragents/${id}`, {
-	// 					name: contragent.name,
-	// 					identification_code: contragent.identification_code,
-	// 					hidden_for_roles: merged,
-	// 				});
-	// 			})
-	// 		);
-	// 		setSelectedIds([]);
-	// 		setHideRoles([]);
-	// 		setHideRolesModalOpen(false);
-	// 		setLoading(true);
-	// 		const res = await defaultInstance.get(`/contragents`);
-	// 		setContragents(res.data);
-	// 		setLoading(false);
-	// 	} catch (err) {
-	// 		alert(t('error_editing'));
-	// 	}
-	// };
 
 	const columns = [
 		...(user && (user.role === 'super_admin') ? [
@@ -420,9 +364,10 @@ const TableContragents = () => {
 			{filterOpen && (
 				<div className={filterStyles.filterDrawer}>
 					<TableFilter
-						filters={filters}
+						filters={filterDrafts}
 						onChange={handleFilterChange}
 						onReset={handleFilterReset}
+						onApply={handleFilterApply}
 						fields={[
 							{ name: 'name', label: t('title'), placeholder: t('search_by_title') },
 							{ name: 'identification_code', label: t('identification_code'), placeholder: t('search_by_code') }
@@ -497,7 +442,6 @@ const TableContragents = () => {
 					text={t('delete_confirm_text') || 'დარწმუნებული ხართ, რომ გსურთ წაშლა?'}
 					t={t}
 				/>
-				{/* Можно вывести ошибку удаления, если нужно */}
 				{deleteError && <div style={{ color: 'red', marginTop: 10 }}>{deleteError}</div>}
 			</div>
 			<Pagination
