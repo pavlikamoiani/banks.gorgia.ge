@@ -301,7 +301,7 @@ const TableStatement = () => {
 							{t('installment') || 'განვადება'}
 						</span>
 						<span className={tableStatementStyles.installmentTooltip}>
-							განვადებები (თბს)
+							{t('installment_tooltip') || 'განვადებების(თბს) ჩვენება/დამალვა'}
 						</span>
 					</div>
 					<button className={tableStatementStyles.liveBtn}

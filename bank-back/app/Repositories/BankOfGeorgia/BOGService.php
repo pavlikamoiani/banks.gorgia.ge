@@ -19,8 +19,8 @@ class BOGService
             ]);
 
             if (!$response->ok()) {
-                \Log::error('Ошибка получения токена BOG', ['response' => $response->body()]);
-                throw new \Exception('Не удалось получить токен BOG');
+                \Log::error('Failed to retrieve BOG token', ['response' => $response->body()]);
+                throw new \Exception('Failed to retrieve BOG token');
             }
 
             return $response->json('access_token');
@@ -39,9 +39,20 @@ class BOGService
         \Log::info('BOG API status', ['status' => $response->status()]);
         \Log::info('BOG API raw response', ['body' => $response->body()]);
 
+        if ($response->status() === 401) {
+            \Log::error('BOG token unauthorized, clearing cache and retrying');
+            Cache::forget('bog_token');
+            $token = $this->getToken();
+            $response = Http::withToken($token)
+                ->timeout(30)
+                ->get(env('BOG_BASE_URL') . "/documents/todayactivities/$account/$currency");
+            \Log::info('BOG API status (after retry)', ['status' => $response->status()]);
+            \Log::info('BOG API raw response (after retry)', ['body' => $response->body()]);
+        }
+
         if (!$response->ok()) {
-            \Log::error('Ошибка получения сегодняшних операций BOG', ['response' => $response->body()]);
-            throw new \Exception('Ошибка при запросе сегодняшних операций');
+            \Log::error('Failed to retrieve today\'s BOG transactions', ['response' => $response->body()]);
+            throw new \Exception('Error requesting today\'s transactions');
         }
 
         return $response->json();
@@ -53,7 +64,6 @@ class BOGService
             $sender = $item['Sender'] ?? [];
             $beneficiary = $item['Beneficiary'] ?? [];
 
-            // CONTRAGENT LOGIC
             if (
                 isset($sender['Name'], $sender['Inn']) &&
                 trim($sender['Name']) !== '' &&
@@ -134,8 +144,8 @@ class BOGService
         \Log::info('BOG statement response', ['body' => $response->body()]);
 
         if (!$response->ok()) {
-            \Log::error('Ошибка получения выписки BOG', ['response' => $response->body()]);
-            throw new \Exception('Ошибка при получении выписки');
+            \Log::error('Failed to retrieve BOG statement', ['response' => $response->body()]);
+            throw new \Exception('Error retrieving statement');
         }
 
         return $response->json();
@@ -165,8 +175,8 @@ class BOGService
         \Log::info('BOG statement page response', ['body' => $response->body()]);
 
         if (!$response->ok()) {
-            \Log::error('Ошибка получения страницы выписки BOG', ['response' => $response->body()]);
-            throw new \Exception('Ошибка при получении страницы выписки');
+            \Log::error('Failed to retrieve BOG statement page', ['response' => $response->body()]);
+            throw new \Exception('Error retrieving statement page');
         }
 
         return $response->json();

@@ -71,6 +71,8 @@ const resources = {
       "show_less": "Show less",
       "apply": "Apply",
       "live_today_transactions": "Today's Transactions",
+      "installment": "Installment",
+      "installment_tooltip": "Show/Hide installments (TBC)",
 
       // Delete confirmation modal
       "delete": "Delete",
@@ -157,6 +159,8 @@ const resources = {
       "show_less": "Показать меньше",
       "apply": "Применить",
       "live_today_transactions": "Сегодняшние транзакции",
+      "installment": "Рассрочка",
+      "installment_tooltip": "Показать/Скрыть рассрочки (ТБС)",
 
       // Delete confirmation modal
       "delete": "Удалить",
@@ -243,6 +247,8 @@ const resources = {
       "show_less": "ნაკლების ნახვა",
       "apply": "გამოყენება",
       "live_today_transactions": "დღევანდელი ტრანზაქციები",
+      "installment": "განვადება",
+      "installment_tooltip": "განვადებების(თბს) ჩვენება/დამალვა",
 
       // Delete confirmation modal
       "delete": "წაშლა",
