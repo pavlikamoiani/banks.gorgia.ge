@@ -108,6 +108,7 @@ const TableStatement = () => {
 
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [liveMode, setLiveMode] = useState(false);
+	const [installmentOnly, setInstallmentOnly] = useState(false);
 
 	const getEndpoint = () => {
 		if (currentBank === 'anta') return '/anta-transactions';
@@ -244,7 +245,16 @@ const TableStatement = () => {
 		return () => document.removeEventListener('mousedown', handler);
 	}, [bankDropdownOpen]);
 
-	const pagedData = dbData.slice((page - 1) * pageSize, page * pageSize);
+	const filteredData = useMemo(() => {
+		let base = dbData;
+		if (liveMode) base = data;
+		if (!installmentOnly) return base;
+		return base.filter(row =>
+			(row.purpose || row.description || '').toLowerCase().includes('განვადებ')
+		);
+	}, [dbData, data, installmentOnly, liveMode]);
+
+	const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
 	useEffect(() => {
 		if (!pageSizeDropdownOpen) return;
@@ -262,6 +272,38 @@ const TableStatement = () => {
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">{t('statement')}</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+					<div
+						className={tableStatementStyles.installmentBtnWrapper}
+						tabIndex={0}
+						role="button"
+						aria-pressed={installmentOnly}
+						onClick={() => setInstallmentOnly(v => !v)}
+						onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setInstallmentOnly(v => !v); }}
+						style={{ outline: 'none' }}
+					>
+						<span
+							className={
+								installmentOnly
+									? tableStatementStyles.installmentBtnActive
+									: tableStatementStyles.installmentBtn
+							}
+						>
+							{installmentOnly ? (
+								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
+									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
+									<path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+								</svg>
+							) : (
+								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
+									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
+								</svg>
+							)}
+							{t('installment') || 'განვადება'}
+						</span>
+						<span className={tableStatementStyles.installmentTooltip}>
+							განვადებები (თბს)
+						</span>
+					</div>
 					<button className={tableStatementStyles.liveBtn}
 						type="button"
 						style={{
@@ -363,7 +405,7 @@ const TableStatement = () => {
 				/>
 			</div>
 			<Pagination
-				total={dbData.length}
+				total={filteredData.length}
 				page={page}
 				pageSize={pageSize}
 				onChange={setPage}

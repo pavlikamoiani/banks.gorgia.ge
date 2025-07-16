@@ -38,7 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/gorgia/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
 
     // BOG Gorgia Statements
-    Route::get('/gorgia/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
     Route::get('/bog/statement/{accountNumber}/{currency}/{startDate}/{endDate}/{includeToday?}/{orderByDate?}', [BOGStatementController::class, 'statement']);
 
     // All Anta Statements
@@ -50,6 +49,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Live Statement
     Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
 });
+
+Route::get('/gorgia/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
+
 
 // BOG Statement Migration
 Route::get('/bog/migrate-all-statements', [BOGStatementController::class, 'migrateAllStatementsByMonth']);

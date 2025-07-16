@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Repositories\BankOfGeorgia\BOGService;
-use App\Models\GorgiaBogTransaction;
 use App\Models\Contragent;
 use App\Models\Transaction;
 use App\Models\Bank;
@@ -50,7 +49,7 @@ class BogMigrateJob extends Command
 
                 $allActivities = [];
                 $statementId = null;
-                $orderByDate = false; // или true, если нужно сортировать по дате
+                $orderByDate = false;
 
                 $retries = 0;
                 $success = false;
@@ -114,10 +113,8 @@ class BogMigrateJob extends Command
                 }
                 $allActivities = array_merge($allActivities, $activities);
 
-                // Получаем statementId для пагинации
                 $statementId = $data['Id'] ?? $data['id'] ?? null;
 
-                // Если записей 1000, делаем дополнительные запросы по страницам
                 $page = 2;
                 while ($statementId && count($activities) === 1000) {
                     try {
@@ -173,7 +170,6 @@ class BogMigrateJob extends Command
                 $inserted = 0;
                 $skipped = 0;
                 foreach ($allActivities as $activity) {
-                    // CONTRAGENT LOGIC
                     if (
                         isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
                         trim($activity['Sender']['Name']) !== '' &&
@@ -197,7 +193,6 @@ class BogMigrateJob extends Command
                         }
                     }
 
-                    // Проверяем дубликаты по bank_statement_id и bank_id
                     $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? null;
                     $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
                     if (!$bankStatementId) {
@@ -213,7 +208,6 @@ class BogMigrateJob extends Command
                         continue;
                     }
 
-                    // Вставляем новую запись
                     Transaction::create([
                         'contragent_id' => $activity['Sender']['Inn'] ?? null,
                         'bank_id' => $bogBankId,
