@@ -15,6 +15,55 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    /* Для tooltip */
+    transition: background 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 8px rgba(46, 139, 87, 0.08);
+}
+
+.liveBtn:hover,
+.liveBtn:focus-visible {
+    background: #24914b;
+    box-shadow: 0 4px 16px rgba(46, 139, 87, 0.18);
+}
+
+.tooltip {
+    visibility: hidden;
+    opacity: 0;
+    width: auto;
+    background: #222222a6;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 6px 14px;
+    position: absolute;
+    z-index: 20;
+    left: 50%;
+    top: -48px;
+    transform: translateX(-50%);
+    font-size: 0.95em;
+    pointer-events: none;
+    transition: opacity 0.22s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
+    white-space: pre-line;
+    text-wrap: nowrap;
+}
+
+.liveBtn:hover .tooltip,
+.liveBtn:focus-visible .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 8px 8px 0 8px;
+    border-style: solid;
+    border-color: #222222a6 transparent transparent transparent;
 }
 
 

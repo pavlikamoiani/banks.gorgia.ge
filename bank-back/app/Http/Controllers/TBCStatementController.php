@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Repositories\TBCBank\TransactionRepository;
 

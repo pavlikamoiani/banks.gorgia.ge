@@ -70,6 +70,7 @@ const resources = {
       "show_more": "Show more",
       "show_less": "Show less",
       "apply": "Apply",
+      "live_today_transactions": "Today's Transactions",
 
       // Delete confirmation modal
       "delete": "Delete",
@@ -155,6 +156,7 @@ const resources = {
       "show_more": "Показать больше",
       "show_less": "Показать меньше",
       "apply": "Применить",
+      "live_today_transactions": "Сегодняшние транзакции",
 
       // Delete confirmation modal
       "delete": "Удалить",
@@ -240,6 +242,7 @@ const resources = {
       "show_more": "მეტის ნახვა",
       "show_less": "ნაკლების ნახვა",
       "apply": "გამოყენება",
+      "live_today_transactions": "დღევანდელი ტრანზაქციები",
 
       // Delete confirmation modal
       "delete": "წაშლა",

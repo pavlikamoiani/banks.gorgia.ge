@@ -252,11 +252,13 @@ const TableStatement = () => {
 							setLiveMode(true);
 							await loadLiveData({ ...pendingFilters });
 						}}
-						title={t('live_today_transactions') || 'დღევანდელი ტრანზაქციები'}
 						disabled={loading}
 					>
 						<FontAwesomeIcon icon={faBolt} style={{ marginRight: 6 }} />
 						{t('live') || 'Live'}
+						<span className={tableStatementStyles.tooltip}>
+							{t('live_today_transactions') || 'დღევანდელი ტრანზაქციები'}
+						</span>
 					</button>
 					<div className={tableStatementStyles.pageSizeDropdownWrapper} ref={pageSizeDropdownRef}>
 						<button
