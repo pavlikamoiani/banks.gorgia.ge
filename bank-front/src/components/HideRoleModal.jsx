@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from '../assets/css/modal.module.css';
-import role from '../assets/css/HideRoleModal.module.css'; // используем role.*
+import role from '../assets/css/HideRoleModal.module.css';
 
 const roleOptions = [
     { value: 'admin', label: 'ადმინისტრატორი' },

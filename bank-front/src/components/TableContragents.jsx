@@ -1,4 +1,4 @@
-import '../assets/css/TableAccounts.css';
+import { useSelector } from 'react-redux';
 import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faXmark, faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons';
@@ -15,8 +15,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
-
-import { useSelector } from 'react-redux';
+import '../assets/css/TableAccounts.css';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 
@@ -247,39 +246,39 @@ const TableContragents = () => {
 	};
 	const closeHideRolesModal = () => setHideRolesModalOpen(false);
 
-	const handleHideRolesChange = (e) => {
-		const { value, checked } = e.target;
-		setHideRoles(prev =>
-			checked ? [...prev, value] : prev.filter(r => r !== value)
-		);
-	};
+	// const handleHideRolesChange = (e) => {
+	// 	const { value, checked } = e.target;
+	// 	setHideRoles(prev =>
+	// 		checked ? [...prev, value] : prev.filter(r => r !== value)
+	// 	);
+	// };
 
-	const handleHideForRolesSubmit = async (e) => {
-		e.preventDefault();
-		try {
-			await Promise.all(
-				selectedIds.map(async (id) => {
-					const contragent = contragents.find(c => c.id === id);
-					const prevHidden = Array.isArray(contragent.hidden_for_roles) ? contragent.hidden_for_roles : [];
-					const merged = Array.from(new Set([...prevHidden, ...hideRoles]));
-					await defaultInstance.put(`/contragents/${id}`, {
-						name: contragent.name,
-						identification_code: contragent.identification_code,
-						hidden_for_roles: merged,
-					});
-				})
-			);
-			setSelectedIds([]);
-			setHideRoles([]);
-			setHideRolesModalOpen(false);
-			setLoading(true);
-			const res = await defaultInstance.get(`/contragents`);
-			setContragents(res.data);
-			setLoading(false);
-		} catch (err) {
-			alert(t('error_editing'));
-		}
-	};
+	// const handleHideForRolesSubmit = async (e) => {
+	// 	e.preventDefault();
+	// 	try {
+	// 		await Promise.all(
+	// 			selectedIds.map(async (id) => {
+	// 				const contragent = contragents.find(c => c.id === id);
+	// 				const prevHidden = Array.isArray(contragent.hidden_for_roles) ? contragent.hidden_for_roles : [];
+	// 				const merged = Array.from(new Set([...prevHidden, ...hideRoles]));
+	// 				await defaultInstance.put(`/contragents/${id}`, {
+	// 					name: contragent.name,
+	// 					identification_code: contragent.identification_code,
+	// 					hidden_for_roles: merged,
+	// 				});
+	// 			})
+	// 		);
+	// 		setSelectedIds([]);
+	// 		setHideRoles([]);
+	// 		setHideRolesModalOpen(false);
+	// 		setLoading(true);
+	// 		const res = await defaultInstance.get(`/contragents`);
+	// 		setContragents(res.data);
+	// 		setLoading(false);
+	// 	} catch (err) {
+	// 		alert(t('error_editing'));
+	// 	}
+	// };
 
 	const columns = [
 		...(user && (user.role === 'super_admin') ? [

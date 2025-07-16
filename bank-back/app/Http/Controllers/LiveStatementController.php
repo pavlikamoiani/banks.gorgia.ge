@@ -31,7 +31,6 @@ class LiveStatementController extends Controller
                 $contragent = substr($contragent, strlen('Wallet/domestic/'));
             }
             $contragentInn = $item['Sender']['Inn'] ?? null;
-            // Новый блок: добавлять только если оба значения валидны
             if ($contragent !== '-' && !empty($contragent) && !empty($contragentInn)) {
                 $existingContragent = Contragent::where('identification_code', $contragentInn)->first();
                 if (!$existingContragent) {
@@ -90,7 +89,6 @@ class LiveStatementController extends Controller
 
             $contragentName = $item['Sender']['Name'] ?? null;
             $contragentInn = $item['Sender']['Inn'] ?? null;
-            // Новый блок: добавлять только если оба значения валидны
             if (!empty($contragentName) && $contragentName !== '-' && !empty($contragentInn)) {
                 $existingContragent = Contragent::where('identification_code', $contragentInn)->first();
                 if (!$existingContragent) {
