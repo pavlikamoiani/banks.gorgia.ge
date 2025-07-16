@@ -25,8 +25,40 @@ const TableStatement = () => {
 	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
 	const [pageSizeDropdownOpen, setPageSizeDropdownOpen] = useState(false);
 	const pageSizeDropdownRef = useRef(null);
-
 	const [expandedRows, setExpandedRows] = useState({});
+
+	const [filters, setFilters] = useState({
+		contragent: '',
+		bank: '',
+		amount: '',
+		transferDate: '',
+		purpose: '',
+		startDate: '',
+		endDate: ''
+	});
+	const [pendingFilters, setPendingFilters] = useState({
+		contragent: '',
+		bank: '',
+		amount: '',
+		transferDate: '',
+		purpose: '',
+		startDate: '',
+		endDate: ''
+	});
+	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
+	const bankDropdownRef = useRef(null);
+	const [dbLoading, setDbLoading] = useState(false);
+
+	const [dbData, setDbData] = useState([]);
+	const bankOptions = useMemo(() => {
+		const setBanks = new Set();
+		(data || []).forEach(row => {
+			if (row.bank) {
+				setBanks.add(row.bank);
+			}
+		});
+		return Array.from(setBanks);
+	}, [data]);
 
 	const currentBank = useMemo(() => {
 		if (location.pathname.startsWith('/anta')) return 'anta';
@@ -75,38 +107,7 @@ const TableStatement = () => {
 	];
 
 	const [filterOpen, setFilterOpen] = useState(false);
-	const [filters, setFilters] = useState({
-		contragent: '',
-		bank: '',
-		amount: '',
-		transferDate: '',
-		purpose: '',
-		startDate: '',
-		endDate: ''
-	});
-	const [pendingFilters, setPendingFilters] = useState({
-		contragent: '',
-		bank: '',
-		amount: '',
-		transferDate: '',
-		purpose: '',
-		startDate: '',
-		endDate: ''
-	});
-	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
-	const bankDropdownRef = useRef(null);
-	const [dbLoading, setDbLoading] = useState(false);
-
-	const [dbData, setDbData] = useState([]);
-	const bankOptions = useMemo(() => {
-		const setBanks = new Set();
-		(data || []).forEach(row => {
-			if (row.bank) {
-				setBanks.add(row.bank);
-			}
-		});
-		return Array.from(setBanks);
-	}, [data]);
+	const [liveMode, setLiveMode] = useState(false);
 
 	const getEndpoint = () => {
 		if (currentBank === 'anta') return '/anta-transactions';
@@ -119,7 +120,7 @@ const TableStatement = () => {
 
 		try {
 			const params = { ...filterParams };
-			const endpoint = getEndpoint(); // <-- используем динамический эндпоинт
+			const endpoint = getEndpoint();
 			const response = await defaultInstance.get(endpoint, { params });
 
 			let combinedRows = [];
@@ -154,15 +155,15 @@ const TableStatement = () => {
 	};
 
 	useEffect(() => {
-		loadDbData(filters);
+		if (!liveMode) {
+			loadDbData(filters);
+		}
 		// eslint-disable-next-line
-	}, [filters, currentBank]);
+	}, [filters, currentBank, liveMode]);
 
 	const handleFilterChange = (e) => {
 		setPendingFilters({ ...pendingFilters, [e.target.name]: e.target.value });
 	};
-
-	const [liveMode, setLiveMode] = useState(false);
 
 	const loadLiveData = async (filterParams = {}) => {
 		setLoading(true);
@@ -176,24 +177,27 @@ const TableStatement = () => {
 			setData(rows);
 			setDbData(rows);
 			setPage(1);
-			// eslint-disable-next-line
-		} catch (err) {
-			setError(t('failed_to_load_transactions'));
-		} finally {
+		}
+		finally {
 			setLoading(false);
 		}
 	};
 
 	const handleApplyFilters = () => {
-		setFilters({ ...pendingFilters });
-		setPage(1);
 		if (liveMode) {
-			loadLiveData({ ...pendingFilters });
+			// Remove startDate and endDate for live mode
+			const { startDate, endDate, ...rest } = pendingFilters;
+			setFilters(rest);
+			setPendingFilters(rest);
+			loadLiveData(rest);
+		} else {
+			setFilters({ ...pendingFilters });
+			setPage(1);
 		}
 	};
 
 	const handleFilterReset = () => {
-		setPendingFilters({
+		const resetFilters = {
 			contragent: '',
 			bank: '',
 			amount: '',
@@ -201,15 +205,32 @@ const TableStatement = () => {
 			purpose: '',
 			startDate: '',
 			endDate: ''
-		});
+		};
 		if (liveMode) {
-			loadLiveData({});
+			const { startDate, endDate, ...rest } = resetFilters;
+			setFilters(rest);
+			setPendingFilters(rest);
+			loadLiveData(rest);
+		} else {
+			setFilters(resetFilters);
+			setPendingFilters(resetFilters);
+			setPage(1);
 		}
 	};
 
 	const handleBankSelect = (bank) => {
 		setPendingFilters(f => ({ ...f, bank }));
 		setBankDropdownOpen(false);
+	};
+
+	const handleLiveMode = async () => {
+		if (loading) return;
+		setLiveMode(true);
+		// Remove startDate and endDate when switching to live mode
+		const { startDate, endDate, ...rest } = pendingFilters;
+		setFilters(rest);
+		setPendingFilters(rest);
+		await loadLiveData(rest);
 	};
 
 	useEffect(() => {
@@ -247,11 +268,7 @@ const TableStatement = () => {
 							background: liveMode ? "#2E8B57" : "#0173b1",
 							cursor: loading ? "not-allowed" : "pointer",
 						}}
-						onClick={async () => {
-							if (loading) return;
-							setLiveMode(true);
-							await loadLiveData({ ...pendingFilters });
-						}}
+						onClick={handleLiveMode}
 						disabled={loading}
 					>
 						<FontAwesomeIcon icon={faBolt} style={{ marginRight: 6 }} />
@@ -322,8 +339,10 @@ const TableStatement = () => {
 							{ name: 'amount', label: t('amount'), placeholder: t('search_by_amount') },
 							{ name: 'transferDate', label: t('transferDate'), placeholder: t('search_by_transferDate') },
 							{ name: 'purpose', label: t('purpose'), placeholder: t('search_by_purpose') },
-							{ name: 'startDate', label: t('Start Date'), type: 'date' },
-							{ name: 'endDate', label: t('End Date'), type: 'date' }
+							...(!liveMode ? [
+								{ name: 'startDate', label: t('Start Date'), type: 'date' },
+								{ name: 'endDate', label: t('End Date'), type: 'date' }
+							] : [])
 						]}
 						bankOptions={bankOptions}
 						bankDropdownOpen={bankDropdownOpen}

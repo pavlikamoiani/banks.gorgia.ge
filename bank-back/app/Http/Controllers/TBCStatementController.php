@@ -39,7 +39,8 @@ class TBCStatementController extends Controller
                 'id' => $transaction->id,
                 'Sender' => [
                     'Name' => $transaction->sender_name,
-                    'BankName' => 'TBC Bank'
+                    'BankName' => 'TBC Bank',
+                    'Inn' => $transaction->contragent ? $transaction->contragent->identification_code : ($transaction->contragent_id ?? null),
                 ],
                 'Amount' => $transaction->amount,
                 'PostDate' => $transaction->transaction_date,

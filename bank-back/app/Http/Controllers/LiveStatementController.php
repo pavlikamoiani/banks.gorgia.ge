@@ -7,6 +7,7 @@ use App\Http\Controllers\TBCStatementController;
 use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\Transaction;
 use App\Models\Bank;
+use App\Models\Contragent;
 
 class LiveStatementController extends Controller
 {
@@ -22,14 +23,25 @@ class LiveStatementController extends Controller
             $bankName = $item['Sender']['BankName'] ?? 'TBC Bank';
 
             if ($bankName === 'TBC Bank') {
-                $bankName = 'სს "თიბისი ბანკი"';
-            } else if ($bankName === 'სს "თიბისი ბანკი"') {
-                $bankName = 'სს "თიბისი ბანკი"';
+                $bankName = 'TBC Bank';
             }
 
             $contragent = $item['Sender']['Name'] ?? '-';
             if (strpos($contragent, 'Wallet/domestic/') === 0) {
                 $contragent = substr($contragent, strlen('Wallet/domestic/'));
+            }
+            $contragentInn = $item['Sender']['Inn'] ?? null;
+            // Новый блок: добавлять только если оба значения валидны
+            if ($contragent !== '-' && !empty($contragent) && !empty($contragentInn)) {
+                $existingContragent = Contragent::where('identification_code', $contragentInn)->first();
+                if (!$existingContragent) {
+                    $contragentData = [
+                        'name' => $contragent,
+                        'hidden_for_roles' => [],
+                        'identification_code' => $contragentInn
+                    ];
+                    Contragent::create($contragentData);
+                }
             }
 
             $syncDate = $item['PostDate'] ?? '-';
@@ -41,6 +53,7 @@ class LiveStatementController extends Controller
                 'id' => 'tbc-' . ($item['id'] ?? uniqid()),
                 'bankType' => 'TBC',
                 'contragent' => $contragent,
+                'contragentInn' => $contragentInn,
                 'bank' => $bankName,
                 'amount' => $item['Amount'] ?? 0,
                 'transferDate' => isset($item['PostDate']) ? substr($item['PostDate'], 0, 10) : '-',
@@ -64,7 +77,8 @@ class LiveStatementController extends Controller
                 'id' => 'bog-' . ($item['Id'] ?? uniqid()),
                 'bankType' => 'BOG',
                 'contragent' => $item['Sender']['Name'] ?? '-',
-                'bank' => $item['Sender']['BankName'] ?? 'სს "საქართველოს ბანკი"',
+                'contragentInn' => $item['Sender']['Inn'] ?? null,
+                'bank' => $item['Sender']['BankName'] ?? 'BOG Bank',
                 'amount' => $item['Amount'] ?? 0,
                 'transferDate' => isset($item['PostDate']) ? substr($item['PostDate'], 0, 10) : '-',
                 'purpose' => $item['EntryComment'] ?? '-',
@@ -73,6 +87,22 @@ class LiveStatementController extends Controller
 
             $bankStatementId = $item['Id'] ?? $item['DocKey'] ?? null;
             if (!$bankStatementId) continue;
+
+            $contragentName = $item['Sender']['Name'] ?? null;
+            $contragentInn = $item['Sender']['Inn'] ?? null;
+            // Новый блок: добавлять только если оба значения валидны
+            if (!empty($contragentName) && $contragentName !== '-' && !empty($contragentInn)) {
+                $existingContragent = Contragent::where('identification_code', $contragentInn)->first();
+                if (!$existingContragent) {
+                    $contragentData = [
+                        'name' => $contragentName,
+                        'hidden_for_roles' => [],
+                        'identification_code' => $contragentInn
+                    ];
+                    Contragent::create($contragentData);
+                }
+            }
+
             $exists = Transaction::where('bank_statement_id', $bankStatementId)
                 ->where('bank_id', $bogBankId)
                 ->exists();

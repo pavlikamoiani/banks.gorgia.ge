@@ -111,7 +111,7 @@ class TransactionRepository extends BaseRepository
 
         $exists = Transaction::where([
             ['bank_statement_id', $transactionData->movementId],
-            ['contragent_id', $transactionData->externalPaymentId ?? null],
+            ['contragent_id', $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode] ?? null,
             ['bank_id', $bank ? $bank->id : null],
             ['amount', $transactionData->amount->amount],
             ['transaction_date', $transactionDate],
@@ -125,7 +125,7 @@ class TransactionRepository extends BaseRepository
         }
 
         $transaction = new Transaction();
-        $transaction->contragent_id = $transactionData->externalPaymentId ?? null;
+        $transaction->contragent_id = $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode ?? null;
         $bank = \App\Models\Bank::where('bank_code', 'TBC')->first();
         $transaction->bank_id = $bank ? $bank->id : null;
         $transaction->bank_statement_id = $transactionData->movementId;

@@ -90,4 +90,38 @@ class TransactionController extends Controller
 
         return $query->orderBy('transaction_date', 'desc')->get();
     }
+
+    public function todayActivities(Request $request)
+    {
+        try {
+            $query = Transaction::query()->whereDate('transaction_date', now()->toDateString());
+
+            if ($request->filled('contragent')) {
+                $query->where('sender_name', 'like', '%' . $request->query('contragent') . '%');
+            }
+            if ($request->filled('bank')) {
+                $bank = Bank::where('name', $request->query('bank'))->orWhere('bank_code', $request->query('bank'))->first();
+                if ($bank) {
+                    $query->where('bank_id', $bank->id);
+                }
+            }
+            if ($request->filled('amount')) {
+                $query->where('amount', 'like', '%' . $request->query('amount') . '%');
+            }
+            if ($request->filled('transferDate')) {
+                $query->whereDate('transaction_date', $request->query('transferDate'));
+            }
+            if ($request->filled('purpose')) {
+                $query->where('description', 'like', '%' . $request->query('purpose') . '%');
+            }
+
+            $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
+
+            $data = $query->orderBy('transaction_date', 'desc')->get();
+
+            return response()->json(['data' => $data]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }
