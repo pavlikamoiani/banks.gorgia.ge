@@ -66,7 +66,15 @@ const TableStatement = () => {
 	}, [location.pathname]);
 
 	const columns = [
-		{ key: 'contragent', label: t('contragent') },
+		{
+			key: 'contragent', label: t('contragent'),
+			render: (value) => {
+				if (value === 'ტერმინალით გადახდა') {
+					return <span style={{ color: 'red' }}>{value}</span>;
+				}
+				return value;
+			}
+		},
 		{ key: 'bank', label: t('bank') },
 		{ key: 'amount', label: t('amount') },
 		{ key: 'transferDate', label: t('transferDate') },
@@ -129,7 +137,7 @@ const TableStatement = () => {
 			if (response.data) {
 				combinedRows = (response.data || []).map((item, idx) => ({
 					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
-					contragent: item.sender_name || '-',
+					contragent: item.sender_name || 'ტერმინალით გადახდა',
 					bank: item.bank_id === 1 ? 'TBC Bank' : 'Bank of Georgia',
 					amount: (item.amount ?? 0) + ' ₾',
 					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',

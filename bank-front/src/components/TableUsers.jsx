@@ -236,7 +236,7 @@ const TableUsers = () => {
 		<div className="table-accounts-container">
 			<div className="table-accounts-header">
 				<h2 className="table-heading">{t('users_title')}</h2>
-				<div style={{ display: 'flex', gap: 10 }}>
+				<div style={{ display: 'flex', gap: 10, maxHeight: '40px', alignItems: 'center', justifyContent: 'center' }}>
 					<button
 						style={{
 							textAlign: "center",
