@@ -140,6 +140,15 @@ class LiveStatementController extends Controller
             return true;
         });
 
+        $user = $request->user();
+        if ($user && $user->role !== 'super_admin') {
+            $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
+                ->pluck('identification_code')->toArray();
+            $filtered = array_filter($filtered, function ($row) use ($hiddenContragents) {
+                return !in_array($row['contragentInn'], $hiddenContragents);
+            });
+        }
+
         usort($filtered, function ($a, $b) {
             return strcmp(($b['transferDate'] ?? ''), ($a['transferDate'] ?? ''));
         });

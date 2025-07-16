@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Models\Bank;
+use App\Models\Contragent;
 
 class TransactionController extends Controller
 {
@@ -12,6 +13,7 @@ class TransactionController extends Controller
     {
         set_time_limit(600);
 
+        $user = $request->user();
         $bankCode = $request->query('bank_code');
         $bankName = $request->query('bank');
         $query = Transaction::query()->whereBetween('transaction_date', [now()->subDays(7), now()]);
@@ -87,12 +89,23 @@ class TransactionController extends Controller
 
         $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
 
-        return $query->orderBy('transaction_date', 'desc')->get();
+        $results = $query->orderBy('transaction_date', 'desc')->get();
+
+        if ($user && $user->role !== 'super_admin') {
+            $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
+                ->pluck('identification_code')->toArray();
+            $results = $results->filter(function ($item) use ($hiddenContragents) {
+                return !in_array($item->contragent_id, $hiddenContragents);
+            })->values();
+        }
+
+        return $results;
     }
 
     public function todayActivities(Request $request)
     {
         try {
+            $user = $request->user();
             $query = Transaction::query()->whereDate('transaction_date', now()->toDateString());
 
             if ($request->filled('contragent')) {
@@ -117,6 +130,14 @@ class TransactionController extends Controller
             $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
 
             $data = $query->orderBy('transaction_date', 'desc')->get();
+
+            if ($user && $user->role !== 'super_admin') {
+                $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
+                    ->pluck('identification_code')->toArray();
+                $data = $data->filter(function ($item) use ($hiddenContragents) {
+                    return !in_array($item->contragent_id, $hiddenContragents);
+                })->values();
+            }
 
             return response()->json(['data' => $data]);
         } catch (\Throwable $e) {
