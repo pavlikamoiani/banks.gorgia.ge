@@ -40,14 +40,14 @@ const SortableTable = ({ columns, data, loading, emptyText }) => {
                     {columns.map(col => (
                         <th
                             key={col.key}
-                            onClick={() => col.key !== 'actions' && handleSort(col.key)}
+                            onClick={() => (col.key !== 'actions' && col.key !== 'select') && handleSort(col.key)}
                             className={styles.sortableTh}
                         >
                             <span className={styles.thContent}>
                                 <span>
                                     {col.label}
                                 </span>
-                                {col.key !== 'actions' && (
+                                {(col.key !== 'actions' && col.key !== 'select') && (
                                     <span className={styles['sort-icons']}>
                                         <span
                                             className={`${styles['sort-arrow']} ${sortConfig.key === col.key && sortConfig.direction === 'asc' ? styles.active : ''}`}
@@ -89,7 +89,7 @@ const SortableTable = ({ columns, data, loading, emptyText }) => {
                     </tr>
                 )}
             </tbody>
-        </table>
+        </table >
     );
 };
 

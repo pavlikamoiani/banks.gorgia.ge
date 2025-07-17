@@ -207,10 +207,10 @@ const TableContragents = () => {
 	};
 
 	const handleSelectAll = (e) => {
-		if (e.target.checked) {
-			setSelectedIds(filteredContragents.map(c => c.id));
-		} else {
+		if (selectedIds.length === filteredContragents.length) {
 			setSelectedIds([]);
+		} else {
+			setSelectedIds(filteredContragents.map(row => row.id));
 		}
 	};
 	const handleSelectOne = (id) => {
@@ -229,12 +229,19 @@ const TableContragents = () => {
 			{
 				key: 'select',
 				label: (
-					<input
-						type="checkbox"
-						checked={selectedIds.length === pagedData.length && pagedData.length > 0}
-						onChange={handleSelectAll}
-						aria-label={t('select_all')}
-					/>
+					<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+						<input
+							type="checkbox"
+							checked={selectedIds.length === filteredContragents.length && filteredContragents.length > 0}
+							onChange={handleSelectAll}
+							aria-label={t('select_all')}
+						/>
+						{selectedIds.length > 0 && (
+							<span style={{ fontWeight: 'bold', color: '#0173b1' }}>
+								{selectedIds.length} {t('selected')}
+							</span>
+						)}
+					</span>
 				),
 				render: (val, row) => (
 					<input

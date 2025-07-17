@@ -65,6 +65,7 @@ function AppContent() {
       {!isLoginPage && <Header />}
       <div className="main-content">
         <Routes>
+          <Route path='/' element={<Navigate to="/gorgia/statement" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/gorgia/statement" element={
             <ProtectedRoute bank="gorgia"><StatementPage /></ProtectedRoute>
