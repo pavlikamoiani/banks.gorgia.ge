@@ -70,7 +70,7 @@ const TableStatement = () => {
 			key: 'contragent', label: t('contragent'),
 			render: (value) => {
 				if (value === 'ტერმინალით გადახდა') {
-					return <span style={{ color: 'red' }}>{value}</span>;
+					return <span style={{ color: '#0173b1' }}>{value}</span>;
 				}
 				return value;
 			}
@@ -235,7 +235,6 @@ const TableStatement = () => {
 	const handleLiveMode = async () => {
 		if (loading) return;
 		setLiveMode(true);
-		// Remove startDate and endDate when switching to live mode
 		const { startDate, endDate, ...rest } = pendingFilters;
 		setFilters(rest);
 		setPendingFilters(rest);

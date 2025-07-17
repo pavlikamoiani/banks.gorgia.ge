@@ -12,10 +12,10 @@ class BOGService
     public function getToken()
     {
         return Cache::remember('bog_token', 3000, function () {
-            $response = Http::asForm()->post(env('BOG_AUTH_URL'), [
+            $response = Http::asForm()->post(env('GORGIA_BOG_AUTH_URL'), [
                 'grant_type' => 'client_credentials',
-                'client_id' => env('BOG_CLIENT_ID'),
-                'client_secret' => env('BOG_CLIENT_SECRET'),
+                'client_id' => env('GORGIA_BOG_CLIENT_ID'),
+                'client_secret' => env('GORGIA_BOG_CLIENT_SECRET'),
             ]);
 
             if (!$response->ok()) {
@@ -29,30 +29,68 @@ class BOGService
 
     public function getTodayActivities($account, $currency)
     {
+        set_time_limit(600);
         $token = $this->getToken();
         \Log::info('BOG token', ['token' => $token]);
 
-        $response = Http::withToken($token)
-            ->timeout(30)
-            ->get(env('BOG_BASE_URL') . "/documents/todayactivities/$account/$currency");
-
-        \Log::info('BOG API status', ['status' => $response->status()]);
-        \Log::info('BOG API raw response', ['body' => $response->body()]);
-
-        if ($response->status() === 401) {
-            \Log::error('BOG token unauthorized, clearing cache and retrying');
-            Cache::forget('bog_token');
-            $token = $this->getToken();
-            $response = Http::withToken($token)
-                ->timeout(30)
-                ->get(env('BOG_BASE_URL') . "/documents/todayactivities/$account/$currency");
-            \Log::info('BOG API status (after retry)', ['status' => $response->status()]);
-            \Log::info('BOG API raw response (after retry)', ['body' => $response->body()]);
+        if (empty($account) || empty($currency)) {
+            \Log::error('BOG getTodayActivities: account or currency is empty', [
+                'account' => $account,
+                'currency' => $currency
+            ]);
+            throw new \Exception('Account or currency is empty');
         }
 
+        $url = env('GORGIA_BOG_BASE_URL') . "/documents/todayactivities/$account/$currency";
+        \Log::info('BOG todayActivities URL', ['url' => $url]);
+
+        $maxRetries = 3;
+        $retryDelay = 2;
+
+        $attempt = 0;
+        do {
+            $response = Http::withToken($token)
+                ->timeout(30)
+                ->get($url);
+
+            \Log::info('BOG API status', ['status' => $response->status()]);
+            \Log::info('BOG API raw response', ['body' => $response->body()]);
+
+            if ($response->status() === 401) {
+                \Log::error('Gorgia BOG token unauthorized, clearing cache and retrying');
+                Cache::forget('bog_token');
+                $token = $this->getToken();
+                $attempt++;
+                sleep($retryDelay);
+                continue;
+            }
+
+            if ($response->status() === 503) {
+                \Log::error('BOG API Service Unavailable (503), retrying', [
+                    'attempt' => $attempt + 1,
+                    'url' => $url,
+                    'body' => $response->body()
+                ]);
+                $attempt++;
+                sleep($retryDelay);
+                continue;
+            }
+
+            break;
+        } while ($attempt < $maxRetries);
+
         if (!$response->ok()) {
-            \Log::error('Failed to retrieve today\'s BOG transactions', ['response' => $response->body()]);
-            throw new \Exception('Error requesting today\'s transactions');
+            \Log::error('Failed to retrieve today\'s Gorgia BOG transactions', [
+                'url' => $url,
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'account' => $account,
+                'currency' => $currency
+            ]);
+            throw new \Exception(
+                "Error requesting today's transactions. Status: " . $response->status() .
+                    ". Body: " . $response->body()
+            );
         }
 
         return $response->json();
@@ -125,7 +163,7 @@ class BOGService
 
         $url = sprintf(
             "%s/statement/%s/%s/%s/%s/%s/%s",
-            env('BOG_BASE_URL'),
+            env('GORGIA_BOG_BASE_URL'),
             $accountNumber,
             $currency,
             $startDate,
@@ -157,7 +195,7 @@ class BOGService
 
         $url = sprintf(
             "%s/statement/%s/%s/%s/%d/%s",
-            env('BOG_BASE_URL'),
+            env('GORGIA_BOG_BASE_URL'),
             $accountNumber,
             $currency,
             $statementId,

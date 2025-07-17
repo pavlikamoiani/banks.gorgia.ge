@@ -36,10 +36,10 @@ class UpdateYesterdayData implements ShouldQueue
     public function handle()
     {
         $bog = app(BOGService::class);
-        $currency = env('BOG_CURRENCY', 'GEL');
+        $currency = env('GORGIA_BOG_CURRENCY', 'GEL');
         $accounts = [
-            env('BOG_ACCOUNT'),
-            env('BOG_ACCOUNT_2')
+            env('GORGIA_BOG_ACCOUNT'),
+            env('GORGIA_BOG_ACCOUNT_2')
         ];
 
         $yesterday = Carbon::yesterday()->format('Y-m-d');

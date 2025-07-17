@@ -27,6 +27,9 @@ class LiveStatementController extends Controller
             }
 
             $contragent = $item['Sender']['Name'] ?? '-';
+            if ($contragent === '-') {
+                $contragent = 'ტერმინალით გადახდა';
+            }
             if (strpos($contragent, 'Wallet/domestic/') === 0) {
                 $contragent = substr($contragent, strlen('Wallet/domestic/'));
             }
@@ -61,8 +64,8 @@ class LiveStatementController extends Controller
             ];
         }
 
-        $account = $request->input('account', env('BOG_ACCOUNT'));
-        $currency = $request->input('currency', env('BOG_CURRENCY', 'GEL'));
+        $account = $request->input('account', env('GORGIA_BOG_ACCOUNT'));
+        $currency = $request->input('currency', env('GORGIA_BOG_CURRENCY', 'GEL'));
         $bogData = $bogService->getTodayActivities($account, $currency);
         $bogRows = [];
         $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? 2;
@@ -72,12 +75,18 @@ class LiveStatementController extends Controller
                 $syncDate = substr($syncDate, 0, 10);
             }
 
+            $contragent = $item['Sender']['Name'] ?? '-';
+            if ($contragent === '-') {
+                $contragent = 'ტერმინალით გადახდა';
+            }
+
+            $bankName = 'Bank of Georgia';
             $bogRows[] = [
                 'id' => 'bog-' . ($item['Id'] ?? uniqid()),
                 'bankType' => 'BOG',
-                'contragent' => $item['Sender']['Name'] ?? '-',
+                'contragent' => $contragent,
                 'contragentInn' => $item['Sender']['Inn'] ?? null,
-                'bank' => $item['Sender']['BankName'] ?? 'BOG Bank',
+                'bank' => $bankName,
                 'amount' => $item['Amount'] ?? 0,
                 'transferDate' => isset($item['PostDate']) ? substr($item['PostDate'], 0, 10) : '-',
                 'purpose' => $item['EntryComment'] ?? '-',

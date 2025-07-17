@@ -26,8 +26,8 @@ class BogMigrateJob extends Command
             $accounts[] = $this->option('account');
         } else {
             $accounts = [
-                env('BOG_ACCOUNT'),
-                env('BOG_ACCOUNT_2')
+                env('GORGIA_BOG_ACCOUNT'),
+                env('GORGIA_BOG_ACCOUNT_2')
             ];
         }
 

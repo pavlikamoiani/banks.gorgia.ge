@@ -15,8 +15,8 @@ class BOGStatementController extends Controller
 {
     public function todayActivities(Request $request, BOGService $bog)
     {
-        $account = $request->input('account', env('BOG_ACCOUNT'));
-        $currency = $request->input('currency', env('BOG_CURRENCY', 'GEL'));
+        $account = $request->input('account', env('GORGIA_BOG_ACCOUNT'));
+        $currency = $request->input('currency', env('GORGIA_BOG_CURRENCY', 'GEL'));
 
         $data = $bog->getTodayActivities($account, $currency);
 
@@ -84,8 +84,8 @@ class BOGStatementController extends Controller
         $accounts = [];
         if ($accountNumber === 'all') {
             $accounts = [
-                env('BOG_ACCOUNT'),
-                env('BOG_ACCOUNT_2')
+                env('GORGIA_BOG_ACCOUNT'),
+                env('GORGIA_BOG_ACCOUNT_2')
             ];
         } else {
             $accounts = [$accountNumber];
@@ -207,14 +207,14 @@ class BOGStatementController extends Controller
     {
         set_time_limit(600);
 
-        $currency = $request->input('currency', env('BOG_CURRENCY', 'GEL'));
+        $currency = $request->input('currency', env('GORGIA_BOG_CURRENCY', 'GEL'));
         $startDateParam = $request->input('start', '2019-01-01');
         $start = Carbon::parse($startDateParam)->startOfMonth();
         $end = Carbon::now()->endOfMonth();
 
         $accounts = $request->has('account')
             ? [$request->input('account')]
-            : [env('BOG_ACCOUNT'), env('BOG_ACCOUNT_2')];
+            : [env('GORGIA_BOG_ACCOUNT'), env('GORGIA_BOG_ACCOUNT_2')];
 
         $allResults = [];
         $grandTotalInserted = 0;
@@ -386,8 +386,8 @@ class BOGStatementController extends Controller
         $orderByDate = filter_var($orderByDate, FILTER_VALIDATE_BOOLEAN);
 
         $accounts = [
-            env('BOG_ACCOUNT'),
-            env('BOG_ACCOUNT_2')
+            env('GORGIA_BOG_ACCOUNT'),
+            env('GORGIA_BOG_ACCOUNT_2')
         ];
 
         $start = Carbon::parse($startDate)->startOfMonth();
