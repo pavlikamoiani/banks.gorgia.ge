@@ -16,7 +16,11 @@ class TransactionController extends Controller
         $user = $request->user();
         $bankCode = $request->query('bank_code');
         $bankName = $request->query('bank');
-        $query = Transaction::query()->whereBetween('transaction_date', [now()->subDays(7), now()]);
+        if (!$request->filled('startDate') && !$request->filled('endDate')) {
+            $query = Transaction::query()->whereBetween('transaction_date', [now()->subDays(7), now()]);
+        } else {
+            $query = Transaction::query();
+        }
 
         $isTbc = false;
 

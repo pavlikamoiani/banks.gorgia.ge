@@ -247,7 +247,7 @@ const resources = {
       "show_less": "ნაკლების ნახვა",
       "apply": "გამოყენება",
       "live_today_transactions": "დღევანდელი ტრანზაქციები",
-      "installment": "განვადება",
+      "installment": "განვადებები",
       "installment_tooltip": "განვადებების(თბს) ჩვენება/დამალვა",
 
       // Delete confirmation modal

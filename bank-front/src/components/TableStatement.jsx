@@ -194,7 +194,6 @@ const TableStatement = () => {
 
 	const handleApplyFilters = () => {
 		if (liveMode) {
-			// Remove startDate and endDate for live mode
 			const { startDate, endDate, ...rest } = pendingFilters;
 			setFilters(rest);
 			setPendingFilters(rest);
@@ -202,6 +201,7 @@ const TableStatement = () => {
 		} else {
 			setFilters({ ...pendingFilters });
 			setPage(1);
+			loadDbData({ ...pendingFilters }); // <--- добавьте этот вызов
 		}
 	};
 
