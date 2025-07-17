@@ -363,7 +363,7 @@ const Header = () => {
 									<div
 										className="profile-dropdown-item"
 										onClick={handleLogout}
-										style={{ color: 'red', borderTop: '1px solid #eee', marginTop: 4 }}
+										style={{ color: 'red', borderTop: '1px solid #eee' }}
 									>
 										{t('logout')}
 									</div>
