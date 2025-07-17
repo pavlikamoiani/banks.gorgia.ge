@@ -12,6 +12,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 
 import filterStyles from '../assets/css/filter.module.css';
 import TableFilter from './TableFilter';
+import { useSelector } from 'react-redux';
 
 const TableUsers = () => {
 	const { t } = useTranslation();
@@ -45,7 +46,6 @@ const TableUsers = () => {
 	const [filterDrafts, setFilterDrafts] = useState({ name: '', email: '', role: '', bank: '' });
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
-	const didFetch = useRef(false);
 
 	const bankOptions = useMemo(() => {
 		const banks = users.map(u => u.bank).filter(Boolean);
@@ -56,6 +56,8 @@ const TableUsers = () => {
 		return [...new Set(roles)];
 	}, [users]);
 
+	const user = useSelector(state => state.user.user);
+
 	useEffect(() => {
 		setLoading(true);
 		const params = {};
@@ -63,13 +65,18 @@ const TableUsers = () => {
 		if (filters.email) params.email = filters.email;
 		if (filters.role) params.role = filters.role;
 		if (filters.bank) params.bank = filters.bank;
+
+		if (user && user.role === 'admin') {
+			params.bank = user.bank;
+		}
+
 		defaultInstance.get('/users', { params })
 			.then(res => {
 				setUsers(res.data);
 				setLoading(false);
 			})
 			.catch(() => setLoading(false));
-	}, [filters]);
+	}, [filters, user]);
 
 	const handleOpenUserModal = () => setUserModalOpen(true);
 	const handleCloseUserModal = () => {
@@ -251,7 +258,7 @@ const TableUsers = () => {
 						}}
 						onClick={handleOpenUserModal}
 					>
-						<FontAwesomeIcon icon={faUserPlus} color='#fff' fontSize={'18px'} />
+						<FontAwesomeIcon icon={faUserPlus} color='#fff' fontSize={'16px'} />
 					</button>
 					<button
 						className={filterStyles.filterToggleBtn}

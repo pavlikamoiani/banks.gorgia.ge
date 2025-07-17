@@ -29,9 +29,8 @@
 .tooltip,
 .installmentTooltip {
     visibility: hidden;
-    opacity: 0;
-    width: auto;
-    background: #000000a6;
+    width: max-content;
+    background: gray;
     color: #fff;
     text-align: center;
     border-radius: 6px;
@@ -41,12 +40,16 @@
     left: 50%;
     top: -40px;
     transform: translateX(-50%);
-    font-size: 0.95em;
+    font-size: 0.90em;
     pointer-events: none;
     transition: opacity 0.22s cubic-bezier(.4, 0, .2, 1);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
     white-space: pre-line;
     text-wrap: nowrap;
+}
+
+.installmentTooltip {
+    top: -42px;
 }
 
 .liveBtn:hover .tooltip,
@@ -64,7 +67,7 @@
     transform: translateX(-50%);
     border-width: 8px 8px 0 8px;
     border-style: solid;
-    border-color: #000000a6 transparent transparent transparent;
+    border-color: gray transparent transparent transparent;
 }
 
 
@@ -203,37 +206,4 @@
 .installmentBtnWrapper:focus .installmentTooltip {
     visibility: visible;
     opacity: 1;
-}
-
-.installmentTooltip {
-    visibility: hidden;
-    opacity: 0;
-    width: auto;
-    background: #000000a6;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 4px 16px;
-    position: absolute;
-    z-index: 20;
-    left: 50%;
-    top: -40px;
-    transform: translateX(-50%);
-    font-size: 0.95em;
-    pointer-events: none;
-    transition: opacity 0.22s cubic-bezier(.4, 0, .2, 1);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
-    white-space: pre-line;
-    text-wrap: nowrap;
-}
-
-.installmentTooltip::after {
-    content: "";
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 8px 8px 0 8px;
-    border-style: solid;
-    border-color: #000000a6 transparent transparent transparent;
 }

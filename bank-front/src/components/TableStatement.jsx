@@ -370,38 +370,40 @@ const TableStatement = () => {
 					</button>
 				</div>
 			</div>
-			{filterOpen && (
-				<div className={filterStyles.filterDrawer}>
-					<TableFilter
-						filters={pendingFilters}
-						onChange={handleFilterChange}
-						onReset={handleFilterReset}
-						onApply={handleApplyFilters}
-						fields={[
-							{ name: 'contragent', label: t('contragent'), placeholder: t('search_by_contragent') },
-							{
-								name: 'bank',
-								label: t('bank'),
-								placeholder: t('search_by_bank'),
-								type: 'bankDropdown'
-							},
-							{ name: 'amount', label: t('amount'), placeholder: t('search_by_amount') },
-							{ name: 'transferDate', label: t('transferDate'), placeholder: t('search_by_transferDate') },
-							{ name: 'purpose', label: t('purpose'), placeholder: t('search_by_purpose') },
-							...(!liveMode ? [
-								{ name: 'startDate', label: t('Start Date'), type: 'date' },
-								{ name: 'endDate', label: t('End Date'), type: 'date' }
-							] : [])
-						]}
-						bankOptions={bankOptions}
-						bankDropdownOpen={bankDropdownOpen}
-						setBankDropdownOpen={setBankDropdownOpen}
-						bankDropdownRef={bankDropdownRef}
-						onBankSelect={handleBankSelect}
-						t={t}
-					/>
-				</div>
-			)}
+			{
+				filterOpen && (
+					<div className={filterStyles.filterDrawer}>
+						<TableFilter
+							filters={pendingFilters}
+							onChange={handleFilterChange}
+							onReset={handleFilterReset}
+							onApply={handleApplyFilters}
+							fields={[
+								{ name: 'contragent', label: t('contragent'), placeholder: t('search_by_contragent') },
+								{
+									name: 'bank',
+									label: t('bank'),
+									placeholder: t('search_by_bank'),
+									type: 'bankDropdown'
+								},
+								{ name: 'amount', label: t('amount'), placeholder: t('search_by_amount') },
+								{ name: 'transferDate', label: t('transferDate'), placeholder: t('search_by_transferDate') },
+								{ name: 'purpose', label: t('purpose'), placeholder: t('search_by_purpose') },
+								...(!liveMode ? [
+									{ name: 'startDate', label: t('Start Date'), type: 'date' },
+									{ name: 'endDate', label: t('End Date'), type: 'date' }
+								] : [])
+							]}
+							bankOptions={bankOptions}
+							bankDropdownOpen={bankDropdownOpen}
+							setBankDropdownOpen={setBankDropdownOpen}
+							bankDropdownRef={bankDropdownRef}
+							onBankSelect={handleBankSelect}
+							t={t}
+						/>
+					</div>
+				)
+			}
 			<div className="table-wrapper">
 				{error && <div style={{ color: 'red' }}>{error}</div>}
 				<SortableTable
@@ -417,7 +419,7 @@ const TableStatement = () => {
 				pageSize={pageSize}
 				onChange={setPage}
 			/>
-		</div>
+		</div >
 	);
 };
 
