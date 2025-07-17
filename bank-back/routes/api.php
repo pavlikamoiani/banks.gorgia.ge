@@ -9,8 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TbcPasswordController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Users

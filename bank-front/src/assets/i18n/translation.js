@@ -16,6 +16,16 @@ const resources = {
       "bank": "Bank",
       "no_data_found": "No data found",
 
+      // Dashboard
+      "dashboard": "Dashboard",
+      "today": "Today",
+      "today_transactions": "Today's Transactions",
+      "transactions": "Transactions",
+      "total_amount": "Total Amount",
+      "top_contragents": "Top Contragents",
+      "transactions_by_day": "Transactions by Day",
+      "loading_data": "Loading data...",
+
       // Hide roles
       "hide_for_roles": "Hide for roles",
       "select_roles_to_hide": "Select roles to hide for",
@@ -104,6 +114,16 @@ const resources = {
       "bank": "Банк",
       "no_data_found": "Данные не найдены",
 
+      // Dashboard
+      "dashboard": "Панель управления",
+      "today": "Сегодня",
+      "today_transactions": "Сегодняшние транзакции",
+      "transactions": "Транзакции",
+      "total_amount": "Общая сумма",
+      "top_contragents": "Топ контрагентов",
+      "transactions_by_day": "Транзакции по дням",
+      "loading_data": "Загрузка данных...",
+
       // Hide roles
       "hide_for_roles": "Скрыть для ролей",
       "select_roles_to_hide": "Выберите роли для скрытия",
@@ -190,6 +210,16 @@ const resources = {
       "reset": "გაუქმება",
       "bank": "დანიშნული ბანკი",
       "no_data_found": "მონაცემები არ მოიძებნა",
+
+      // Dashboard
+      "dashboard": "დაშვება",
+      "today": "დღეს",
+      "today_transactions": "დღევანდელი ტრანზაქციები",
+      "transactions": "ტრანზაქციები",
+      "total_amount": "სულ თანხა",
+      "top_contragents": "ტოპ კონტრაგენტები",
+      "transactions_by_day": "დღის ტრანზაქციები",
+      "loading_data": "მონაცემების ჩატვირთვა...",
 
       // Hide roles
       "hide_for_roles": "მომხმარებლის როლის დამალვა",

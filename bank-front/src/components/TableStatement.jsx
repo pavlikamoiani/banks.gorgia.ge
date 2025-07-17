@@ -258,6 +258,7 @@ const TableStatement = () => {
 		if (!installmentOnly) return base;
 		return base.filter(row =>
 			(row.purpose || row.description || '').toLowerCase().includes('განვადებ')
+			// || (row.purpose || row.description || '').toLowerCase().includes('განაწილებ')
 		);
 	}, [dbData, data, installmentOnly, liveMode]);
 

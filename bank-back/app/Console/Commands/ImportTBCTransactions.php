@@ -29,6 +29,8 @@ class ImportTBCTransactions extends Command
      */
     public function handle()
     {
+        set_time_limit(0);
+
         $from = $this->option('from') ? Carbon::parse($this->option('from'))->startOfDay() : Carbon::today()->startOfDay();
         $to = $this->option('to') ? Carbon::parse($this->option('to'))->endOfDay() : Carbon::today()->endOfDay();
 
