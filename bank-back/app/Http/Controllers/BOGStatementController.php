@@ -29,7 +29,7 @@ class BOGStatementController extends Controller
             ) {
                 $inn = trim($activity['Sender']['Inn']);
                 $name = trim($activity['Sender']['Name']);
-                $existing = \App\Models\Contragent::where('identification_code', $inn)->get();
+                $existing = Contragent::where('identification_code', $inn)->get();
                 $shouldInsert = true;
                 foreach ($existing as $contragent) {
                     if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
@@ -38,20 +38,20 @@ class BOGStatementController extends Controller
                     }
                 }
                 if ($shouldInsert) {
-                    \App\Models\Contragent::create([
+                    Contragent::create([
                         'name' => $name,
                         'identification_code' => $inn,
                     ]);
                 }
             }
-            $bogBankId = \App\Models\Bank::where('bank_code', 'BOG')->first()->id ?? 2;
+            $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? 2;
             $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
             if (!$bankStatementId) continue;
-            $exists = \App\Models\Transaction::where('bank_statement_id', $bankStatementId)
+            $exists = Transaction::where('bank_statement_id', $bankStatementId)
                 ->where('bank_id', $bogBankId)
                 ->exists();
             if (!$exists) {
-                \App\Models\Transaction::create([
+                Transaction::create([
                     'contragent_id' => $activity['Sender']['Inn'] ?? null,
                     'bank_id' => $bogBankId,
                     'bank_statement_id' => $bankStatementId,
