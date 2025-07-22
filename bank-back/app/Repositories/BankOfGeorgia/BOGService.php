@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Transaction;
 use App\Models\Bank;
+use App\Models\BankName;
 
 class BOGService
 {
@@ -160,6 +161,8 @@ class BOGService
                 $transaction->sender_name = $sender['Name'] ?? null;
                 $transaction->description = $item['EntryComment'] ?? $item['EntryCommentEn'] ?? null;
                 $transaction->status_code = $item['EntryType'] ?? null;
+                $bankNameModel = BankName::where('name', ucfirst($this->bank))->first();
+                $transaction->bank_name_id = $bankNameModel ? $bankNameModel->id : null;
                 $transaction->save();
 
                 \Log::info('Saved BOG transaction', [

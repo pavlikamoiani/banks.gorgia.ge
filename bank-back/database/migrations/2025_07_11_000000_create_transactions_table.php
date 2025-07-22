@@ -12,8 +12,9 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('gorgia_transactions', function (Blueprint $table) {
+        Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('bank_name_id')->nullable();
             $table->unsignedBigInteger('contragent_id')->nullable();
             $table->unsignedBigInteger('bank_id')->nullable();
             $table->string('bank_statement_id')->nullable();
@@ -24,6 +25,8 @@ return new class extends Migration {
             $table->string('description')->nullable();
             $table->string('status_code')->nullable();
             $table->timestamps();
+
+            $table->foreign('bank_name_id')->references('id')->on('bank_names')->onDelete('set null');
         });
     }
 
@@ -34,6 +37,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('gorgia_transactions');
+        Schema::dropIfExists('transactions');
     }
 };

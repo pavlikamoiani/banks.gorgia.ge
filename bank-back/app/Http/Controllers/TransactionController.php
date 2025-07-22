@@ -91,7 +91,9 @@ class TransactionController extends Controller
             $query->whereDate('transaction_date', '<=', $request->query('endDate'));
         }
 
-        $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
+        $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
+            ->leftJoin('bank_names', 'transactions.bank_name_id', '=', 'bank_names.id')
+            ->addSelect('bank_names.name as bank_name');
 
         $results = $query->orderBy('transaction_date', 'desc')->get();
 
@@ -103,7 +105,6 @@ class TransactionController extends Controller
             })->values();
         }
 
-        // Add this block to filter by user's bank if endpoint is /anta-transactions or /gorgia-transactions
         $route = $request->route() ? $request->route()->uri() : '';
         if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
             $antaAccount = env('ANTA_BOG_ACCOUNT');
@@ -124,7 +125,11 @@ class TransactionController extends Controller
             }
         }
 
-        return $results;
+        return $results->map(function ($item) {
+            $arr = $item->toArray();
+            $arr['bank_name'] = $item->bank_name ?? null;
+            return $arr;
+        });
     }
 
     public function todayActivities(Request $request)

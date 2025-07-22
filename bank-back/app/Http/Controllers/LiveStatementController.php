@@ -8,6 +8,7 @@ use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\Transaction;
 use App\Models\Bank;
 use App\Models\Contragent;
+use App\Models\BankName;
 
 class LiveStatementController extends Controller
 {
@@ -131,6 +132,7 @@ class LiveStatementController extends Controller
                     'sender_name' => $item['Sender']['Name'] ?? null,
                     'description' => $item['EntryComment'] ?? $item['EntryCommentEn'] ?? null,
                     'status_code' => $item['EntryType'] ?? null,
+                    'bank_name_id' => BankName::where('name', ucfirst($bank))->first()?->id,
                 ]);
             }
         }

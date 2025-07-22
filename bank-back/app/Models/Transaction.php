@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
-    protected $table = 'gorgia_transactions';
+    protected $table = 'transactions';
     protected $fillable = [
         'contragent_id',
         'bank_id',
@@ -16,7 +16,8 @@ class Transaction extends Model
         'reflection_date',
         'sender_name',
         'description',
-        'status_code'
+        'status_code',
+        'bank_name_id'
     ];
 
     protected $dates = [
@@ -25,4 +26,9 @@ class Transaction extends Model
         'created_at',
         'updated_at'
     ];
+
+    public function bankName()
+    {
+        return $this->belongsTo(\App\Models\BankName::class, 'bank_name_id');
+    }
 }

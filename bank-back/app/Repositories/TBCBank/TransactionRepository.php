@@ -5,6 +5,7 @@ namespace App\Repositories\TBCBank;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\BankName;
 
 class TransactionRepository extends BaseRepository
 {
@@ -135,6 +136,8 @@ class TransactionRepository extends BaseRepository
         $transaction->status_code = $transactionData->statusCode;
         $transaction->description = $transactionData->description;
         $transaction->sender_name = $transactionData->partnerName ?? null;
+        $bankNameModel = BankName::where('name', 'Gorgia')->first();
+        $transaction->bank_name_id = $bankNameModel ? $bankNameModel->id : null;
         $transaction->save();
     }
 
