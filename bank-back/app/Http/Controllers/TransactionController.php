@@ -103,6 +103,27 @@ class TransactionController extends Controller
             })->values();
         }
 
+        // Add this block to filter by user's bank if endpoint is /anta-transactions or /gorgia-transactions
+        $route = $request->route() ? $request->route()->uri() : '';
+        if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
+            $antaAccount = env('ANTA_BOG_ACCOUNT');
+            $antaBank = \App\Models\Bank::where('bank_code', 'BOG')->first();
+            if ($antaBank) {
+                $query->where('bank_id', $antaBank->id)
+                    ->where(function ($q) use ($antaAccount) {
+                        $q->where('bank_statement_id', $antaAccount)
+                            ->orWhereNull('bank_statement_id');
+                    });
+            }
+        } elseif (strpos($route, 'gorgia-transactions') !== false || ($user && $user->bank === 'gorgia')) {
+            $gorgiaAccounts = [env('GORGIA_BOG_ACCOUNT'), env('GORGIA_BOG_ACCOUNT_2')];
+            $gorgiaBank = \App\Models\Bank::where('bank_code', 'BOG')->first();
+            if ($gorgiaBank) {
+                $query->where('bank_id', $gorgiaBank->id)
+                    ->whereIn('bank_statement_id', $gorgiaAccounts);
+            }
+        }
+
         return $results;
     }
 

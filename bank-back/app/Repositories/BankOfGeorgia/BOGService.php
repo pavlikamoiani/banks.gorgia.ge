@@ -9,29 +9,44 @@ use App\Models\Bank;
 
 class BOGService
 {
+    protected $bank;
+
+    public function __construct($bank = 'gorgia')
+    {
+        $this->bank = $bank;
+    }
+
+    protected function getEnv($key)
+    {
+        $prefix = strtoupper($this->bank);
+        return env("{$prefix}_BOG_{$key}");
+    }
+
     public function getToken()
     {
-        return Cache::remember('bog_token', 3000, function () {
-            $response = Http::asForm()->post(env('GORGIA_BOG_AUTH_URL'), [
+        $cacheKey = $this->bank . '_bog_token';
+        return \Cache::remember($cacheKey, 3000, function () {
+            $response = \Http::asForm()->post($this->getEnv('AUTH_URL'), [
                 'grant_type' => 'client_credentials',
-                'client_id' => env('GORGIA_BOG_CLIENT_ID'),
-                'client_secret' => env('GORGIA_BOG_CLIENT_SECRET'),
+                'client_id' => $this->getEnv('CLIENT_ID'),
+                'client_secret' => $this->getEnv('CLIENT_SECRET'),
             ]);
-
             if (!$response->ok()) {
                 \Log::error('Failed to retrieve BOG token', ['response' => $response->body()]);
                 throw new \Exception('Failed to retrieve BOG token');
             }
-
             return $response->json('access_token');
         });
     }
 
-    public function getTodayActivities($account, $currency)
+    public function getTodayActivities($account = null, $currency = null)
     {
         set_time_limit(600);
         $token = $this->getToken();
         \Log::info('BOG token', ['token' => $token]);
+
+        $account = $account ?: $this->getEnv('ACCOUNT');
+        $currency = $currency ?: $this->getEnv('CURRENCY', 'GEL');
 
         if (empty($account) || empty($currency)) {
             \Log::error('BOG getTodayActivities: account or currency is empty', [
@@ -41,15 +56,14 @@ class BOGService
             throw new \Exception('Account or currency is empty');
         }
 
-        $url = env('GORGIA_BOG_BASE_URL') . "/documents/todayactivities/$account/$currency";
+        $url = $this->getEnv('BASE_URL') . "/documents/todayactivities/$account/$currency";
         \Log::info('BOG todayActivities URL', ['url' => $url]);
 
         $maxRetries = 3;
         $retryDelay = 2;
-
         $attempt = 0;
         do {
-            $response = Http::withToken($token)
+            $response = \Http::withToken($token)
                 ->timeout(30)
                 ->get($url);
 
@@ -57,8 +71,8 @@ class BOGService
             \Log::info('BOG API raw response', ['body' => $response->body()]);
 
             if ($response->status() === 401) {
-                \Log::error('Gorgia BOG token unauthorized, clearing cache and retrying');
-                Cache::forget('bog_token');
+                \Log::error('BOG token unauthorized, clearing cache and retrying');
+                \Cache::forget($this->bank . '_bog_token');
                 $token = $this->getToken();
                 $attempt++;
                 sleep($retryDelay);
@@ -80,7 +94,7 @@ class BOGService
         } while ($attempt < $maxRetries);
 
         if (!$response->ok()) {
-            \Log::error('Failed to retrieve today\'s Gorgia BOG transactions', [
+            \Log::error('Failed to retrieve today\'s BOG transactions', [
                 'url' => $url,
                 'status' => $response->status(),
                 'body' => $response->body(),
@@ -89,7 +103,7 @@ class BOGService
             ]);
             throw new \Exception(
                 "Error requesting today's transactions. Status: " . $response->status() .
-                    ". Body: " . $response->body()
+                ". Body: " . $response->body()
             );
         }
 
@@ -163,7 +177,7 @@ class BOGService
 
         $url = sprintf(
             "%s/statement/%s/%s/%s/%s/%s/%s",
-            env('GORGIA_BOG_BASE_URL'),
+            $this->getEnv('BASE_URL'),
             $accountNumber,
             $currency,
             $startDate,
@@ -174,7 +188,7 @@ class BOGService
 
         \Log::info('BOG statement URL', ['url' => $url]);
 
-        $response = Http::timeout(30)
+        $response = \Http::timeout(30)
             ->withToken($token)
             ->get($url);
 
@@ -195,7 +209,7 @@ class BOGService
 
         $url = sprintf(
             "%s/statement/%s/%s/%s/%d/%s",
-            env('GORGIA_BOG_BASE_URL'),
+            $this->getEnv('BASE_URL'),
             $accountNumber,
             $currency,
             $statementId,
@@ -205,7 +219,7 @@ class BOGService
 
         \Log::info('BOG statement page URL', ['url' => $url]);
 
-        $response = Http::timeout(30)
+        $response = \Http::timeout(30)
             ->withToken($token)
             ->get($url);
 

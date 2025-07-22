@@ -128,7 +128,7 @@ const TableStatement = () => {
 		setError(null);
 
 		try {
-			const params = { ...filterParams };
+			const params = { ...filterParams, bank: currentBank === 'anta' ? 'anta' : 'gorgia' };
 			const endpoint = getEndpoint();
 			const response = await defaultInstance.get(endpoint, { params });
 
@@ -178,7 +178,8 @@ const TableStatement = () => {
 		setLoading(true);
 		setError(null);
 		try {
-			const resp = await defaultInstance.get('/live/today-activities', { params: filterParams });
+			const params = { ...filterParams, bank: currentBank };
+			const resp = await defaultInstance.get('/live/today-activities', { params });
 			const rows = (resp.data?.data || []).map(item => ({
 				...item,
 				amount: (item.amount ?? 0) + ' ₾'
@@ -195,13 +196,13 @@ const TableStatement = () => {
 	const handleApplyFilters = () => {
 		if (liveMode) {
 			const { startDate, endDate, ...rest } = pendingFilters;
-			setFilters(rest);
+			setFilters(rest); x
 			setPendingFilters(rest);
 			loadLiveData(rest);
 		} else {
 			setFilters({ ...pendingFilters });
 			setPage(1);
-			loadDbData({ ...pendingFilters }); // <--- добавьте этот вызов
+			loadDbData({ ...pendingFilters });
 		}
 	};
 

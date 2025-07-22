@@ -13,8 +13,14 @@ class LiveStatementController extends Controller
 {
     public function todayActivities(Request $request)
     {
+        $bank = $request->input('bank');
+        if (!$bank) {
+            $user = $request->user();
+            $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
+        }
+        $bogService = new BOGService($bank);
+
         $tbcController = new TBCStatementController();
-        $bogService = new BOGService();
 
         $tbcResponse = $tbcController->todayActivities($request);
         $tbcData = $tbcResponse->getData(true);
@@ -64,8 +70,8 @@ class LiveStatementController extends Controller
             ];
         }
 
-        $account = $request->input('account', env('GORGIA_BOG_ACCOUNT'));
-        $currency = $request->input('currency', env('GORGIA_BOG_CURRENCY', 'GEL'));
+        $account = $request->input('account', env(strtoupper($bank) . '_BOG_ACCOUNT'));
+        $currency = $request->input('currency', env(strtoupper($bank) . '_BOG_CURRENCY', 'GEL'));
         $bogData = $bogService->getTodayActivities($account, $currency);
         $bogRows = [];
         $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? 2;
@@ -94,7 +100,8 @@ class LiveStatementController extends Controller
             ];
 
             $bankStatementId = $item['Id'] ?? $item['DocKey'] ?? null;
-            if (!$bankStatementId) continue;
+            if (!$bankStatementId)
+                continue;
 
             $contragentName = $item['Sender']['Name'] ?? null;
             $contragentInn = $item['Sender']['Inn'] ?? null;
@@ -139,13 +146,20 @@ class LiveStatementController extends Controller
         $endDate = $request->input('endDate');
 
         $filtered = array_filter($all, function ($row) use ($contragent, $bank, $amount, $transferDate, $purpose, $startDate, $endDate) {
-            if ($contragent && stripos($row['contragent'], $contragent) === false) return false;
-            if ($bank && $row['bank'] !== $bank) return false;
-            if ($amount && stripos((string)$row['amount'], (string)$amount) === false) return false;
-            if ($transferDate && strpos($row['transferDate'], $transferDate) === false) return false;
-            if ($purpose && stripos($row['purpose'], $purpose) === false) return false;
-            if ($startDate && $row['transferDate'] !== '-' && $row['transferDate'] < $startDate) return false;
-            if ($endDate && $row['transferDate'] !== '-' && $row['transferDate'] > $endDate) return false;
+            if ($contragent && stripos($row['contragent'], $contragent) === false)
+                return false;
+            if ($bank && $row['bank'] !== $bank)
+                return false;
+            if ($amount && stripos((string) $row['amount'], (string) $amount) === false)
+                return false;
+            if ($transferDate && strpos($row['transferDate'], $transferDate) === false)
+                return false;
+            if ($purpose && stripos($row['purpose'], $purpose) === false)
+                return false;
+            if ($startDate && $row['transferDate'] !== '-' && $row['transferDate'] < $startDate)
+                return false;
+            if ($endDate && $row['transferDate'] !== '-' && $row['transferDate'] > $endDate)
+                return false;
             return true;
         });
 

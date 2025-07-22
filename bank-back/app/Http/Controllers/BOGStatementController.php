@@ -13,10 +13,14 @@ use Carbon\Carbon;
 
 class BOGStatementController extends Controller
 {
-    public function todayActivities(Request $request, BOGService $bog)
+    public function todayActivities(Request $request)
     {
-        $account = $request->input('account', env('GORGIA_BOG_ACCOUNT'));
-        $currency = $request->input('currency', env('GORGIA_BOG_CURRENCY', 'GEL'));
+        $user = $request->user();
+        $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
+        $bog = new \App\Repositories\BankOfGeorgia\BOGService($bank);
+
+        $account = $request->input('account', env(strtoupper($bank) . '_BOG_ACCOUNT'));
+        $currency = $request->input('currency', env(strtoupper($bank) . '_BOG_CURRENCY', 'GEL'));
 
         $data = $bog->getTodayActivities($account, $currency);
 
@@ -46,7 +50,8 @@ class BOGStatementController extends Controller
             }
             $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? 2;
             $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
-            if (!$bankStatementId) continue;
+            if (!$bankStatementId)
+                continue;
             $exists = Transaction::where('bank_statement_id', $bankStatementId)
                 ->where('bank_id', $bogBankId)
                 ->exists();
@@ -75,9 +80,12 @@ class BOGStatementController extends Controller
         $endDate,
         $includeToday = false,
         $orderByDate = false,
-        Request $request,
-        BOGService $bog
+        Request $request
     ) {
+        $user = $request->user();
+        $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
+        $bog = new \App\Repositories\BankOfGeorgia\BOGService($bank);
+
         $includeToday = filter_var($includeToday, FILTER_VALIDATE_BOOLEAN);
         $orderByDate = filter_var($orderByDate, FILTER_VALIDATE_BOOLEAN);
 
@@ -292,9 +300,12 @@ class BOGStatementController extends Controller
 
                 foreach ($activities as $activity) {
                     $exists = GorgiaBogTransaction::where(function ($q) use ($activity) {
-                        if (!empty($activity['Id'])) $q->orWhere('bog_id', $activity['Id']);
-                        if (!empty($activity['DocKey'])) $q->orWhere('doc_key', $activity['DocKey']);
-                        if (!empty($activity['DocNo'])) $q->orWhere('doc_no', $activity['DocNo']);
+                        if (!empty($activity['Id']))
+                            $q->orWhere('bog_id', $activity['Id']);
+                        if (!empty($activity['DocKey']))
+                            $q->orWhere('doc_key', $activity['DocKey']);
+                        if (!empty($activity['DocNo']))
+                            $q->orWhere('doc_no', $activity['DocNo']);
                     })->exists();
 
                     if ($exists) {
