@@ -26,6 +26,9 @@ class TBCStatementController extends Controller
             Log::info("TBC transaction sync completed");
         } catch (\Exception $e) {
             Log::error('Error syncing TBC transactions: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Synchronization error TBC: ' . $e->getMessage()
+            ], 500);
         }
 
         $transactions = Transaction::whereDate('transaction_date', $today)

@@ -38,7 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tbc-password/update', [TbcPasswordController::class, 'update']);
 
     // TBC Gorgia Statements
-    Route::get('/gorgia/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
 
     // BOG Gorgia Statements
     Route::get('/bog/statement/{accountNumber}/{currency}/{startDate}/{endDate}/{includeToday?}/{orderByDate?}', [BOGStatementController::class, 'statement']);
@@ -64,3 +63,6 @@ Route::get('/bog/statement-by-month/{currency}/{startDate}/{endDate}/{includeTod
 Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);
 // TBC Sync Today's Transactions
 Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);
+
+
+Route::get('/gorgia/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);

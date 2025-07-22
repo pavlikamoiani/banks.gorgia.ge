@@ -39,6 +39,7 @@ class BaseRepository
         return '<wsse:UsernameToken>
                   <wsse:Username>' . $this->id . '</wsse:Username>
                   <wsse:Password>' . $this->password . '</wsse:Password>
+                  <wsse:Nonce>798853</wsse:Nonce>
                 </wsse:UsernameToken>';
     }
 
