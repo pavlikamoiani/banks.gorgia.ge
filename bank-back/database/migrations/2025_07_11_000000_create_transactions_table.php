@@ -15,8 +15,8 @@ return new class extends Migration {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('bank_name_id')->nullable();
-            $table->unsignedBigInteger('contragent_id')->nullable();
             $table->unsignedBigInteger('bank_id')->nullable();
+            $table->unsignedBigInteger('contragent_id')->nullable();
             $table->string('bank_statement_id')->nullable();
             $table->decimal('amount', 20, 2)->nullable();
             $table->timestamp('transaction_date')->nullable();
@@ -27,6 +27,7 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->foreign('bank_name_id')->references('id')->on('bank_names')->onDelete('set null');
+            $table->foreign('bank_id')->references('id')->on('banks')->onDelete('set null');
         });
     }
 

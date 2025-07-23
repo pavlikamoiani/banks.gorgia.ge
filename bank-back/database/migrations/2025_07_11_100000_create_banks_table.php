@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     /**
@@ -16,9 +17,13 @@ return new class extends Migration {
             $table->id();
             $table->string('name')->unique();
             $table->string('bank_code')->unique();
-            $table->string('auth_token')->nullable();
             $table->timestamps();
         });
+
+        DB::table('banks')->insert([
+            ['name' => 'TBC', 'bank_code' => 'TBC', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'BOG', 'bank_code' => 'BOG', 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 
     /**
