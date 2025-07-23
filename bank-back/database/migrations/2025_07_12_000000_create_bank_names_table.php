@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
 	public function up()
 	{
-		Schema::create('bank_names', function (Blueprint $table) {
+		Schema::create('banks', function (Blueprint $table) {
 			$table->id();
 			$table->string('name')->unique();
 			$table->timestamps();
 		});
 
-		DB::table('bank_names')->insert([
+		DB::table('banks')->insert([
 			['name' => 'Gorgia', 'created_at' => now(), 'updated_at' => now()],
 			['name' => 'Anta', 'created_at' => now(), 'updated_at' => now()],
 		]);
@@ -22,6 +22,6 @@ return new class extends Migration {
 
 	public function down()
 	{
-		Schema::dropIfExists('bank_names');
+		Schema::dropIfExists('banks');
 	}
 };

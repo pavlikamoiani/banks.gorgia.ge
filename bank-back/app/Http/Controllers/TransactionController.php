@@ -99,8 +99,8 @@ class TransactionController extends Controller
         }
 
         $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
-            ->leftJoin('bank_names', 'transactions.bank_name_id', '=', 'bank_names.id')
-            ->addSelect('bank_names.name as bank_name');
+            ->leftJoin('banks', 'transactions.bank_name_id', '=', 'banks.id')
+            ->addSelect('banks.name as bank_name');
 
         $results = $query->orderBy('transaction_date', 'desc')->get();
 

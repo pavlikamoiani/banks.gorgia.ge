@@ -13,14 +13,14 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('banks', function (Blueprint $table) {
+        Schema::create('bank_type', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->string('bank_code')->unique();
             $table->timestamps();
         });
 
-        DB::table('banks')->insert([
+        DB::table('bank_type')->insert([
             ['name' => 'TBC', 'bank_code' => 'TBC', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'BOG', 'bank_code' => 'BOG', 'created_at' => now(), 'updated_at' => now()],
         ]);
@@ -33,6 +33,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('banks');
+        Schema::dropIfExists('bank_type');
     }
 };
