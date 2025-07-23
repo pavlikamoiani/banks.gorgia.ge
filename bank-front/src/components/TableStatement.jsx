@@ -410,7 +410,7 @@ const TableStatement = () => {
 							aria-haspopup="listbox"
 							aria-expanded={pageSizeDropdownOpen}
 						>
-							{pageSize} <span className={tableStatementStyles.pageSizeArrow}>▼</span>
+							{pageSize} <span className={tableStatementStyles.pageSizeArrow}><FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: 6, fontSize: '0.8em' }} /></span>
 						</button>
 						{pageSizeDropdownOpen && (
 							<ul className={tableStatementStyles.pageSizeDropdown} role="listbox">
