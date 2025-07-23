@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Transaction;
 use App\Models\Bank;
 use App\Models\BankName;
+use App\Models\Contragent;
 
 class BOGService
 {
@@ -104,7 +105,7 @@ class BOGService
             ]);
             throw new \Exception(
                 "Error requesting today's transactions. Status: " . $response->status() .
-                ". Body: " . $response->body()
+                    ". Body: " . $response->body()
             );
         }
 
@@ -124,7 +125,7 @@ class BOGService
             ) {
                 $inn = trim($sender['Inn']);
                 $name = trim($sender['Name']);
-                $existing = \App\Models\Contragent::where('identification_code', $inn)->get();
+                $existing = Contragent::where('identification_code', $inn)->get();
                 $shouldInsert = true;
                 foreach ($existing as $contragent) {
                     if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
@@ -133,7 +134,7 @@ class BOGService
                     }
                 }
                 if ($shouldInsert) {
-                    \App\Models\Contragent::create([
+                    Contragent::create([
                         'name' => $name,
                         'identification_code' => $inn,
                     ]);

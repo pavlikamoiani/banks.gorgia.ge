@@ -49,9 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/gorgia-transactions', [TransactionController::class, 'index']);
 
     // Live Statement
+    Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
 });
 
-Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
+
 Route::get('/gorgia/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 
 
