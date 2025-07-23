@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class TbcPassword extends Model
 {
-    protected $fillable = ['password'];
+    protected $fillable = ['password', 'bank_name_id'];
 }

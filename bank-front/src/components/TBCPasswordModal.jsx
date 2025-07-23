@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 const TbcPasswordModal = ({ open, onClose, onUpdated }) => {
     const [password, setPassword] = useState('');
+    const [bankNameId, setBankNameId] = useState(1);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -17,11 +18,10 @@ const TbcPasswordModal = ({ open, onClose, onUpdated }) => {
         setError('');
         setLoading(true);
         try {
-            await defaultInstance.post('/tbc-password/update', { password });
+            await defaultInstance.post('/tbc-password/update', { password, bank_name_id: bankNameId });
             setSuccess(true);
             setPassword('');
             if (onUpdated) onUpdated();
-            // eslint-disable-next-line
         } catch (err) {
             setError(t('error_updating_password'));
         }
@@ -51,6 +51,17 @@ const TbcPasswordModal = ({ open, onClose, onUpdated }) => {
                             className={styles.modalInput}
                             required
                         />
+                    </div>
+                    <div className={styles.modalFormGroup}>
+                        <label>ბანკი</label>
+                        <select
+                            value={bankNameId}
+                            onChange={e => setBankNameId(Number(e.target.value))}
+                            className={styles.modalInput}
+                        >
+                            <option value={1}>Gorgia</option>
+                            <option value={2}>Anta</option>
+                        </select>
                     </div>
                     {error && <div className={styles.modalError}>{error}</div>}
                     {success && <div style={{ color: 'green', marginBottom: 10 }}>პაროლი წარმატებით განახლდა</div>}

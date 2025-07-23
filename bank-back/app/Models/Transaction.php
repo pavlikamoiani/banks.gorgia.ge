@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BankName;
 
 class Transaction extends Model
 {
@@ -29,6 +30,6 @@ class Transaction extends Model
 
     public function bankName()
     {
-        return $this->belongsTo(\App\Models\BankName::class, 'bank_name_id');
+        return $this->belongsTo(BankName::class, 'bank_name_id');
     }
 }

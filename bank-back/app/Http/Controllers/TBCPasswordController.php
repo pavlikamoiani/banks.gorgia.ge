@@ -25,9 +25,14 @@ class TbcPasswordController extends Controller
 
     public function update(Request $request)
     {
-        $request->validate(['password' => 'required|string|min:6']);
-        $pw = TbcPassword::create(['password' => $request->password]);
-
+        $request->validate([
+            'password' => 'required|string|min:6',
+            'bank_name_id' => 'required|integer|in:1,2',
+        ]);
+        $pw = TbcPassword::create([
+            'password' => $request->password,
+            'bank_name_id' => $request->bank_name_id
+        ]);
         return response()->json(['success' => true, 'created_at' => $pw->created_at]);
     }
 }

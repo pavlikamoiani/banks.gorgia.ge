@@ -17,30 +17,32 @@ class BaseRepository
     protected $id;
     protected $password;
     protected $baseUrl;
+    protected $bankNameId;
 
     /**
      * StatementRepository constructor.
      */
-    public function __construct()
+    public function __construct($bankNameId = 1)
     {
-        $this->id = env("TBC_ID");
-        $this->password = $this->getCurrentPassword();
+        $this->id = $bankNameId == 2 ? env("TBC_ANTA_ID") : env("TBC_GORGIA_ID");
+        $this->password = $this->getCurrentPassword($bankNameId);
         $this->baseUrl = env('TBC_BASE_URL');
+        $this->bankNameId = $bankNameId;
     }
 
-    private function getCurrentPassword()
+    private function getCurrentPassword($bankNameId)
     {
-
-        return TbcPassword::latest()->firstOrFail()->password;
+        return TbcPassword::where('bank_name_id', $bankNameId)->latest()->firstOrFail()->password;
     }
 
     protected function getAuthenticationBody()
     {
+        $nonce = $this->bankNameId == 2 ? '<wsse:Nonce>798853</wsse:Nonce>' : '';
         return '<wsse:UsernameToken>
-                  <wsse:Username>' . $this->id . '</wsse:Username>
-                  <wsse:Password>' . $this->password . '</wsse:Password>
-                  <wsse:Nonce>798853</wsse:Nonce>
-                </wsse:UsernameToken>';
+              <wsse:Username>' . $this->id . '</wsse:Username>
+              <wsse:Password>' . $this->password . '</wsse:Password>
+              ' . $nonce . '
+            </wsse:UsernameToken>';
     }
 
     protected function responseAsObject($response)
