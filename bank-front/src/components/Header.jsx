@@ -13,6 +13,7 @@ const getCurrentVersion = (pathname) => {
 	return 'Gorgia';
 };
 
+
 const Header = () => {
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -29,6 +30,7 @@ const Header = () => {
 	const currentVersion = getCurrentVersion(location.pathname);
 	const dispatch = useDispatch();
 	const user = useSelector(state => state.user.user);
+	const getBankNameId = (pathname) => pathname.startsWith('/anta') ? 2 : 1;
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -377,6 +379,7 @@ const Header = () => {
 				open={tbcPwModalOpen}
 				onClose={handleTbcPwModalClose}
 				onUpdated={handleTbcPwUpdated}
+				bankNameId={getBankNameId(location.pathname)}
 			/>
 		</header>
 	);

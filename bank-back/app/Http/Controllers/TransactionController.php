@@ -24,9 +24,9 @@ class TransactionController extends Controller
 
         $route = $request->route() ? $request->route()->uri() : '';
         if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
-            $query->where('bank_id', 1);
+            $query->where('bank_name_id', 2);
         } elseif (strpos($route, 'gorgia-transactions') !== false || ($user && $user->bank === 'gorgia')) {
-            $query->where('bank_id', 2);
+            $query->where('bank_name_id', 1);
         }
 
         $isTbc = false;
