@@ -10,11 +10,11 @@ class CreateTbcPasswordsTable extends Migration
     {
         Schema::create('tbc_passwords', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('bank_name_id')->nullable();
+            $table->unsignedBigInteger('bank_id')->nullable();
             $table->string('password');
             $table->timestamps();
 
-            $table->foreign('bank_name_id')->references('id')->on('bank_names')->onDelete('cascade');
+            $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade');
         });
     }
 

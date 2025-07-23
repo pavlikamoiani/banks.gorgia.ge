@@ -17,7 +17,7 @@ const TbcPasswordModal = ({ open, onClose, onUpdated, bankNameId }) => {
         setError('');
         setLoading(true);
         try {
-            await defaultInstance.post('/tbc-password/update', { password, bank_name_id: bankNameId });
+            await defaultInstance.post('/tbc-password/update', { password, bank_id: bankNameId });
             setSuccess(true);
             setPassword('');
             if (onUpdated) onUpdated();

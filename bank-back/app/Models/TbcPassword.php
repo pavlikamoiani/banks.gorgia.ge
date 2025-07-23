@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class TbcPassword extends Model
 {
-    protected $fillable = ['password', 'bank_name_id'];
+    protected $fillable = ['password', 'bank_id'];
+
+    public function bank()
+    {
+        return $this->belongsTo(BankName::class, 'bank_id');
+    }
 }

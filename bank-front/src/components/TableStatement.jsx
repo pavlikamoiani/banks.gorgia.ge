@@ -8,7 +8,7 @@ import defaultInstance from '../api/defaultInstance';
 import Pagination from './Pagination';
 import TableFilter from './TableFilter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faXmark, faBolt } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faXmark, faBolt, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
@@ -48,6 +48,12 @@ const TableStatement = () => {
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
 	const [dbLoading, setDbLoading] = useState(false);
+
+	// New state for live mode
+	const [liveMode, setLiveMode] = useState(false);
+	const [liveBankDropdownOpen, setLiveBankDropdownOpen] = useState(false);
+	const [selectedLiveBank, setSelectedLiveBank] = useState(null);
+	const liveBankDropdownRef = useRef(null);
 
 	const [dbData, setDbData] = useState([]);
 	const bankOptions = useMemo(() => {
@@ -115,7 +121,6 @@ const TableStatement = () => {
 	];
 
 	const [filterOpen, setFilterOpen] = useState(false);
-	const [liveMode, setLiveMode] = useState(false);
 	const [installmentOnly, setInstallmentOnly] = useState(false);
 
 	const getEndpoint = () => {
@@ -174,12 +179,18 @@ const TableStatement = () => {
 		setPendingFilters({ ...pendingFilters, [e.target.name]: e.target.value });
 	};
 
-	const loadLiveData = async (filterParams = {}) => {
+	const loadLiveData = async (bankType) => {
+		if (!bankType) return;
+
 		setLoading(true);
 		setError(null);
 		try {
-			const params = { ...filterParams, bank: currentBank };
-			const resp = await defaultInstance.get('/live/today-activities', { params });
+			const params = {
+				...filters,
+				bank: currentBank,
+				bankType: bankType
+			};
+			const resp = await defaultInstance.get(`/live/${bankType.toLowerCase()}/today-activities`, { params });
 			const rows = (resp.data?.data || []).map(item => ({
 				...item,
 				amount: (item.amount ?? 0) + ' ₾'
@@ -187,18 +198,27 @@ const TableStatement = () => {
 			setData(rows);
 			setDbData(rows);
 			setPage(1);
-		}
-		finally {
+		} catch (error) {
+			console.error("Error loading live data:", error);
+			setError(t('failed_to_load_live_data'));
+		} finally {
 			setLoading(false);
 		}
 	};
 
+	const handleSelectLiveBank = (bankType) => {
+		setSelectedLiveBank(bankType);
+		setLiveMode(true);
+		setLiveBankDropdownOpen(false);
+		loadLiveData(bankType);
+	};
+
 	const handleApplyFilters = () => {
-		if (liveMode) {
+		if (liveMode && selectedLiveBank) {
 			const { startDate, endDate, ...rest } = pendingFilters;
-			setFilters(rest); x
+			setFilters(rest);
 			setPendingFilters(rest);
-			loadLiveData(rest);
+			loadLiveData(selectedLiveBank);
 		} else {
 			setFilters({ ...pendingFilters });
 			setPage(1);
@@ -216,11 +236,11 @@ const TableStatement = () => {
 			startDate: '',
 			endDate: ''
 		};
-		if (liveMode) {
+		if (liveMode && selectedLiveBank) {
 			const { startDate, endDate, ...rest } = resetFilters;
 			setFilters(rest);
 			setPendingFilters(rest);
-			loadLiveData(rest);
+			loadLiveData(selectedLiveBank);
 		} else {
 			setFilters(resetFilters);
 			setPendingFilters(resetFilters);
@@ -228,19 +248,27 @@ const TableStatement = () => {
 		}
 	};
 
+	const handleExitLiveMode = () => {
+		setLiveMode(false);
+		setSelectedLiveBank(null);
+		loadDbData(filters);
+	};
+
 	const handleBankSelect = (bank) => {
 		setPendingFilters(f => ({ ...f, bank }));
 		setBankDropdownOpen(false);
 	};
 
-	const handleLiveMode = async () => {
-		if (loading) return;
-		setLiveMode(true);
-		const { startDate, endDate, ...rest } = pendingFilters;
-		setFilters(rest);
-		setPendingFilters(rest);
-		await loadLiveData(rest);
-	};
+	useEffect(() => {
+		if (!liveBankDropdownOpen) return;
+		const handler = (e) => {
+			if (liveBankDropdownRef.current && !liveBankDropdownRef.current.contains(e.target)) {
+				setLiveBankDropdownOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handler);
+		return () => document.removeEventListener('mousedown', handler);
+	}, [liveBankDropdownOpen]);
 
 	useEffect(() => {
 		if (!bankDropdownOpen) return;
@@ -279,7 +307,14 @@ const TableStatement = () => {
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-				<h2 className="table-heading">{t('statement')}</h2>
+				<h2 className="table-heading">
+					{t('statement')}
+					{liveMode && selectedLiveBank && (
+						<span style={{ fontSize: '0.8em', marginLeft: '10px', color: '#2E8B57' }}>
+							({selectedLiveBank} Live)
+						</span>
+					)}
+				</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
 					<div
 						className={tableStatementStyles.installmentBtnWrapper}
@@ -313,21 +348,60 @@ const TableStatement = () => {
 							{t('installment_tooltip') || 'განვადებების(თბს) ჩვენება/დამალვა'}
 						</span>
 					</div>
-					<button className={tableStatementStyles.liveBtn}
-						type="button"
-						style={{
-							background: liveMode ? "#2E8B57" : "#0173b1",
-							cursor: loading ? "not-allowed" : "pointer",
-						}}
-						onClick={handleLiveMode}
-						disabled={loading}
-					>
-						<FontAwesomeIcon icon={faBolt} style={{ marginRight: 6 }} />
-						{t('live') || 'Live'}
-						<span className={tableStatementStyles.tooltip}>
-							{t('live_today_transactions') || 'დღევანდელი ტრანზაქციები'}
-						</span>
-					</button>
+
+					{!liveMode ? (
+						<div className={tableStatementStyles.liveBankDropdownWrapper} ref={liveBankDropdownRef}>
+							<button className={tableStatementStyles.liveBtn}
+								type="button"
+								style={{
+									background: "#0173b1",
+									cursor: loading ? "not-allowed" : "pointer",
+								}}
+								onClick={() => setLiveBankDropdownOpen(!liveBankDropdownOpen)}
+								disabled={loading}
+							>
+								<FontAwesomeIcon icon={faBolt} style={{ marginRight: 6 }} />
+								{t('live') || 'Live'}
+								<FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: 6, fontSize: '0.8em' }} />
+							</button>
+							{liveBankDropdownOpen && (
+								<ul className={tableStatementStyles.liveBankDropdown}>
+									<li className={tableStatementStyles.liveBankDropdownItem}>
+										<button
+											type="button"
+											className={tableStatementStyles.liveBankDropdownBtn}
+											onClick={() => handleSelectLiveBank('BOG')}
+										>
+											Bank of Georgia
+										</button>
+									</li>
+									<li className={tableStatementStyles.liveBankDropdownItem}>
+										<button
+											type="button"
+											className={tableStatementStyles.liveBankDropdownBtn}
+											onClick={() => handleSelectLiveBank('TBC')}
+										>
+											TBC Bank
+										</button>
+									</li>
+								</ul>
+							)}
+						</div>
+					) : (
+						<button className={tableStatementStyles.liveBtn}
+							type="button"
+							style={{
+								background: "#FF6347",
+								cursor: loading ? "not-allowed" : "pointer",
+							}}
+							onClick={handleExitLiveMode}
+							disabled={loading}
+						>
+							<FontAwesomeIcon icon={faXmark} style={{ marginRight: 6 }} />
+							{t('exit_live') || 'Exit Live'}
+						</button>
+					)}
+
 					<div className={tableStatementStyles.pageSizeDropdownWrapper} ref={pageSizeDropdownRef}>
 						<button
 							type="button"

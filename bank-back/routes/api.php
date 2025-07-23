@@ -49,7 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/gorgia-transactions', [TransactionController::class, 'index']);
 
     // Live Statement
-    Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
 });
 
 
@@ -67,3 +66,6 @@ Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransact
 
 
 Route::get('/gorgia/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
+
+
+Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
