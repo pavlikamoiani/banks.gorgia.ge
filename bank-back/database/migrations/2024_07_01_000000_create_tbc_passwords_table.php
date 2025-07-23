@@ -14,7 +14,9 @@ class CreateTbcPasswordsTable extends Migration
             $table->string('password');
             $table->timestamps();
 
-            $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade');
+            if (Schema::hasTable('banks')) {
+                $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade');
+            }
         });
     }
 

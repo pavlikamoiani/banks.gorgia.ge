@@ -26,8 +26,12 @@ return new class extends Migration {
             $table->string('status_code')->nullable();
             $table->timestamps();
 
-            $table->foreign('bank_name_id')->references('id')->on('bank_names')->onDelete('set null');
-            $table->foreign('bank_id')->references('id')->on('banks')->onDelete('set null');
+            if (Schema::hasTable('bank_names')) {
+                $table->foreign('bank_name_id')->references('id')->on('bank_names')->onDelete('set null');
+            }
+            if (Schema::hasTable('banks')) {
+                $table->foreign('bank_id')->references('id')->on('banks')->onDelete('set null');
+            }
         });
     }
 
