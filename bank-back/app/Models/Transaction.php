@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\BankName;
 
+
 class Transaction extends Model
 {
     protected $table = 'transactions';
