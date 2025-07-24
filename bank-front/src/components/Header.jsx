@@ -9,14 +9,12 @@ import defaultInstance from '../api/defaultInstance';
 import Modal from './TbcPasswordModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
-
-
+import Flag from 'react-world-flags';
 
 const getCurrentVersion = (pathname) => {
 	if (pathname.startsWith('/anta')) return 'Anta';
 	return 'Gorgia';
 };
-
 
 const Header = () => {
 	const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -242,39 +240,9 @@ const Header = () => {
 								className={`flag-animate${langDropdownOpen ? ' open' : ' closed'}`}
 								style={{ fontWeight: 600 }}
 							>
-								{(i18n.language === 'ka') && (
-									<svg width="22" height="16" viewBox="0 0 22 16">
-										<rect width="22" height="16" fill="#fff" />
-										<rect x="9" width="4" height="16" fill="#e8112d" />
-										<rect y="6" width="22" height="4" fill="#e8112d" />
-										<rect x="2" y="2" width="2" height="2" fill="#e8112d" />
-										<rect x="18" y="2" width="2" height="2" fill="#e8112d" />
-										<rect x="2" y="12" width="2" height="2" fill="#e8112d" />
-										<rect x="18" y="12" width="2" height="2" fill="#e8112d" />
-									</svg>
-								)}
-								{(i18n.language === 'en') && (
-									<svg width="22" height="16" viewBox="0 0 22 16">
-										<rect width="22" height="16" fill="#012169" />
-										<polygon points="0,0 22,16 22,14.5 2.5,0 0,0" fill="#fff" />
-										<polygon points="22,0 0,16 0,14.5 19.5,0 22,0" fill="#fff" />
-										<rect x="9" width="4" height="16" fill="#fff" />
-										<rect y="6" width="22" height="4" fill="#fff" />
-										<rect x="10" width="2" height="16" fill="#c8102e" />
-										<rect y="7" width="22" height="2" fill="#c8102e" />
-										<polygon points="0,0 9,6 10,6 0,0" fill="#c8102e" />
-										<polygon points="22,0 13,6 12,6 22,0" fill="#c8102e" />
-										<polygon points="0,16 9,10 10,10 0,16" fill="#c8102e" />
-										<polygon points="22,16 13,10 12,10 22,16" fill="#c8102e" />
-									</svg>
-								)}
-								{(i18n.language === 'ru') && (
-									<svg width="22" height="16" viewBox="0 0 22 16">
-										<rect width="22" height="16" fill="#fff" />
-										<rect y="5.33" width="22" height="5.33" fill="#0033a0" />
-										<rect y="10.66" width="22" height="5.34" fill="#d52b1e" />
-									</svg>
-								)}
+								{(i18n.language === 'ka') && <Flag code="GE" height="16" style={{ width: 22, objectFit: 'cover' }} />}
+								{(i18n.language === 'en') && <Flag code="GB" height="16" style={{ width: 22, objectFit: 'cover' }} />}
+								{(i18n.language === 'ru') && <Flag code="RU" height="16" style={{ width: 22, objectFit: 'cover' }} />}
 							</span>
 							<FontAwesomeIcon
 								icon={faChevronDown}
@@ -295,15 +263,7 @@ const Header = () => {
 										className={`lang-btn ${i18n.language === 'ka' ? 'active' : ''}`}
 									>
 										<span className="flag-animate closed" style={{ marginRight: 6 }}>
-											<svg width="22" height="16" viewBox="0 0 22 16">
-												<rect width="22" height="16" fill="#fff" />
-												<rect x="9" width="4" height="16" fill="#e8112d" />
-												<rect y="6" width="22" height="4" fill="#e8112d" />
-												<rect x="2" y="2" width="2" height="2" fill="#e8112d" />
-												<rect x="18" y="2" width="2" height="2" fill="#e8112d" />
-												<rect x="2" y="12" width="2" height="2" fill="#e8112d" />
-												<rect x="18" y="12" width="2" height="2" fill="#e8112d" />
-											</svg>
+											<Flag code="GE" height="16" style={{ width: 22, objectFit: 'cover' }} />
 										</span>
 										GE
 									</button>
@@ -314,19 +274,7 @@ const Header = () => {
 										className={`lang-btn ${i18n.language === 'en' ? 'active' : ''}`}
 									>
 										<span className="flag-animate closed" style={{ marginRight: 6 }}>
-											<svg width="22" height="16" viewBox="0 0 22 16">
-												<rect width="22" height="16" fill="#012169" />
-												<polygon points="0,0 22,16 22,14.5 2.5,0 0,0" fill="#fff" />
-												<polygon points="22,0 0,16 0,14.5 19.5,0 22,0" fill="#fff" />
-												<rect x="9" width="4" height="16" fill="#fff" />
-												<rect y="6" width="22" height="4" fill="#fff" />
-												<rect x="10" width="2" height="16" fill="#c8102e" />
-												<rect y="7" width="22" height="2" fill="#c8102e" />
-												<polygon points="0,0 9,6 10,6 0,0" fill="#c8102e" />
-												<polygon points="22,0 13,6 12,6 22,0" fill="#c8102e" />
-												<polygon points="0,16 9,10 10,10 0,16" fill="#c8102e" />
-												<polygon points="22,16 13,10 12,10 22,16" fill="#c8102e" />
-											</svg>
+											<Flag code="GB" height="16" style={{ width: 22, objectFit: 'cover' }} />
 										</span>
 										EN
 									</button>
@@ -337,11 +285,7 @@ const Header = () => {
 										className={`lang-btn ${i18n.language === 'ru' ? 'active' : ''}`}
 									>
 										<span className="flag-animate closed" style={{ marginRight: 6 }}>
-											<svg width="22" height="16" viewBox="0 0 22 16">
-												<rect width="22" height="16" fill="#fff" />
-												<rect y="5.33" width="22" height="5.33" fill="#0033a0" />
-												<rect y="10.66" width="22" height="5.34" fill="#d52b1e" />
-											</svg>
+											<Flag code="RU" height="16" style={{ width: 22, objectFit: 'cover' }} />
 										</span>
 										RU
 									</button>
