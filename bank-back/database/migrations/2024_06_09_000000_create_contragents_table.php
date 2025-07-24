@@ -15,10 +15,15 @@ return new class extends Migration
     {
         Schema::create('contragents', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('bank_id')->nullable();
             $table->string('name');
             $table->string('identification_code');
             $table->json('hidden_for_roles')->nullable();
             $table->timestamps();
+
+            if (Schema::hasTable('banks')) {
+                $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade');
+            }
         });
     }
 

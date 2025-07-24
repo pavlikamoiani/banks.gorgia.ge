@@ -23,6 +23,9 @@ class BOGStatementController extends Controller
         $account = $request->input('account', null);
         $currency = $request->input('currency', env(strtoupper($bank) . '_BOG_CURRENCY', 'GEL'));
 
+        $allActivities = [];
+        $accounts = [];
+
         if (!$account || $account === 'all') {
             if ($bank === 'anta') {
                 $accounts = [
@@ -40,6 +43,18 @@ class BOGStatementController extends Controller
                     try {
                         $data = $bog->getTodayActivities($acc, $currency);
                         $activities = $data['activities'] ?? (is_array($data) ? $data : []);
+                        foreach ($activities as $activity) {
+                            if (
+                                isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
+                                trim($activity['Sender']['Name']) !== '' &&
+                                trim($activity['Sender']['Inn']) !== ''
+                            ) {
+                                $inn = trim($activity['Sender']['Inn']);
+                                $name = trim($activity['Sender']['Name']);
+                                $bankId = $bank === 'anta' ? 2 : 1;
+                                Contragent::findOrCreateByInnAndName($inn, $name, $bankId);
+                            }
+                        }
                         $allActivities = array_merge($allActivities, $activities);
                     } catch (\Exception $e) {
                         \Log::error('BOG API error for account ' . $acc, ['message' => $e->getMessage()]);
@@ -50,6 +65,18 @@ class BOGStatementController extends Controller
         } else {
             $data = $bog->getTodayActivities($account, $currency);
             $activities = $data['activities'] ?? (is_array($data) ? $data : []);
+            foreach ($activities as $activity) {
+                if (
+                    isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
+                    trim($activity['Sender']['Name']) !== '' &&
+                    trim($activity['Sender']['Inn']) !== ''
+                ) {
+                    $inn = trim($activity['Sender']['Inn']);
+                    $name = trim($activity['Sender']['Name']);
+                    $bankId = $bank === 'anta' ? 2 : 1;
+                    Contragent::findOrCreateByInnAndName($inn, $name, $bankId);
+                }
+            }
             return response()->json(['data' => $activities]);
         }
     }
@@ -141,7 +168,9 @@ class BOGStatementController extends Controller
                 ) {
                     $inn = trim($activity['Sender']['Inn']);
                     $name = trim($activity['Sender']['Name']);
-                    $existing = Contragent::where('identification_code', $inn)->get();
+                    $existing = Contragent::where('identification_code', $inn)
+                        ->where('bank_id', $bank === 'anta' ? 2 : 1)
+                        ->get();
                     $shouldInsert = true;
                     foreach ($existing as $contragent) {
                         if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
@@ -153,6 +182,7 @@ class BOGStatementController extends Controller
                         Contragent::create([
                             'name' => $name,
                             'identification_code' => $inn,
+                            'bank_id' => $bank === 'anta' ? 2 : 1,
                         ]);
                     }
                 }

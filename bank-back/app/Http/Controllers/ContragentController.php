@@ -11,11 +11,12 @@ class ContragentController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $bankId = $user && $user->bank === 'anta' ? 2 : 1;
 
         $name = $request->query('name');
         $identification_code = $request->query('identification_code');
 
-        $query = Contragent::query();
+        $query = Contragent::where('bank_id', $bankId);
 
         if ($name) {
             $query->where('name', 'like', '%' . $name . '%');
@@ -38,11 +39,16 @@ class ContragentController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        $bankId = $user && $user->bank === 'anta' ? 2 : 1;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identification_code' => 'required|string|max:255',
             'hidden_for_roles' => 'nullable|array',
         ]);
+        $validated['bank_id'] = $bankId;
+
         $contragent = Contragent::create($validated);
         return response()->json($contragent, 201);
     }
