@@ -71,62 +71,68 @@ const TableStatement = () => {
 		return 'gorgia';
 	}, [location.pathname]);
 
-	const columns = [
-		{
-			key: 'contragent', label: t('contragent'),
-			render: (value) => {
-				if (value === 'ტერმინალით გადახდა') {
-					return <span style={{ color: '#0173b1' }}>{value}</span>;
+	const columns = useMemo(() => {
+		const baseColumns = [
+			{
+				key: 'contragent', label: t('contragent'),
+				render: (value) => {
+					if (value === 'ტერმინალით გადახდა') {
+						return <span style={{ color: '#0173b1' }}>{value}</span>;
+					}
+					return value;
 				}
-				return value;
+			},
+			{
+				key: 'bank',
+				label: t('bank'),
+				render: (value, row) => {
+					if (row.bank) return row.bank;
+					if (row.bank_id === 1) return 'Gorgia';
+					if (row.bank_id === 2) return 'Anta';
+					return '-';
+				}
+			},
+			{ key: 'amount', label: t('amount') },
+			{ key: 'transferDate', label: t('transferDate') },
+			{
+				key: 'purpose',
+				label: t('purpose'),
+				render: (value, row) => {
+					if (!value) return '';
+					const isExpanded = expandedRows[row.id];
+					if (value.length <= MAX_PURPOSE_LENGTH) return value;
+					return (
+						<span style={{ display: 'inline-block', maxWidth: 350, verticalAlign: 'middle', wordBreak: 'break-word' }}>
+							{isExpanded ? (
+								<>
+									<span>{value}</span>
+									<button className={tableStatementStyles.showLessBtn}
+										onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: false }))}
+									>
+										{t('show_less')}
+									</button>
+								</>
+							) : (
+								<>
+									<span>{value.slice(0, MAX_PURPOSE_LENGTH)}...</span>
+									<button className={tableStatementStyles.showoreBtn}
+										onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: true }))}
+									>
+										{t('show_more')}
+									</button>
+								</>
+							)}
+						</span>
+					);
+				}
 			}
-		},
-		{
-			key: 'bank',
-			label: t('bank'),
-			render: (value, row) => {
-				if (row.bank_id === 1) return 'Gorgia';
-				if (row.bank_id === 2) return 'Anta';
-				return value || '-';
-			}
-		},
-		{ key: 'amount', label: t('amount') },
-		{ key: 'transferDate', label: t('transferDate') },
-		{
-			key: 'purpose',
-			label: t('purpose'),
-			render: (value, row) => {
-				if (!value) return '';
-				const isExpanded = expandedRows[row.id];
-				if (value.length <= MAX_PURPOSE_LENGTH) return value;
-				return (
-					<span style={{ display: 'inline-block', maxWidth: 350, verticalAlign: 'middle', wordBreak: 'break-word' }}>
-						{isExpanded ? (
-							<>
-								<span>{value}</span>
-								<button className={(tableStatementStyles.showLessBtn)}
-									onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: false }))}
-								>
-									{t('show_less')}
-								</button>
-							</>
-						) : (
-							<>
-								<span>{value.slice(0, MAX_PURPOSE_LENGTH)}...</span>
-								<button className={(tableStatementStyles.showoreBtn)}
-
-									onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: true }))}
-								>
-									{t('show_more')}
-								</button>
-							</>
-						)}
-					</span>
-				);
-			}
-		},
-		{ key: 'syncDate', label: t('syncDate') }
-	];
+		];
+		if (!liveMode) {
+			baseColumns.push({ key: 'syncDate', label: t('syncDate') });
+		}
+		return baseColumns;
+		// eslint-disable-next-line
+	}, [t, expandedRows, liveMode]);
 
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [installmentOnly, setInstallmentOnly] = useState(false);
@@ -210,7 +216,7 @@ const TableStatement = () => {
 			const rows = (resp.data?.data || []).map((item, idx) => ({
 				id: item.Id || item.DocKey || idx + 1,
 				contragent: item?.Sender?.Name || 'ტერმინალით გადახდა',
-				bank: 'Bank of Georgia',
+				bank: item?.Sender?.BankName || 'სს "საქართველოს ბანკი"',
 				bank_id: currentBank === 'anta' ? 2 : 1,
 				amount: (item.Amount ?? 0) + ' ₾',
 				transferDate: item.PostDate ? item.PostDate.slice(0, 10) : '-',
@@ -331,11 +337,6 @@ const TableStatement = () => {
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">
 					{t('statement')}
-					{liveMode && selectedLiveBank && (
-						<span style={{ fontSize: '0.8em', marginLeft: '10px', color: '#2E8B57' }}>
-							({selectedLiveBank} Live)
-						</span>
-					)}
 				</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
 					<div
