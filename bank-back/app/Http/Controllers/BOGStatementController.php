@@ -15,18 +15,25 @@ class BOGStatementController extends Controller
 {
     public function todayActivities(Request $request)
     {
+        $bankParam = $request->input('bank');
         $user = $request->user();
-        $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
+        $bank = $bankParam ?: ($user && $user->bank === 'anta' ? 'anta' : 'gorgia');
         $bog = new BOGService($bank);
 
         $account = $request->input('account', null);
         $currency = $request->input('currency', env(strtoupper($bank) . '_BOG_CURRENCY', 'GEL'));
 
         if (!$account || $account === 'all') {
-            $accounts = [
-                env(strtoupper($bank) . '_BOG_ACCOUNT'),
-                env(strtoupper($bank) . '_BOG_ACCOUNT_2')
-            ];
+            if ($bank === 'anta') {
+                $accounts = [
+                    env('ANTA_BOG_ACCOUNT')
+                ];
+            } else {
+                $accounts = [
+                    env('GORGIA_BOG_ACCOUNT'),
+                    env('GORGIA_BOG_ACCOUNT_2')
+                ];
+            }
             $allActivities = [];
             foreach ($accounts as $acc) {
                 if ($acc) {
