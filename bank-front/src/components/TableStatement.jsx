@@ -314,15 +314,55 @@ const TableStatement = () => {
 		return () => document.removeEventListener('mousedown', handler);
 	}, [bankDropdownOpen]);
 
-	const filteredData = useMemo(() => {
+	const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+	// Sorting logic for all data before pagination
+	const sortedData = useMemo(() => {
 		let base = dbData;
 		if (liveMode) base = data;
+		if (!sortConfig.key) return base;
+		const sorted = [...base].sort((a, b) => {
+			let aValue = a[sortConfig.key];
+			let bValue = b[sortConfig.key];
+
+			if (sortConfig.key === 'amount') {
+				const parseAmount = val => {
+					if (typeof val === 'number') return val;
+					if (typeof val === 'string') {
+						const num = parseFloat(val.replace(/[^\d.-]/g, ''));
+						return isNaN(num) ? 0 : num;
+					}
+					return 0;
+				};
+				aValue = parseAmount(aValue);
+				bValue = parseAmount(bValue);
+				if (sortConfig.direction === 'asc') {
+					return bValue - aValue;
+				} else {
+					return aValue - bValue;
+				}
+			}
+
+			if (aValue === undefined || bValue === undefined) return 0;
+			if (typeof aValue === 'number' && typeof bValue === 'number') {
+				return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+			}
+			const aStr = String(aValue).toLowerCase();
+			const bStr = String(bValue).toLowerCase();
+			if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+			if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+			return 0;
+		});
+		return sorted;
+	}, [dbData, data, liveMode, sortConfig]);
+
+	const filteredData = useMemo(() => {
+		let base = sortedData;
 		if (!installmentOnly) return base;
 		return base.filter(row =>
 			(row.purpose || row.description || '').toLowerCase().includes('განვადებ')
-			// || (row.purpose || row.description || '').toLowerCase().includes('განაწილებ')
 		);
-	}, [dbData, data, installmentOnly, liveMode]);
+	}, [sortedData, installmentOnly]);
 
 	const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
@@ -515,6 +555,8 @@ const TableStatement = () => {
 					data={pagedData}
 					loading={loading || dbLoading}
 					emptyText="ამონაწერი არ მოიძებნა"
+					sortConfig={sortConfig}
+					setSortConfig={setSortConfig}
 				/>
 			</div>
 			<Pagination

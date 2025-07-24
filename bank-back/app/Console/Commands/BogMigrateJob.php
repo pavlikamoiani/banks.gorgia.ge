@@ -13,7 +13,7 @@ use Log;
 class BogMigrateJob extends Command
 {
     protected $signature = 'bog:migrate {--account=} {--start=2025-07-01} {--end=} {--currency=GEL}';
-    protected $description = 'Миграция выписок BOG по месяцам для одного или двух счетов';
+    protected $description = 'BOG statement migration by days for one or two accounts';
 
     public function handle(BOGService $bog)
     {
@@ -31,7 +31,7 @@ class BogMigrateJob extends Command
             ];
         }
 
-        $this->info("Миграция с {$start->toDateString()} по {$end->toDateString()} для счетов:");
+        $this->info("Migration from {$start->toDateString()} to {$end->toDateString()} for accounts:");
         foreach ($accounts as $acc) {
             $this->info("  - $acc");
         }
@@ -59,7 +59,7 @@ class BogMigrateJob extends Command
                         $success = true;
                     } catch (\Exception $e) {
                         $retries++;
-                        $this->error("Ошибка для $account $dayStart (попытка $retries): " . $e->getMessage());
+                        $this->error("Error for $account $dayStart (attempt $retries): " . $e->getMessage());
                         Log::error("BOG MIGRATION ERROR for $account $dayStart (try $retries): " . $e->getMessage());
                         if ($retries < $maxRetries) {
                             sleep($retryDelay);
@@ -67,7 +67,7 @@ class BogMigrateJob extends Command
                     }
                 }
                 if (!$success) {
-                    $this->error("Не удалось получить выписку для $account $dayStart после $maxRetries попыток.");
+                    $this->error("Failed to get statement for $account $dayStart after $maxRetries attempts.");
                     $current->addDay();
                     sleep(1);
                     continue;
@@ -120,7 +120,7 @@ class BogMigrateJob extends Command
                     try {
                         $pagedData = $bog->getStatementPage($account, $currency, $statementId, $page, $orderByDate);
                     } catch (\Exception $e) {
-                        $this->error("Ошибка (страница $page) для $account $dayStart: " . $e->getMessage());
+                        $this->error("Error (page $page) for $account $dayStart: " . $e->getMessage());
                         Log::error("BOG MIGRATION ERROR (page $page) for $account $dayStart: " . $e->getMessage());
                         break;
                     }
@@ -221,12 +221,12 @@ class BogMigrateJob extends Command
                     ]);
                     $inserted++;
                 }
-                $this->info("  -> Вставлено: $inserted, пропущено (дубликаты): $skipped");
+                $this->info("  -> Inserted: $inserted, skipped (duplicates): $skipped");
                 $current->addDay();
                 sleep(1);
             }
         }
 
-        $this->info("Миграция завершена!");
+        $this->info("Migration completed!");
     }
 }

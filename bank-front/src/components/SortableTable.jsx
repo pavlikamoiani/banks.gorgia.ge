@@ -1,28 +1,8 @@
-import { useState } from 'react';
-import styles from '../assets/css/SortableTable.module.css';
 import { useTranslation } from 'react-i18next';
+import styles from '../assets/css/SortableTable.module.css';
 
-const SortableTable = ({ columns, data, loading, emptyText }) => {
+const SortableTable = ({ columns, data, loading, emptyText, sortConfig, setSortConfig }) => {
     const { t } = useTranslation();
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-
-    const sortedData = (() => {
-        if (!sortConfig.key) return data;
-        const sorted = [...data].sort((a, b) => {
-            const aValue = a[sortConfig.key];
-            const bValue = b[sortConfig.key];
-            if (aValue === undefined || bValue === undefined) return 0;
-            if (typeof aValue === 'number' && typeof bValue === 'number') {
-                return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
-            }
-            const aStr = String(aValue).toLowerCase();
-            const bStr = String(bValue).toLowerCase();
-            if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-        return sorted;
-    })();
 
     const handleSort = (key) => {
         setSortConfig(prev => {
@@ -50,12 +30,12 @@ const SortableTable = ({ columns, data, loading, emptyText }) => {
                                 {(col.key !== 'actions' && col.key !== 'select') && (
                                     <span className={styles['sort-icons']}>
                                         <span
-                                            className={`${styles['sort-arrow']} ${sortConfig.key === col.key && sortConfig.direction === 'asc' ? styles.active : ''}`}
+                                            className={`${styles['sort-arrow']} ${sortConfig?.key === col.key && sortConfig?.direction === 'asc' ? styles.active : ''}`}
                                         >
                                             ▲
                                         </span>
                                         <span
-                                            className={`${styles['sort-arrow']} ${sortConfig.key === col.key && sortConfig.direction === 'desc' ? styles.active : ''}`}
+                                            className={`${styles['sort-arrow']} ${sortConfig?.key === col.key && sortConfig?.direction === 'desc' ? styles.active : ''}`}
                                         >
                                             ▼
                                         </span>
@@ -71,8 +51,8 @@ const SortableTable = ({ columns, data, loading, emptyText }) => {
                     <tr>
                         <td colSpan={columns.length}>{t('loading')}</td>
                     </tr>
-                ) : sortedData.length > 0 ? (
-                    sortedData.map((row, idx) => (
+                ) : data.length > 0 ? (
+                    data.map((row, idx) => (
                         <tr key={row.id || idx}>
                             {columns.map(col => (
                                 <td key={col.key}>
@@ -92,6 +72,5 @@ const SortableTable = ({ columns, data, loading, emptyText }) => {
         </table >
     );
 };
-
 
 export default SortableTable;
