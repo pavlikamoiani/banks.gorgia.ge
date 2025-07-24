@@ -14,4 +14,3 @@ class BankName extends Model
 		return $this->hasMany(Transaction::class, 'bank_id');
 	}
 }
-ს

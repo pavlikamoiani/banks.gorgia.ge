@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TbcPasswordController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\DashboardController;
+use App\Jobs\Gorgia\BogJob;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -51,9 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Live Statement
 });
 
-
-
-
 // BOG Statement Migration
 Route::get('/bog/migrate-all-statements', [BOGStatementController::class, 'migrateAllStatementsByMonth']);
 Route::get('/bog/statement-by-month/{currency}/{startDate}/{endDate}/{includeToday?}/{orderByDate?}', [BOGStatementController::class, 'statementByMonthJob']);
@@ -63,9 +61,14 @@ Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransact
 // TBC Sync Today's Transactions
 Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);
 
-
 Route::get('/gorgia/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
 Route::get('/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 
-
 Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
+
+
+// Jobs
+Route::get('/run-bog-job', function () {
+    \App\Jobs\Gorgia\BogJob::dispatch();
+    return response()->json(['status' => 'BogJob dispatched']);
+});

@@ -38,7 +38,7 @@ class BogMigrateJob extends Command
 
 
         $maxRetries = 3;
-        $retryDelay = 2; // секунд
+        $retryDelay = 2;
 
         foreach ($accounts as $account) {
             $current = $start->copy();

@@ -15,6 +15,11 @@ import tableStatementStyles from '../assets/css/TableStatement.module.css';
 const MAX_PURPOSE_LENGTH = 20;
 const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 
+const BANK_TYPE_MAP = {
+	1: 'TBC Bank',
+	2: 'სს "საქართველოს ბანკი"'
+};
+
 const TableStatement = () => {
 	const { t } = useTranslation();
 	const location = useLocation();
@@ -157,7 +162,7 @@ const TableStatement = () => {
 				combinedRows = (response.data || []).map((item, idx) => ({
 					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
 					contragent: item.sender_name || 'ტერმინალით გადახდა',
-					bank: item.bank_id === 1 ? 'TBC Bank' : 'Bank of Georgia',
+					bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
 					amount: (item.amount ?? 0) + ' ₾',
 					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
 					purpose: item.description || '-',
