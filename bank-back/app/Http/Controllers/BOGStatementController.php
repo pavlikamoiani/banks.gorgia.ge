@@ -17,16 +17,34 @@ class BOGStatementController extends Controller
     {
         $user = $request->user();
         $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
-        $bog = new \App\Repositories\BankOfGeorgia\BOGService($bank);
+        $bog = new BOGService($bank);
 
-        $account = $request->input('account', env(strtoupper($bank) . '_BOG_ACCOUNT'));
+        $account = $request->input('account', null);
         $currency = $request->input('currency', env(strtoupper($bank) . '_BOG_CURRENCY', 'GEL'));
 
-        $data = $bog->getTodayActivities($account, $currency);
-
-        $activities = $data['activities'] ?? (is_array($data) ? $data : []);
-
-        return response()->json(['data' => $activities]);
+        if (!$account || $account === 'all') {
+            $accounts = [
+                env(strtoupper($bank) . '_BOG_ACCOUNT'),
+                env(strtoupper($bank) . '_BOG_ACCOUNT_2')
+            ];
+            $allActivities = [];
+            foreach ($accounts as $acc) {
+                if ($acc) {
+                    try {
+                        $data = $bog->getTodayActivities($acc, $currency);
+                        $activities = $data['activities'] ?? (is_array($data) ? $data : []);
+                        $allActivities = array_merge($allActivities, $activities);
+                    } catch (\Exception $e) {
+                        \Log::error('BOG API error for account ' . $acc, ['message' => $e->getMessage()]);
+                    }
+                }
+            }
+            return response()->json(['data' => $allActivities]);
+        } else {
+            $data = $bog->getTodayActivities($account, $currency);
+            $activities = $data['activities'] ?? (is_array($data) ? $data : []);
+            return response()->json(['data' => $activities]);
+        }
     }
 
     public function statement(
