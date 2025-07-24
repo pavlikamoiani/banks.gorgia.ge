@@ -7,6 +7,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../store/userSlice';
 import defaultInstance from '../api/defaultInstance';
 import Modal from './TbcPasswordModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+
+
 
 const getCurrentVersion = (pathname) => {
 	if (pathname.startsWith('/anta')) return 'Anta';
@@ -272,7 +276,16 @@ const Header = () => {
 									</svg>
 								)}
 							</span>
-							<span style={{ fontSize: 12, marginLeft: 2, transition: 'transform 0.3s', display: 'inline-block', transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', color: '#000' }}>▼</span>
+							<FontAwesomeIcon
+								icon={faChevronDown}
+								style={{
+									marginLeft: 6,
+									fontSize: '0.8em',
+									transition: 'transform 0.3s ease',
+									transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+									color: '#000',
+								}}
+							/>
 						</button>
 						{langDropdownOpen && (
 							<ul className="lang-dropdown-list">
