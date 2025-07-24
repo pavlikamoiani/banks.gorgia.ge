@@ -11,6 +11,6 @@ class Bank extends Model
 
     public function transactions()
     {
-        return $this->hasMany(Transaction::class, 'bank_id');
+        return $this->hasMany(Transaction::class, 'bank_type');
     }
 }

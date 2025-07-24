@@ -12,6 +12,7 @@ class Transaction extends Model
     protected $fillable = [
         'contragent_id',
         'bank_id',
+        'bank_type',
         'bank_statement_id',
         'amount',
         'transaction_date',
@@ -19,7 +20,6 @@ class Transaction extends Model
         'sender_name',
         'description',
         'status_code',
-        'bank_name_id'
     ];
 
     protected $dates = [
@@ -31,6 +31,6 @@ class Transaction extends Model
 
     public function bankName()
     {
-        return $this->belongsTo(BankName::class, 'bank_name_id');
+        return $this->belongsTo(BankName::class, 'bank_id');
     }
 }

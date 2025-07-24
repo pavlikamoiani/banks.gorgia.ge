@@ -24,9 +24,9 @@ class TransactionController extends Controller
 
         $route = $request->route() ? $request->route()->uri() : '';
         if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
-            $query->where('bank_name_id', 2);
+            $query->where('bank_id', 2);
         } elseif (strpos($route, 'gorgia-transactions') !== false || ($user && $user->bank === 'gorgia')) {
-            $query->where('bank_name_id', 1);
+            $query->where('bank_id', 1);
         }
 
         $isTbc = false;
@@ -34,7 +34,7 @@ class TransactionController extends Controller
         if ($bankCode) {
             $bank = Bank::where('bank_code', $bankCode)->first();
             if ($bank) {
-                $query->where('bank_id', $bank->id);
+                $query->where('bank_type', $bank->id);
                 $isTbc = ($bankCode === 'TBC');
             }
         } elseif ($request->filled('bank')) {
@@ -46,7 +46,7 @@ class TransactionController extends Controller
             if ($bankCodeFromName === 'TBC' || $bankName === 'TBC') {
                 $bank = Bank::where('bank_code', 'TBC')->first();
                 if ($bank) {
-                    $query->where('bank_id', $bank->id);
+                    $query->where('bank_type', $bank->id);
                     $isTbc = true;
                 }
             } else {
@@ -55,7 +55,7 @@ class TransactionController extends Controller
                     $bank = Bank::where('name', $bankName)->orWhere('bank_code', $bankName)->first();
                 }
                 if ($bank) {
-                    $query->where('bank_id', $bank->id);
+                    $query->where('bank_type', $bank->id);
                 }
             }
         }
@@ -64,9 +64,9 @@ class TransactionController extends Controller
             $tbcBank = Bank::where('bank_code', 'TBC')->first();
             if ($tbcBank) {
                 $query->where(function ($q) use ($tbcBank) {
-                    $q->where('bank_id', '!=', $tbcBank->id)
+                    $q->where('bank_type', '!=', $tbcBank->id)
                         ->orWhere(function ($subQ) use ($tbcBank) {
-                            $subQ->where('bank_id', $tbcBank->id)->where('status_code', 3);
+                            $subQ->where('bank_type', $tbcBank->id)->where('status_code', 3);
                         });
                 });
             }
@@ -99,7 +99,7 @@ class TransactionController extends Controller
         }
 
         $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
-            ->leftJoin('banks', 'transactions.bank_name_id', '=', 'banks.id')
+            ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
             ->addSelect('banks.name as bank_name');
 
         $results = $query->orderBy('transaction_date', 'desc')->get();
@@ -117,7 +117,7 @@ class TransactionController extends Controller
             $antaAccount = env('ANTA_BOG_ACCOUNT');
             $antaBank = Bank::where('bank_code', 'BOG')->first();
             if ($antaBank) {
-                $query->where('bank_id', $antaBank->id)
+                $query->where('bank_type', $antaBank->id)
                     ->where(function ($q) use ($antaAccount) {
                         $q->where('bank_statement_id', $antaAccount)
                             ->orWhereNull('bank_statement_id');
@@ -127,7 +127,7 @@ class TransactionController extends Controller
             $gorgiaAccounts = [env('GORGIA_BOG_ACCOUNT'), env('GORGIA_BOG_ACCOUNT_2')];
             $gorgiaBank = Bank::where('bank_code', 'BOG')->first();
             if ($gorgiaBank) {
-                $query->where('bank_id', $gorgiaBank->id)
+                $query->where('bank_type', $gorgiaBank->id)
                     ->whereIn('bank_statement_id', $gorgiaAccounts);
             }
         }

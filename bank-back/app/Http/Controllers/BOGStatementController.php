@@ -17,7 +17,7 @@ class BOGStatementController extends Controller
     {
         $user = $request->user();
         $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
-        $bog = new \App\Repositories\BankOfGeorgia\BOGService($bank);
+        $bog = new BOGService($bank);
 
         $account = $request->input('account', env(strtoupper($bank) . '_BOG_ACCOUNT'));
         $currency = $request->input('currency', env(strtoupper($bank) . '_BOG_CURRENCY', 'GEL'));
@@ -53,12 +53,12 @@ class BOGStatementController extends Controller
             if (!$bankStatementId)
                 continue;
             $exists = Transaction::where('bank_statement_id', $bankStatementId)
-                ->where('bank_id', $bogBankId)
+                ->where('bank_type', $bogBankId)
                 ->exists();
             if (!$exists) {
                 Transaction::create([
                     'contragent_id' => $activity['Sender']['Inn'] ?? null,
-                    'bank_id' => $bogBankId,
+                    'bank_type' => $bogBankId,
                     'bank_statement_id' => $bankStatementId,
                     'amount' => $activity['Amount'] ?? null,
                     'transaction_date' => $activity['PostDate'] ?? null,
@@ -84,7 +84,7 @@ class BOGStatementController extends Controller
     ) {
         $user = $request->user();
         $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
-        $bog = new \App\Repositories\BankOfGeorgia\BOGService($bank);
+        $bog = new BOGService($bank);
 
         $includeToday = filter_var($includeToday, FILTER_VALIDATE_BOOLEAN);
         $orderByDate = filter_var($orderByDate, FILTER_VALIDATE_BOOLEAN);
@@ -187,7 +187,7 @@ class BOGStatementController extends Controller
 
             $statements = Transaction::whereDate('transaction_date', '>=', $startDate)
                 ->whereDate('transaction_date', '<=', $endDate)
-                ->where('bank_id', $bogBankId)
+                ->where('bank_type', $bogBankId)
                 ->orderBy('transaction_date', $orderByDate ? 'asc' : 'desc')
                 ->get();
 
@@ -299,13 +299,13 @@ class BOGStatementController extends Controller
                 $skipped = 0;
 
                 foreach ($activities as $activity) {
-                    $exists = GorgiaBogTransaction::where(function ($q) use ($activity) {
+                    $exists = Transaction::where(function ($q) use ($activity) {
                         if (!empty($activity['Id']))
-                            $q->orWhere('bog_id', $activity['Id']);
+                            $q->orWhere('bank_statement_id', $activity['Id']);
                         if (!empty($activity['DocKey']))
-                            $q->orWhere('doc_key', $activity['DocKey']);
+                            $q->orWhere('bank_statement_id', $activity['DocKey']);
                         if (!empty($activity['DocNo']))
-                            $q->orWhere('doc_no', $activity['DocNo']);
+                            $q->orWhere('bank_statement_id', $activity['DocNo']);
                     })->exists();
 
                     if ($exists) {
@@ -313,33 +313,16 @@ class BOGStatementController extends Controller
                         continue;
                     }
 
-                    GorgiaBogTransaction::create([
-                        'bog_id' => $activity['Id'] ?? null,
-                        'doc_key' => $activity['DocKey'] ?? null,
-                        'doc_no' => $activity['DocNo'] ?? null,
-                        'transaction_date' => $activity['PostDate'] ?? null,
-                        'value_date' => $activity['ValueDate'] ?? null,
-                        'entry_type' => $activity['EntryType'] ?? null,
-                        'entry_comment' => $activity['EntryComment'] ?? null,
-                        'entry_comment_en' => $activity['EntryCommentEn'] ?? null,
-                        'nomination' => $activity['Nomination'] ?? null,
-                        'credit' => $activity['Credit'] ?? null,
-                        'debit' => $activity['Debit'] ?? null,
+                    Transaction::create([
+                        'contragent_id' => $activity['Sender']['Inn'] ?? null,
+                        'bank_type' => $bogBankId,
+                        'bank_statement_id' => $bankStatementId,
                         'amount' => $activity['Amount'] ?? null,
-                        'amount_base' => $activity['AmountBase'] ?? null,
-                        'payer_name' => $activity['PayerName'] ?? null,
-                        'payer_inn' => $activity['PayerInn'] ?? null,
+                        'transaction_date' => $activity['PostDate'] ?? null,
+                        'reflection_date' => $activity['ValueDate'] ?? null,
                         'sender_name' => $activity['Sender']['Name'] ?? null,
-                        'sender_inn' => $activity['Sender']['Inn'] ?? null,
-                        'sender_account_number' => $activity['Sender']['AccountNumber'] ?? null,
-                        'sender_bank_code' => $activity['Sender']['BankCode'] ?? null,
-                        'sender_bank_name' => $activity['Sender']['BankName'] ?? null,
-                        'beneficiary_name' => $activity['Beneficiary']['Name'] ?? null,
-                        'beneficiary_inn' => $activity['Beneficiary']['Inn'] ?? null,
-                        'beneficiary_account_number' => $activity['Beneficiary']['AccountNumber'] ?? null,
-                        'beneficiary_bank_code' => $activity['Beneficiary']['BankCode'] ?? null,
-                        'beneficiary_bank_name' => $activity['Beneficiary']['BankName'] ?? null,
-                        'raw' => $activity,
+                        'description' => $activity['EntryComment'] ?? $activity['EntryCommentEn'] ?? null,
+                        'status_code' => $activity['EntryType'] ?? null,
                     ]);
                     $inserted++;
                 }
@@ -472,7 +455,7 @@ class BOGStatementController extends Controller
 
                 $statements = Transaction::whereDate('transaction_date', '>=', $monthStart)
                     ->whereDate('transaction_date', '<=', $monthEnd)
-                    ->where('bank_id', $bogBankId)
+                    ->where('bank_type', $bogBankId)
                     ->orderBy('transaction_date', $orderByDate ? 'asc' : 'desc')
                     ->get();
 
