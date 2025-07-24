@@ -11,7 +11,7 @@ use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 
-class BogJob implements ShouldQueue
+class GorgiaBogJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

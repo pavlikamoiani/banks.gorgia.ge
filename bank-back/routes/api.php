@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TbcPasswordController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\DashboardController;
-use App\Jobs\Gorgia\BogJob;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -68,7 +67,12 @@ Route::get('/live/today-activities', [LiveStatementController::class, 'todayActi
 
 
 // Jobs
-Route::get('/run-bog-job', function () {
-    \App\Jobs\Gorgia\BogJob::dispatch();
-    return response()->json(['status' => 'BogJob dispatched']);
+Route::get('/run-gorgia-bog-job', function () {
+    \App\Jobs\Gorgia\GorgiaBogJob::dispatch();
+    return response()->json(['status' => 'GorgiaBogJob dispatched']);
+});
+
+Route::get('/run-anta-bog-job', function () {
+    \App\Jobs\Anta\AntaBogJob::dispatch();
+    return response()->json(['status' => 'AntaBogJob dispatched']);
 });
