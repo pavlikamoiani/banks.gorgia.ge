@@ -10,9 +10,9 @@ class Transaction extends Model
 {
     protected $table = 'transactions';
     protected $fillable = [
-        'contragent_id',
         'bank_id',
         'bank_type',
+        'contragent_id',
         'bank_statement_id',
         'amount',
         'transaction_date',

@@ -17,7 +17,7 @@ class BOGStatementController extends Controller
     {
         $user = $request->user();
         $bank = $user && $user->bank === 'anta' ? 'anta' : 'gorgia';
-        $bog = new BOGService($bank);
+        $bog = new \App\Repositories\BankOfGeorgia\BOGService($bank);
 
         $account = $request->input('account', env(strtoupper($bank) . '_BOG_ACCOUNT'));
         $currency = $request->input('currency', env(strtoupper($bank) . '_BOG_CURRENCY', 'GEL'));
@@ -25,52 +25,8 @@ class BOGStatementController extends Controller
         $data = $bog->getTodayActivities($account, $currency);
 
         $activities = $data['activities'] ?? (is_array($data) ? $data : []);
-        foreach ($activities as $activity) {
-            if (
-                isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
-                trim($activity['Sender']['Name']) !== '' &&
-                trim($activity['Sender']['Inn']) !== ''
-            ) {
-                $inn = trim($activity['Sender']['Inn']);
-                $name = trim($activity['Sender']['Name']);
-                $existing = Contragent::where('identification_code', $inn)->get();
-                $shouldInsert = true;
-                foreach ($existing as $contragent) {
-                    if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
-                        $shouldInsert = false;
-                        break;
-                    }
-                }
-                if ($shouldInsert) {
-                    Contragent::create([
-                        'name' => $name,
-                        'identification_code' => $inn,
-                    ]);
-                }
-            }
-            $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? 2;
-            $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
-            if (!$bankStatementId)
-                continue;
-            $exists = Transaction::where('bank_statement_id', $bankStatementId)
-                ->where('bank_type', $bogBankId)
-                ->exists();
-            if (!$exists) {
-                Transaction::create([
-                    'contragent_id' => $activity['Sender']['Inn'] ?? null,
-                    'bank_type' => $bogBankId,
-                    'bank_statement_id' => $bankStatementId,
-                    'amount' => $activity['Amount'] ?? null,
-                    'transaction_date' => $activity['PostDate'] ?? null,
-                    'reflection_date' => $activity['ValueDate'] ?? null,
-                    'sender_name' => $activity['Sender']['Name'] ?? null,
-                    'description' => $activity['EntryComment'] ?? $activity['EntryCommentEn'] ?? null,
-                    'status_code' => $activity['EntryType'] ?? null,
-                ]);
-            }
-        }
 
-        return response()->json($data);
+        return response()->json(['data' => $activities]);
     }
 
     public function statement(
@@ -316,6 +272,7 @@ class BOGStatementController extends Controller
                     Transaction::create([
                         'contragent_id' => $activity['Sender']['Inn'] ?? null,
                         'bank_type' => $bogBankId,
+                        'bank_id' => $bankId,
                         'bank_statement_id' => $bankStatementId,
                         'amount' => $activity['Amount'] ?? null,
                         'transaction_date' => $activity['PostDate'] ?? null,

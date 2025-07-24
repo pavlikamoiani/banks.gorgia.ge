@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\BankName;
+use App\Models\Bank;
 
 class TransactionRepository extends BaseRepository
 {
@@ -127,7 +128,7 @@ class TransactionRepository extends BaseRepository
 
         $transaction = new Transaction();
         $transaction->contragent_id = $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode ?? null;
-        $bank = \App\Models\Bank::where('bank_code', 'TBC')->first();
+        $bank = Bank::where('bank_code', 'TBC')->first();
         $transaction->bank_id = $bank ? $bank->id : null;
         $transaction->bank_statement_id = $transactionData->movementId;
         $transaction->amount = $transactionData->amount->amount;

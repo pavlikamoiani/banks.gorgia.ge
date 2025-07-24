@@ -114,6 +114,10 @@ class BOGService
 
     public function saveStatementToDb($activities)
     {
+        $bankName = $this->bank === 'anta' ? 'Anta' : 'Gorgia';
+        $bankModel = \App\Models\BankName::where('name', $bankName)->first();
+        $bankId = $bankModel ? $bankModel->id : null;
+
         foreach ($activities as $item) {
             $sender = $item['Sender'] ?? [];
             $beneficiary = $item['Beneficiary'] ?? [];
@@ -125,7 +129,7 @@ class BOGService
             ) {
                 $inn = trim($sender['Inn']);
                 $name = trim($sender['Name']);
-                $existing = Contragent::where('identification_code', $inn)->get();
+                $existing = \App\Models\Contragent::where('identification_code', $inn)->get();
                 $shouldInsert = true;
                 foreach ($existing as $contragent) {
                     if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
@@ -134,7 +138,7 @@ class BOGService
                     }
                 }
                 if ($shouldInsert) {
-                    Contragent::create([
+                    \App\Models\Contragent::create([
                         'name' => $name,
                         'identification_code' => $inn,
                     ]);
@@ -144,17 +148,19 @@ class BOGService
             $transactionDate = isset($item['PostDate']) ? date('Y-m-d H:i:s', strtotime($item['PostDate'])) : null;
             $valueDate = isset($item['ValueDate']) ? date('Y-m-d H:i:s', strtotime($item['ValueDate'])) : null;
 
-            $bank = Bank::where('bank_code', 'BOG')->first();
-            $bankId = $bank ? $bank->id : null;
+            // Use bank_type for TBC/BOG, but bank_id for Gorgia/Anta
+            $bogBank = \App\Models\Bank::where('bank_code', 'BOG')->first();
+            $bogBankTypeId = $bogBank ? $bogBank->id : null;
 
-            $exists = Transaction::where('bank_statement_id', $item['Id'] ?? $item['DocKey'] ?? null)
+            $exists = \App\Models\Transaction::where('bank_statement_id', $item['Id'] ?? $item['DocKey'] ?? null)
                 ->where('bank_id', $bankId)
                 ->exists();
 
             if (!$exists) {
-                $transaction = new Transaction();
+                $transaction = new \App\Models\Transaction();
                 $transaction->bank_statement_id = $item['Id'] ?? $item['DocKey'] ?? null;
-                $transaction->bank_id = $bankId;
+                $transaction->bank_id = $bankId; // 1 for Gorgia, 2 for Anta
+                $transaction->bank_type = $bogBankTypeId;
                 $transaction->contragent_id = $sender['Inn'] ?? null;
                 $transaction->amount = $item['Amount'] ?? null;
                 $transaction->transaction_date = $transactionDate;
@@ -162,14 +168,13 @@ class BOGService
                 $transaction->sender_name = $sender['Name'] ?? null;
                 $transaction->description = $item['EntryComment'] ?? $item['EntryCommentEn'] ?? null;
                 $transaction->status_code = $item['EntryType'] ?? null;
-                $bankNameModel = BankName::where('name', ucfirst($this->bank))->first();
-                $transaction->bank_name_id = $bankNameModel ? $bankNameModel->id : null;
                 $transaction->save();
 
                 \Log::info('Saved BOG transaction', [
                     'id' => $transaction->id,
                     'bank_statement_id' => $transaction->bank_statement_id,
-                    'transaction_date' => $transaction->transaction_date
+                    'transaction_date' => $transaction->transaction_date,
+                    'bank_id' => $transaction->bank_id
                 ]);
             }
         }

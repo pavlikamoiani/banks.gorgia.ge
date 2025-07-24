@@ -81,7 +81,15 @@ const TableStatement = () => {
 				return value;
 			}
 		},
-		{ key: 'bank', label: t('bank') },
+		{
+			key: 'bank',
+			label: t('bank'),
+			render: (value, row) => {
+				if (row.bank_id === 1) return 'Gorgia';
+				if (row.bank_id === 2) return 'Anta';
+				return value || '-';
+			}
+		},
 		{ key: 'amount', label: t('amount') },
 		{ key: 'transferDate', label: t('transferDate') },
 		{
@@ -190,10 +198,24 @@ const TableStatement = () => {
 				bank: currentBank,
 				bankType: bankType
 			};
-			const resp = await defaultInstance.get(`/live/${bankType.toLowerCase()}/today-activities`, { params });
-			const rows = (resp.data?.data || []).map(item => ({
-				...item,
-				amount: (item.amount ?? 0) + ' ₾'
+			let endpoint;
+			if (bankType === 'BOG') {
+				endpoint = '/bog/todayactivities';
+			} else if (bankType === 'TBC') {
+				endpoint = '/live/tbc/today-activities';
+			} else {
+				endpoint = `/live/${bankType.toLowerCase()}/today-activities`;
+			}
+			const resp = await defaultInstance.get(endpoint, { params });
+			const rows = (resp.data?.data || []).map((item, idx) => ({
+				id: item.Id || item.DocKey || idx + 1,
+				contragent: item?.Sender?.Name || 'ტერმინალით გადახდა',
+				bank: 'Bank of Georgia',
+				bank_id: currentBank === 'anta' ? 2 : 1,
+				amount: (item.Amount ?? 0) + ' ₾',
+				transferDate: item.PostDate ? item.PostDate.slice(0, 10) : '-',
+				purpose: item.EntryComment || item.EntryCommentEn || '-',
+				syncDate: item.syncDate || '-',
 			}));
 			setData(rows);
 			setDbData(rows);
