@@ -32,16 +32,14 @@ class BaseRepository
 
     private function getCurrentPassword($bankNameId)
     {
-        return TbcPassword::where('bank_name_id', $bankNameId)->latest()->firstOrFail()->password;
+        return TbcPassword::where('bank_id', $bankNameId)->latest()->firstOrFail()->password;
     }
 
     protected function getAuthenticationBody()
     {
-        $nonce = $this->bankNameId == 2 ? '<wsse:Nonce>798853</wsse:Nonce>' : '';
         return '<wsse:UsernameToken>
               <wsse:Username>' . $this->id . '</wsse:Username>
               <wsse:Password>' . $this->password . '</wsse:Password>
-              ' . $nonce . '
             </wsse:UsernameToken>';
     }
 

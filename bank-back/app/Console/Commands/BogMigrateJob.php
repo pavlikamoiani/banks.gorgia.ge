@@ -12,23 +12,32 @@ use Log;
 
 class BogMigrateJob extends Command
 {
-    protected $signature = 'bog:migrate {--account=} {--start=2025-07-01} {--end=} {--currency=GEL}';
+    protected $signature = 'bog:migrate {--account=} {--start=2025-07-01} {--end=} {--currency=GEL} {--bank=gorgia}';
     protected $description = 'BOG statement migration by days for one or two accounts';
 
     public function handle(BOGService $bog)
     {
+        $bank = $this->option('bank') ?: 'gorgia';
+
+        if ($bank === 'anta') {
+            $accountEnv = [env('ANTA_BOG_ACCOUNT')];
+            $currency = env('ANTA_BOG_CURRENCY', 'GEL');
+        } else {
+            $accountEnv = [
+                env('GORGIA_BOG_ACCOUNT'),
+                env('GORGIA_BOG_ACCOUNT_2')
+            ];
+            $currency = env('GORGIA_BOG_CURRENCY', 'GEL');
+        }
+
         $start = Carbon::parse($this->option('start'))->startOfDay();
         $end = $this->option('end') ? Carbon::parse($this->option('end'))->endOfDay() : Carbon::now()->endOfDay();
-        $currency = $this->option('currency');
 
         $accounts = [];
         if ($this->option('account')) {
             $accounts[] = $this->option('account');
         } else {
-            $accounts = [
-                env('GORGIA_BOG_ACCOUNT'),
-                env('GORGIA_BOG_ACCOUNT_2')
-            ];
+            $accounts = $accountEnv;
         }
 
         $this->info("Migration from {$start->toDateString()} to {$end->toDateString()} for accounts:");
@@ -39,6 +48,8 @@ class BogMigrateJob extends Command
 
         $maxRetries = 3;
         $retryDelay = 2;
+
+        $bogBankId = ($bank === 'anta') ? 2 : 1;
 
         foreach ($accounts as $account) {
             $current = $start->copy();
@@ -170,6 +181,7 @@ class BogMigrateJob extends Command
                 $inserted = 0;
                 $skipped = 0;
                 foreach ($allActivities as $activity) {
+                    $contragentId = null;
                     if (
                         isset($activity['Sender']['Name'], $activity['Sender']['Inn']) &&
                         trim($activity['Sender']['Name']) !== '' &&
@@ -177,23 +189,27 @@ class BogMigrateJob extends Command
                     ) {
                         $inn = trim($activity['Sender']['Inn']);
                         $name = trim($activity['Sender']['Name']);
-                        $existing = Contragent::where('identification_code', $inn)->get();
+                        $existing = Contragent::where('identification_code', $inn)
+                            ->where('bank_id', $bogBankId)
+                            ->get();
                         $shouldInsert = true;
                         foreach ($existing as $contragent) {
                             if (mb_strtolower(trim($contragent->name)) === mb_strtolower($name)) {
                                 $shouldInsert = false;
+                                $contragentId = $contragent->id;
                                 break;
                             }
                         }
                         if ($shouldInsert) {
-                            Contragent::create([
+                            $contragent = Contragent::create([
                                 'name' => $name,
                                 'identification_code' => $inn,
+                                'bank_id' => $bogBankId,
                             ]);
+                            $contragentId = $contragent->id;
                         }
                     }
 
-                    $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? null;
                     $bankStatementId = $activity['Id'] ?? $activity['DocKey'] ?? null;
                     if (!$bankStatementId) {
                         $skipped++;
@@ -208,16 +224,19 @@ class BogMigrateJob extends Command
                         continue;
                     }
 
+                    $statusCode = $activity['EntryType'] ?? $activity['status_code'] ?? $activity['EntryDepartment'] ?? null;
+
                     Transaction::create([
-                        'contragent_id' => $activity['Sender']['Inn'] ?? null,
+                        'contragent_id' => $contragentId,
                         'bank_id' => $bogBankId,
+                        'bank_type' => 2,
                         'bank_statement_id' => $bankStatementId,
                         'amount' => $activity['Amount'] ?? null,
                         'transaction_date' => $activity['PostDate'] ?? null,
                         'reflection_date' => $activity['ValueDate'] ?? null,
                         'sender_name' => $activity['Sender']['Name'] ?? null,
                         'description' => $activity['EntryComment'] ?? $activity['EntryCommentEn'] ?? null,
-                        'status_code' => $activity['EntryType'] ?? null,
+                        'status_code' => $statusCode,
                     ]);
                     $inserted++;
                 }

@@ -60,7 +60,7 @@ Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransact
 // TBC Sync Today's Transactions
 Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransactions']);
 
-Route::get('/gorgia/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
+Route::get('/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
 Route::get('/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 
 Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);

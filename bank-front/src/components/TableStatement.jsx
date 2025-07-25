@@ -16,7 +16,7 @@ const MAX_PURPOSE_LENGTH = 20;
 const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 
 const BANK_TYPE_MAP = {
-	1: 'TBC Bank',
+	1: 'სს "თბს ბანკი"',
 	2: 'სს "საქართველოს ბანკი"'
 };
 
@@ -213,9 +213,7 @@ const TableStatement = () => {
 			if (bankType === 'BOG') {
 				endpoint = '/bog/todayactivities';
 			} else if (bankType === 'TBC') {
-				endpoint = '/live/tbc/today-activities';
-			} else {
-				endpoint = `/live/${bankType.toLowerCase()}/today-activities`;
+				endpoint = '/tbc/today-activities';
 			}
 			const resp = await defaultInstance.get(endpoint, { params });
 			const rows = (resp.data?.data || []).map((item, idx) => ({
