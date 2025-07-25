@@ -63,7 +63,7 @@ Route::get('/tbc/sync-today', [TBCStatementController::class, 'syncTodayTransact
 Route::get('/tbc/todayactivities', [TBCStatementController::class, 'todayActivities']);
 Route::get('/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 
-Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
+// Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
 
 
 // Jobs
@@ -75,4 +75,9 @@ Route::get('/run-gorgia-bog-job', function () {
 Route::get('/run-anta-bog-job', function () {
     \App\Jobs\Anta\AntaBogJob::dispatch();
     return response()->json(['status' => 'AntaBogJob dispatched']);
+});
+
+Route::get('/run-gorgia-tbc-job', function () {
+    \App\Jobs\Gorgia\GorgiaTbcJob::dispatch();
+    return response()->json(['status' => 'GorgiaTbcJob dispatched']);
 });

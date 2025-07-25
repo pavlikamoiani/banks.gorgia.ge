@@ -2,58 +2,62 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use App\Repositories\TBCBank\TransactionRepository;
 
 class TBCStatementController extends Controller
 {
     public function todayActivities(Request $request)
     {
-
-        set_time_limit(600);
-
-        $company = $request->path() === 'api/gorgia/tbc/todayactivities' ? 'gorgia' : 'anta';
-
-        $today = Carbon::now()->format('Y-m-d');
-
         try {
-            Log::info("Starting TBC transaction sync for today: {$today}");
-            $repository = new TransactionRepository();
-            $repository->transactionsByTimestamp(Carbon::today()->startOfDay());
-            Log::info("TBC transaction sync completed");
-        } catch (\Exception $e) {
-            Log::error('Error syncing TBC transactions: ' . $e->getMessage());
+            $bank = $request->input('bank', 'gorgia');
+            $bankNameId = $bank === 'anta' ? 2 : 1;
+            $repository = new TransactionRepository($bankNameId);
+            $from = Carbon::today();
+            $to = Carbon::today()->endOfDay();
+            $repository->setPeriod($from, $to);
+
+            $response = $repository->getTransactionsResponse(0, 700);
+            $responseObj = $repository->responseAsObject($response);
+
+            $movements = $responseObj->Body->GetAccountMovementsResponseIo->accountMovement ?? [];
+            if (!is_array($movements) && !is_null($movements)) {
+                $movements = [$movements];
+            }
+
+            $mapped = collect($movements)->map(function ($item, $idx) {
+                $partnerName = $item->partnerName ?? 'ტერმინალით გადახდა';
+
+                if (strpos($partnerName, 'Wallet/domestic/') === 0) {
+                    $partnerName = substr($partnerName, strlen('Wallet/domestic/'));
+                } elseif (strpos($partnerName, 'TBCBank_ის') === 0) {
+                    $partnerName = substr($partnerName, strlen('TBCBank_ის'));
+                }
+                return [
+                    'Id' => $item->movementId ?? ($item->documentNumber ?? $idx + 1),
+                    'Sender' => [
+                        'Name' => $partnerName,
+                        'BankName' => 'სს "თბს ბანკი"',
+                    ],
+                    'Amount' => isset($item->amount->amount) ? $item->amount->amount : 0,
+                    'PostDate' => isset($item->documentDate) ? substr($item->documentDate, 0, 10) : '-',
+                    'EntryComment' => $item->description ?? '-',
+                    'EntryCommentEn' => $item->description ?? '-',
+                    'syncDate' => isset($item->valueDate) ? substr($item->valueDate, 0, 19) : '-',
+                ];
+            })->values();
+
             return response()->json([
-                'error' => 'Synchronization error TBC: ' . $e->getMessage()
+                'status' => 'success',
+                'data' => $mapped
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
             ], 500);
         }
-
-        $transactions = Transaction::whereDate('transaction_date', $today)
-            ->orderBy('transaction_date', 'desc')
-            ->get();
-
-        Log::info('TBC today transactions count: ' . $transactions->count());
-
-        $formattedTransactions = $transactions->map(function ($transaction) {
-            return [
-                'id' => $transaction->id,
-                'Sender' => [
-                    'Name' => $transaction->sender_name,
-                    'BankName' => 'TBC Bank',
-                    'Inn' => $transaction->contragent ? $transaction->contragent->identification_code : ($transaction->contragent_id ?? null),
-                ],
-                'Amount' => $transaction->amount,
-                'PostDate' => $transaction->transaction_date,
-                'ValueDate' => $transaction->reflection_date,
-                'EntryComment' => $transaction->description,
-                'SourceBank' => 'TBC'
-            ];
-        });
-
-        return response()->json(['activities' => $formattedTransactions]);
     }
 
     public function statement(Request $request)

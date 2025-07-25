@@ -43,7 +43,7 @@ class BaseRepository
             </wsse:UsernameToken>';
     }
 
-    protected function responseAsObject($response)
+    public function responseAsObject($response)
     {
         $cleanXml = str_ireplace(['SOAP-ENV:', 'SOAP:', 'ns2:', ' xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"', ' xmlns:ns2="http://www.mygemini.com/schemas/mygemini"'], '', $response);
         $object = simplexml_load_string($cleanXml);

@@ -213,7 +213,7 @@ const TableStatement = () => {
 			if (bankType === 'BOG') {
 				endpoint = '/bog/todayactivities';
 			} else if (bankType === 'TBC') {
-				endpoint = '/tbc/today-activities';
+				endpoint = '/tbc/todayactivities';
 			}
 			const resp = await defaultInstance.get(endpoint, { params });
 			const rows = (resp.data?.data || []).map((item, idx) => ({

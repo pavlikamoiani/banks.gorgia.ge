@@ -17,9 +17,9 @@ class TransactionRepository extends BaseRepository
     /**
      * StatementRepository constructor.
      */
-    public function __construct()
+    public function __construct($bankNameId = 1)
     {
-        parent::__construct();
+        parent::__construct($bankNameId);
 
         $this->soapActionHeader = 'SoapAction: "http://www.mygemini.com/schemas/mygemini/GetAccountMovements"';
     }
@@ -142,7 +142,12 @@ class TransactionRepository extends BaseRepository
         $transaction->save();
     }
 
-    private function getTransactionsResponse($page, $limit = 700)
+    public function responseAsObject($response)
+    {
+        return parent::responseAsObject($response);
+    }
+
+    public function getTransactionsResponse($page, $limit = 700)
     {
         $headers = $this->getHeaders();
         $headers[] = $this->soapActionHeader;
