@@ -7,7 +7,7 @@ use App\Http\Controllers\TBCStatementController;
 use App\Http\Controllers\LiveStatementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TbcPasswordController;
+use App\Http\Controllers\TBCPasswordController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\DashboardController;
 
@@ -28,14 +28,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/contragents/{id}', [ContragentController::class, 'update']);
     Route::delete('/contragents/{id}', [ContragentController::class, 'destroy']);
 
-    Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+    Route::middleware('/logout')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
     Route::post('/users', [AuthController::class, 'store']);
     Route::put('/users/{id}', [AuthController::class, 'update']);
     Route::delete('/users/{id}', [AuthController::class, 'destroy']);
 
     // TBC Password Management
-    Route::get('/tbc-password/info', [TbcPasswordController::class, 'info']);
-    Route::post('/tbc-password/update', [TbcPasswordController::class, 'update']);
+    Route::get('/tbc-password/info', [TBCPasswordController::class, 'info']);
+    Route::post('/tbc-password/update', [TBCPasswordController::class, 'update']);
 
     // TBC Gorgia Statements
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import defaultInstance from '../api/defaultInstance';
 import { useTranslation } from 'react-i18next';
 import { Bar, Pie } from 'react-chartjs-2';
-import styles from '../assets/css/dashboard.module.css';
+import styles from '../assets/css/Dashboard.module.css';
 
 import {
     Chart as ChartJS,

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\TbcPassword;
 
-class TbcPasswordController extends Controller
+class TBCPasswordController extends Controller
 {
     public function info()
     {

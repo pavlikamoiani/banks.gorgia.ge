@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../store/userSlice';
 import defaultInstance from '../api/defaultInstance';
-import Modal from './TbcPasswordModal';
+import Modal from './TBCPasswordModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import Flag from 'react-world-flags';

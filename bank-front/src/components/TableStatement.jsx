@@ -180,7 +180,6 @@ const TableStatement = () => {
 			setData(combinedRows);
 		} catch (err) {
 			console.error("Error loading DB transactions:", err);
-			setError(t('no_data_found'));
 		} finally {
 			setDbLoading(false);
 		}
