@@ -83,7 +83,7 @@ const resources = {
       "live_today_transactions": "Today's Transactions",
       "exit_live": "Exit Live",
       "installment": "Installment",
-      "installment_tooltip": "Show/Hide installments (TBC)",
+      "installment_tooltip": "Show/Hide installments and distributions (TBC)",
 
       // Delete confirmation modal
       "delete": "Delete",
@@ -182,7 +182,7 @@ const resources = {
       "live_today_transactions": "Сегодняшние транзакции",
       "exit_live": "Выход из Live",
       "installment": "Рассрочка",
-      "installment_tooltip": "Показать/Скрыть рассрочки (ТБС)",
+      "installment_tooltip": "Показать/Скрыть рассрочки и распределения (ТБС)",
 
       // Delete confirmation modal
       "delete": "Удалить",
@@ -281,7 +281,7 @@ const resources = {
       "live_today_transactions": "დღევანდელი ტრანზაქციები",
       "exit_live": "გამოსვლა Live რეჟიმიდან",
       "installment": "განვადებები",
-      "installment_tooltip": "განვადებების(თბს) ჩვენება/დამალვა",
+      "installment_tooltip": "განვადებები/განაწებები(თბს) ჩვენება/დამალვა",
 
       // Delete confirmation modal
       "delete": "წაშლა",

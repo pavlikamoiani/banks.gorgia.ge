@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Carbon\Carbon;
 use App\Repositories\TBCBank\TransactionRepository;
 use App\Models\Transaction;
+use App\Models\Contragent;
 
 class GorgiaTbcJob implements ShouldQueue
 {
@@ -48,7 +49,17 @@ class GorgiaTbcJob implements ShouldQueue
             if ($exists) {
                 continue;
             }
-
+            if (
+                isset($transactionData->partnerTaxCode, $transactionData->partnerName) &&
+                trim($transactionData->partnerTaxCode) !== '' &&
+                trim($transactionData->partnerName) !== ''
+            ) {
+                Contragent::findOrCreateByInnAndName(
+                    trim($transactionData->partnerTaxCode),
+                    trim($transactionData->partnerName),
+                    1
+                );
+            }
             $transaction = new Transaction();
             $transaction->contragent_id = $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode ?? null;
             $transaction->bank_id = 1;

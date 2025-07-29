@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
+use App\Models\Contragent;
 
 class AntaBogJob implements ShouldQueue
 {
@@ -27,6 +28,17 @@ class AntaBogJob implements ShouldQueue
                 $bankStatementId = $item['Id'] ?? $item['DocKey'] ?? null;
                 if (!$bankStatementId) {
                     continue;
+                }
+                if (
+                    isset($item['Sender']['Name'], $item['Sender']['Inn']) &&
+                    trim($item['Sender']['Name']) !== '' &&
+                    trim($item['Sender']['Inn']) !== ''
+                ) {
+                    Contragent::findOrCreateByInnAndName(
+                        trim($item['Sender']['Inn']),
+                        trim($item['Sender']['Name']),
+                        2 // bank_id для Anta
+                    );
                 }
                 $exists = Transaction::where('bank_statement_id', $bankStatementId)
                     ->where('bank_id', 2)

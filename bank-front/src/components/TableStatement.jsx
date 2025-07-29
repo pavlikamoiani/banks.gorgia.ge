@@ -54,7 +54,6 @@ const TableStatement = () => {
 	const bankDropdownRef = useRef(null);
 	const [dbLoading, setDbLoading] = useState(false);
 
-	// New state for live mode
 	const [liveMode, setLiveMode] = useState(false);
 	const [liveBankDropdownOpen, setLiveBankDropdownOpen] = useState(false);
 	const [selectedLiveBank, setSelectedLiveBank] = useState(null);
@@ -314,7 +313,6 @@ const TableStatement = () => {
 
 	const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-	// Sorting logic for all data before pagination
 	const sortedData = useMemo(() => {
 		let base = dbData;
 		if (liveMode) base = data;
@@ -358,7 +356,7 @@ const TableStatement = () => {
 		let base = sortedData;
 		if (!installmentOnly) return base;
 		return base.filter(row =>
-			(row.purpose || row.description || '').toLowerCase().includes('განვადებ')
+			(row.purpose || row.description || '').toLowerCase().includes('განვადებ') || (row.purpose || row.description || '').toLowerCase().includes('განაწილება')
 		);
 	}, [sortedData, installmentOnly]);
 
@@ -411,7 +409,7 @@ const TableStatement = () => {
 							{t('installment') || 'განვადება'}
 						</span>
 						<span className={tableStatementStyles.installmentTooltip}>
-							{t('installment_tooltip') || 'განვადებების(თბს) ჩვენება/დამალვა'}
+							{t('installment_tooltip') || 'განვადებები/განაწილება(თბს) ჩვენება/დამალვა'}
 						</span>
 					</div>
 

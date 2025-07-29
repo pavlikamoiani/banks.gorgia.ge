@@ -24,7 +24,6 @@ export default function Login() {
       }
       localStorage.setItem('authToken', response.data.token);
 
-      // Use user info from login response, not /user endpoint
       const user = response.data.user;
       dispatch(setUser(user));
 
