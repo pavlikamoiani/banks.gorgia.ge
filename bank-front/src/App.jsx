@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css'
 import Header from './components/Header'
-import Dashboard from './components/Dashboard';
+// import Dashboard from './components/Dashboard';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import StatementPage from './pages/gorgia/StatementPage'
 import ContragentsPage from './pages/gorgia/ContragentsPage'

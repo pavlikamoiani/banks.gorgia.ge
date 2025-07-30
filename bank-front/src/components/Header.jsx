@@ -21,7 +21,6 @@ const Header = () => {
 	const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 	const [tbcPwInfo, setTbcPwInfo] = useState({ days_left: null, created_at: null });
 	const [tbcPwModalOpen, setTbcPwModalOpen] = useState(false);
-	// eslint-disable-next-line
 	const [tbcPwLoading, setTbcPwLoading] = useState(false);
 	const dropdownRef = useRef(null);
 	const langDropdownRef = useRef(null);
