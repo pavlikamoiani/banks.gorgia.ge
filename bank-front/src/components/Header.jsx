@@ -208,18 +208,19 @@ const Header = () => {
 										: ""
 								}
 								style={{
-									color:
-										tbcPwInfo.days_left !== null && tbcPwInfo.days_left <= 3
-											? 'red'
-											: '#0173b1',
+									color: tbcPwInfo.days_left !== null && tbcPwInfo.days_left <= 3 ? 'red' : '#0173b1',
 									fontWeight: 700,
 									cursor: 'pointer',
 									margin: 0,
+									maxWidth: '100%',
+									whiteSpace: 'nowrap',
+									overflow: 'hidden',
+									textOverflow: 'ellipsis',
 								}}
 								onClick={handleTbcPwModalOpen}
 								title="Click to change TBC password"
 							>
-								{t('tbc_password_change')} ({t('')} {tbcPwInfo.days_left !== null ? tbcPwInfo.days_left : '...'} {t('days')})
+								{t('tbc_password_change')} ({tbcPwInfo.days_left !== null ? tbcPwInfo.days_left : '...'} {t('days')})
 							</p>
 						</div>
 					)}
