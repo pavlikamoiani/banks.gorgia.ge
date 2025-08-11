@@ -18,6 +18,8 @@ class GorgiaBogJob implements ShouldQueue
 
     public function handle()
     {
+        Log::info('GorgiaBogJob: handle started');
+
         $bog = new BOGService('gorgia');
         try {
             $accounts = [];

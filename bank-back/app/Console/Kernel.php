@@ -15,12 +15,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->job(new \App\Jobs\UpdateYesterdayData)->dailyAt('04:00');
+        // $schedule->job(new \App\Jobs\UpdateYesterdayData)->dailyAt('04:00');
 
-        $schedule->job(new \App\Jobs\Gorgia\GorgiaBogJob)->hourly()->at('00');
-        $schedule->job(new \App\Jobs\Gorgia\GorgiaBogJob)->hourly()->at('15');
-        $schedule->job(new \App\Jobs\Anta\AntaBogJob)->hourly()->at('30');
-        // $schedule->job(new \App\Jobs\Anta\TbcJob)->hourly()->at('45');
+        // $schedule->job(new \App\Jobs\Gorgia\GorgiaBogJob)->cron('0 * * * *');
+        // $schedule->job(new \App\Jobs\Gorgia\GorgiaTbcJob)->cron('15 * * * *');
+        // $schedule->job(new \App\Jobs\Anta\AntaBogJob)->cron('30 * * * *');
+        // $schedule->job(new \App\Jobs\Anta\TbcJob)->cron('45 * * * *');  
+
+        $schedule->job(new \App\Jobs\Gorgia\GorgiaBogJob)->dailyAt('12:58');
     }
 
     /**

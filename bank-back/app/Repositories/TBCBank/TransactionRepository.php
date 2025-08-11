@@ -147,6 +147,7 @@ class TransactionRepository extends BaseRepository
         return parent::responseAsObject($response);
     }
 
+
     public function getTransactionsResponse($page, $limit = 700)
     {
         $headers = $this->getHeaders();
@@ -160,6 +161,13 @@ class TransactionRepository extends BaseRepository
         curl_setopt($ch, CURLOPT_POSTFIELDS, $this->getTransactionsByLastTimeBody($page, $limit));
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        curl_setopt($ch, CURLOPT_SSLCERT, storage_path('app/certs/ANTA.GE LLC.pfx'));
+        curl_setopt($ch, CURLOPT_SSLCERTPASSWD, env('TBC_CERT_PASS'));
+
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+
         $response = curl_exec($ch);
 
         if (curl_error($ch)) {
