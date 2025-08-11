@@ -21,9 +21,30 @@ class TBCStatementController extends Controller
             $response = $repository->getTransactionsResponse(0, 700);
             $responseObj = $repository->responseAsObject($response);
 
+            // Log the raw response for debugging
+            \Log::debug('TBC API raw response:', ['response' => $response]);
+            \Log::debug('TBC API parsed object:', ['responseObj' => $responseObj]);
+
+            // Check for error in response
+            if (!isset($responseObj->Body) || !isset($responseObj->Body->GetAccountMovementsResponseIo)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'TBC API response invalid or credentials incorrect',
+                    'data' => []
+                ], 500);
+            }
+
             $movements = $responseObj->Body->GetAccountMovementsResponseIo->accountMovement ?? [];
             if (!is_array($movements) && !is_null($movements)) {
                 $movements = [$movements];
+            }
+
+            if (empty($movements)) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'No transactions found for given credentials or period',
+                    'data' => []
+                ]);
             }
 
             $mapped = collect($movements)->map(function ($item, $idx) {

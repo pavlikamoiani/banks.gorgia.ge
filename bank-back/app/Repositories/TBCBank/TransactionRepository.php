@@ -63,7 +63,7 @@ class TransactionRepository extends BaseRepository
             $totalCount = $responseAsObject->Body->GetAccountMovementsResponseIo->result->totalCount ?? 0;
             \Log::info("TBC transactions totalCount: {$totalCount}, page: {$page}");
 
-            $movements = $responseAsObject->Body->GetAccountMovementsResponseIo->accountMovement ?? [];
+            $movements = $responseAsObject->Body->GetAccountMovementsResponseIo->accountMovement;
             if (!is_array($movements) && !is_null($movements)) {
                 $movements = [$movements];
             }
@@ -159,12 +159,13 @@ class TransactionRepository extends BaseRepository
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $this->getTransactionsByLastTimeBody($page, $limit));
-
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        curl_setopt($ch, CURLOPT_SSLCERT, storage_path('app/certs/ANTA.GE LLC.pfx'));
+        // Use actual .crt and .key files from storage/app/cert/
+        curl_setopt($ch, CURLOPT_SSLCERT, storage_path('app/certs/cert.pem'));
+        curl_setopt($ch, CURLOPT_SSLKEY, storage_path('app/certs/key.pem'));
         curl_setopt($ch, CURLOPT_SSLCERTPASSWD, env('TBC_CERT_PASS'));
-
+        curl_setopt($ch, CURLOPT_SSLKEYPASSWD, env('TBC_CERT_PASS'));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
@@ -175,13 +176,14 @@ class TransactionRepository extends BaseRepository
         }
         curl_close($ch);
 
-        Log::debug($this->getTransactionsByLastTimeBody($page, $limit));
+        \Log::debug($this->getTransactionsByLastTimeBody($page, $limit));
         if (isset($errorMsg)) {
-            Log::error($errorMsg);
+            \Log::error($errorMsg);
         }
 
         return $response;
     }
+
 
     private function getTransactionsByLastTimeBody($page, $limit = 700)
     {

@@ -26,7 +26,7 @@ class BaseRepository
     {
         $this->id = $bankNameId == 2 ? env("TBC_ANTA_ID") : env("TBC_GORGIA_ID");
         $this->password = $this->getCurrentPassword($bankNameId);
-        $this->baseUrl = env('TBC_BASE_URL');
+        $this->baseUrl = env('TBC_API_URL');
         $this->bankNameId = $bankNameId;
     }
 

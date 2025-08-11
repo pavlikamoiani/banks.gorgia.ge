@@ -49,7 +49,10 @@ class BOGStatementController extends Controller
                     }
                 }
             }
-            return response()->json(['data' => $allActivities]);
+            if (empty($allActivities)) {
+                return response()->json(['status' => 'error', 'message' => 'No activities found', 'data' => []], 404);
+            }
+            return response()->json(['status' => 'success', 'data' => $allActivities]);
         } else {
             $data = $bog->getTodayActivities($account, $currency);
             $activities = $data['activities'] ?? (is_array($data) ? $data : []);
@@ -65,7 +68,10 @@ class BOGStatementController extends Controller
                     Contragent::findOrCreateByInnAndName($inn, $name, $bankId);
                 }
             }
-            return response()->json(['data' => $activities]);
+            if (empty($activities)) {
+                return response()->json(['status' => 'error', 'message' => 'No activities found', 'data' => []], 404);
+            }
+            return response()->json(['status' => 'success', 'data' => $activities]);
         }
     }
 
@@ -179,7 +185,10 @@ class BOGStatementController extends Controller
 
         Log::info('BOG statements for frontend', ['result' => $allResults]);
 
-        return response()->json(['data' => $allResults->values()]);
+        if ($allResults->isEmpty()) {
+            return response()->json(['status' => 'error', 'message' => 'No statements found', 'data' => []], 404);
+        }
+        return response()->json(['status' => 'success', 'data' => $allResults->values()]);
     }
 
     public function migrateAllStatementsByMonth(Request $request, BOGService $bog)
@@ -329,6 +338,17 @@ class BOGStatementController extends Controller
             $lastSuccessMonth[$account] = $lastOkMonth;
         }
 
+        if (empty($allResults)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No migration results found',
+                'accounts' => $accounts,
+                'results' => [],
+                'grandTotalInserted' => $grandTotalInserted,
+                'grandTotalSkipped' => $grandTotalSkipped,
+                'lastSuccessMonth' => $lastSuccessMonth,
+            ], 404);
+        }
         return response()->json([
             'message' => 'Migration completed',
             'accounts' => $accounts,
@@ -456,6 +476,14 @@ class BOGStatementController extends Controller
             }
         }
 
+        if ($allResults->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No statements found for the given period',
+                'log' => $log,
+                'data' => [],
+            ], 404);
+        }
         return response()->json([
             'message' => 'Statements by month completed',
             'log' => $log,

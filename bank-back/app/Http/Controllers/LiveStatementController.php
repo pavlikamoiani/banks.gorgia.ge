@@ -26,7 +26,7 @@ class LiveStatementController extends Controller
         $tbcResponse = $tbcController->todayActivities($request);
         $tbcData = $tbcResponse->getData(true);
         $tbcRows = [];
-        foreach (($tbcData['activities'] ?? []) as $item) {
+        foreach (($tbcData['activities']) as $item) {
             $bankName = $item['Sender']['BankName'] ?? 'TBC Bank';
 
             if ($bankName === 'TBC Bank') {
@@ -76,7 +76,7 @@ class LiveStatementController extends Controller
         $bogData = $bogService->getTodayActivities($account, $currency);
         $bogRows = [];
         $bogBankId = Bank::where('bank_code', 'BOG')->first()->id ?? 2;
-        foreach (($bogData['activities'] ?? (is_array($bogData) ? $bogData : [])) as $item) {
+        foreach (($bogData['activities']) as $item) {
             $syncDate = $item['PostDate'] ?? '-';
             if ($syncDate !== '-' && strlen($syncDate) >= 10) {
                 $syncDate = substr($syncDate, 0, 10);
