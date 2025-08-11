@@ -161,18 +161,59 @@ class TransactionRepository extends BaseRepository
         curl_setopt($ch, CURLOPT_POSTFIELDS, $this->getTransactionsByLastTimeBody($page, $limit));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        // Use actual .crt and .key files from storage/app/cert/
-        curl_setopt($ch, CURLOPT_SSLCERT, storage_path('app/certs/cert.pem'));
-        curl_setopt($ch, CURLOPT_SSLKEY, storage_path('app/certs/key.pem'));
-        curl_setopt($ch, CURLOPT_SSLCERTPASSWD, env('TBC_CERT_PASS'));
-        curl_setopt($ch, CURLOPT_SSLKEYPASSWD, env('TBC_CERT_PASS'));
+        $certPath = env('TBC_CERT_PEM_PATH', storage_path('app/certs/fullchain.pem'));
+        if (!file_exists($certPath)) {
+            $certPath = storage_path('app/certs/client.pem');
+        }
+        $keyPath = storage_path('app/certs/key.pem');
+        $sslPass = env('TBC_CERT_PASS');
+
+        curl_setopt($ch, CURLOPT_SSLCERT, $certPath);
+        curl_setopt($ch, CURLOPT_SSLKEY, $keyPath);
+        curl_setopt($ch, CURLOPT_SSLKEYPASSWD, $sslPass);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
         $response = curl_exec($ch);
 
-        if (curl_error($ch)) {
+        if (curl_errno($ch)) {
             $errorMsg = curl_error($ch);
+            $errorCode = curl_errno($ch);
+            \Log::error('cURL error: ' . $errorMsg);
+            \Log::error('cURL error code: ' . $errorCode);
+            \Log::error('cURL info: ' . json_encode(curl_getinfo($ch)));
+            \Log::error('Certificate path used: ' . $certPath);
+            \Log::error('Key path used: ' . $keyPath);
+            \Log::error('SSL password used: ' . $sslPass);
+
+            // Log PEM block only, warn if "Bag Attributes" found
+            if (file_exists($certPath)) {
+                $certContent = file_get_contents($certPath);
+                if (strpos($certContent, 'Bag Attributes') !== false) {
+                    \Log::warning('Certificate file contains Bag Attributes. Remove all lines before -----BEGIN CERTIFICATE----- for cURL compatibility.');
+                }
+                $pemStart = strpos($certContent, '-----BEGIN CERTIFICATE-----');
+                $pemEnd = strpos($certContent, '-----END CERTIFICATE-----');
+                if ($pemStart !== false && $pemEnd !== false) {
+                    $pemBlock = substr($certContent, $pemStart, $pemEnd - $pemStart + strlen('-----END CERTIFICATE-----'));
+                    \Log::error('Certificate PEM block: ' . substr($pemBlock, 0, 200));
+                }
+            }
+            if (file_exists($keyPath)) {
+                $keyContent = file_get_contents($keyPath);
+                if (strpos($keyContent, 'Bag Attributes') !== false) {
+                    \Log::warning('Key file contains Bag Attributes. Remove all lines before -----BEGIN PRIVATE KEY----- for cURL compatibility.');
+                }
+                $pemStart = strpos($keyContent, '-----BEGIN PRIVATE KEY-----');
+                $pemEnd = strpos($keyContent, '-----END PRIVATE KEY-----');
+                if ($pemStart !== false && $pemEnd !== false) {
+                    $pemBlock = substr($keyContent, $pemStart, $pemEnd - $pemStart + strlen('-----END PRIVATE KEY-----'));
+                    \Log::error('Key PEM block: ' . substr($pemBlock, 0, 200));
+                }
+            }
+            \Log::error('BankNameId: ' . $this->bankNameId);
+            \Log::error('Endpoint URL: ' . $this->baseUrl);
         }
         curl_close($ch);
 
@@ -180,6 +221,7 @@ class TransactionRepository extends BaseRepository
         if (isset($errorMsg)) {
             \Log::error($errorMsg);
         }
+        \Log::debug('TBC SOAP response: ' . substr($response, 0, 1000));
 
         return $response;
     }
