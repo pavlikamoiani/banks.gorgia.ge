@@ -1,24 +1,21 @@
 <?php
 
-namespace App\Jobs\Gorgia;
+namespace App\Console\Commands;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Console\Command;
 use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 use App\Models\Contragent;
 
-class GorgiaBogJob implements ShouldQueue
+class GorgiaBogCommand extends Command
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    protected $signature = 'gorgia:bog';
+    protected $description = 'Fetch and save Gorgia BOG transactions';
 
     public function handle()
     {
-        Log::info('GorgiaBogJob: handle started');
+        Log::info('GorgiaBogCommand: handle started');
 
         $bog = new BOGService('gorgia');
         try {
@@ -68,9 +65,9 @@ class GorgiaBogJob implements ShouldQueue
                     ]);
                 }
             }
-            Log::info('BogJob: Transactions saved for Gorgia (all accounts).');
+            Log::info('BogCommand: Transactions saved for Gorgia (all accounts).');
         } catch (\Exception $e) {
-            Log::error('BogJob error: ' . $e->getMessage());
+            Log::error('BogCommand error: ' . $e->getMessage());
         }
     }
 }

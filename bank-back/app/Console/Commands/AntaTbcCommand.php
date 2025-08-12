@@ -1,24 +1,21 @@
 <?php
 
-namespace App\Jobs\Gorgia;
+namespace App\Console\Commands;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Console\Command;
 use Carbon\Carbon;
 use App\Repositories\TBCBank\TransactionRepository;
 use App\Models\Transaction;
 use App\Models\Contragent;
 
-class GorgiaTbcJob implements ShouldQueue
+class AntaTbcCommand extends Command
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    protected $signature = 'anta:tbc';
+    protected $description = 'Fetch and save Anta TBC transactions';
 
     public function handle()
     {
-        $bankNameId = 1;
+        $bankNameId = 2;
         $repository = new TransactionRepository($bankNameId);
         $from = Carbon::today();
         $to = Carbon::today()->endOfDay();
@@ -37,7 +34,7 @@ class GorgiaTbcJob implements ShouldQueue
             $reflectionDate = date('Y-m-d H:i:s', strtotime($transactionData->valueDate));
             $exists = Transaction::where([
                 ['bank_statement_id', $transactionData->movementId],
-                ['bank_id', 1],
+                ['bank_id', 2],
                 ['bank_type', 1],
                 ['amount', $transactionData->amount->amount],
                 ['transaction_date', $transactionDate],
@@ -57,12 +54,12 @@ class GorgiaTbcJob implements ShouldQueue
                 Contragent::findOrCreateByInnAndName(
                     trim($transactionData->partnerTaxCode),
                     trim($transactionData->partnerName),
-                    1
+                    2
                 );
             }
             $transaction = new Transaction();
             $transaction->contragent_id = $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode ?? null;
-            $transaction->bank_id = 1;
+            $transaction->bank_id = 2;
             $transaction->bank_type = 1;
             $transaction->bank_statement_id = $transactionData->movementId;
             $transaction->amount = $transactionData->amount->amount;
@@ -73,5 +70,7 @@ class GorgiaTbcJob implements ShouldQueue
             $transaction->sender_name = $transactionData->partnerName ?? null;
             $transaction->save();
         }
+
+        $this->info('Anta TBC transactions processed.');
     }
 }

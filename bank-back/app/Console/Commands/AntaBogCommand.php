@@ -1,20 +1,17 @@
 <?php
 
-namespace App\Jobs\Anta;
+namespace App\Console\Commands;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Console\Command;
 use App\Repositories\BankOfGeorgia\BOGService;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 use App\Models\Contragent;
 
-class AntaBogJob implements ShouldQueue
+class AntaBogCommand extends Command
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    protected $signature = 'anta:bog';
+    protected $description = 'Fetch and save Anta BOG transactions';
 
     public function handle()
     {
@@ -37,7 +34,7 @@ class AntaBogJob implements ShouldQueue
                     Contragent::findOrCreateByInnAndName(
                         trim($item['Sender']['Inn']),
                         trim($item['Sender']['Name']),
-                        2 // bank_id для Anta
+                        2
                     );
                 }
                 $exists = Transaction::where('bank_statement_id', $bankStatementId)
@@ -60,9 +57,9 @@ class AntaBogJob implements ShouldQueue
                     'status_code' => $item['EntryType'] ?? null,
                 ]);
             }
-            Log::info('BogJob: Transactions saved for Anta.');
+            Log::info('BogCommand: Transactions saved for Anta.');
         } catch (\Exception $e) {
-            Log::error('BogJob error: ' . $e->getMessage());
+            Log::error('BogCommand error: ' . $e->getMessage());
         }
     }
 }

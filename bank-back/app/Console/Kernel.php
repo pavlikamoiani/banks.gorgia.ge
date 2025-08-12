@@ -21,8 +21,6 @@ class Kernel extends ConsoleKernel
         // $schedule->job(new \App\Jobs\Gorgia\GorgiaTbcJob)->cron('15 * * * *');
         // $schedule->job(new \App\Jobs\Anta\AntaBogJob)->cron('30 * * * *');
         // $schedule->job(new \App\Jobs\Anta\TbcJob)->cron('45 * * * *');  
-
-        $schedule->job(new \App\Jobs\Gorgia\GorgiaBogJob)->dailyAt('12:58');
     }
 
     /**
@@ -45,5 +43,9 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\BogMigrateJob::class,
         \App\Console\Commands\ImportTBCTransactions::class,
+        \App\Console\Commands\GorgiaTbcCommand::class,
+        \App\Console\Commands\GorgiaBogCommand::class,
+        \App\Console\Commands\AntaBogCommand::class,
+        \App\Console\Commands\AntaTbcCommand::class,
     ];
 }

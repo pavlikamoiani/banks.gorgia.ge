@@ -229,7 +229,6 @@ const TableStatement = () => {
 			setPage(1);
 		} catch (error) {
 			console.error("Error loading live data:", error);
-			setError(t('failed_to_load_live_data'));
 		} finally {
 			setLoading(false);
 		}

@@ -52,16 +52,16 @@ class TransactionRepository extends BaseRepository
 
         do {
             $response = $this->getTransactionsResponse($page, $limit);
-            \Log::debug('TBC SOAP RAW RESPONSE (page loop): ' . substr($response, 0, 500) . '...');
+            Log::debug('TBC SOAP RAW RESPONSE (page loop): ' . substr($response, 0, 500) . '...');
             $responseAsObject = $this->responseAsObject($response);
 
             if (!isset($responseAsObject->Body)) {
-                \Log::error('TBC SOAP: Body property missing in response (page loop)', ['response' => substr(json_encode($responseAsObject), 0, 500)]);
+                Log::error('TBC SOAP: Body property missing in response (page loop)', ['response' => substr(json_encode($responseAsObject), 0, 500)]);
                 throw new \Exception('TBC SOAP: Body property missing in response (page loop). Check logs for details.');
             }
 
             $totalCount = $responseAsObject->Body->GetAccountMovementsResponseIo->result->totalCount ?? 0;
-            \Log::info("TBC transactions totalCount: {$totalCount}, page: {$page}");
+            Log::info("TBC transactions totalCount: {$totalCount}, page: {$page}");
 
             $movements = $responseAsObject->Body->GetAccountMovementsResponseIo->accountMovement;
             if (!is_array($movements) && !is_null($movements)) {
@@ -69,7 +69,7 @@ class TransactionRepository extends BaseRepository
             }
 
             if (empty($movements)) {
-                \Log::info("No movements found on page {$page}, stopping.");
+                Log::info("No movements found on page {$page}, stopping.");
                 break;
             }
 
@@ -161,11 +161,8 @@ class TransactionRepository extends BaseRepository
         curl_setopt($ch, CURLOPT_POSTFIELDS, $this->getTransactionsByLastTimeBody($page, $limit));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $certPath = env('TBC_CERT_PEM_PATH', storage_path('app/certs/fullchain.pem'));
-        if (!file_exists($certPath)) {
-            $certPath = storage_path('app/certs/client.pem');
-        }
-        $keyPath = storage_path('app/certs/key.pem');
+        $certPath = env('TBC_CERT_PEM_PATH', storage_path('app/certs/cert.pem'));
+        $keyPath = env('TBC_CERT_KEY_PATH', storage_path('app/certs/key.pem'));
         $sslPass = env('TBC_CERT_PASS');
 
         curl_setopt($ch, CURLOPT_SSLCERT, $certPath);
@@ -180,48 +177,48 @@ class TransactionRepository extends BaseRepository
         if (curl_errno($ch)) {
             $errorMsg = curl_error($ch);
             $errorCode = curl_errno($ch);
-            \Log::error('cURL error: ' . $errorMsg);
-            \Log::error('cURL error code: ' . $errorCode);
-            \Log::error('cURL info: ' . json_encode(curl_getinfo($ch)));
-            \Log::error('Certificate path used: ' . $certPath);
-            \Log::error('Key path used: ' . $keyPath);
-            \Log::error('SSL password used: ' . $sslPass);
+            Log::error('cURL error: ' . $errorMsg);
+            Log::error('cURL error code: ' . $errorCode);
+            Log::error('cURL info: ' . json_encode(curl_getinfo($ch)));
+            Log::error('Certificate path used: ' . $certPath);
+            Log::error('Key path used: ' . $keyPath);
+            Log::error('SSL password used: ' . $sslPass);
 
             // Log PEM block only, warn if "Bag Attributes" found
             if (file_exists($certPath)) {
                 $certContent = file_get_contents($certPath);
                 if (strpos($certContent, 'Bag Attributes') !== false) {
-                    \Log::warning('Certificate file contains Bag Attributes. Remove all lines before -----BEGIN CERTIFICATE----- for cURL compatibility.');
+                    Log::warning('Certificate file contains Bag Attributes. Remove all lines before -----BEGIN CERTIFICATE----- for cURL compatibility.');
                 }
                 $pemStart = strpos($certContent, '-----BEGIN CERTIFICATE-----');
                 $pemEnd = strpos($certContent, '-----END CERTIFICATE-----');
                 if ($pemStart !== false && $pemEnd !== false) {
                     $pemBlock = substr($certContent, $pemStart, $pemEnd - $pemStart + strlen('-----END CERTIFICATE-----'));
-                    \Log::error('Certificate PEM block: ' . substr($pemBlock, 0, 200));
+                    Log::error('Certificate PEM block: ' . substr($pemBlock, 0, 200));
                 }
             }
             if (file_exists($keyPath)) {
                 $keyContent = file_get_contents($keyPath);
                 if (strpos($keyContent, 'Bag Attributes') !== false) {
-                    \Log::warning('Key file contains Bag Attributes. Remove all lines before -----BEGIN PRIVATE KEY----- for cURL compatibility.');
+                    Log::warning('Key file contains Bag Attributes. Remove all lines before -----BEGIN PRIVATE KEY----- for cURL compatibility.');
                 }
                 $pemStart = strpos($keyContent, '-----BEGIN PRIVATE KEY-----');
                 $pemEnd = strpos($keyContent, '-----END PRIVATE KEY-----');
                 if ($pemStart !== false && $pemEnd !== false) {
                     $pemBlock = substr($keyContent, $pemStart, $pemEnd - $pemStart + strlen('-----END PRIVATE KEY-----'));
-                    \Log::error('Key PEM block: ' . substr($pemBlock, 0, 200));
+                    Log::error('Key PEM block: ' . substr($pemBlock, 0, 200));
                 }
             }
-            \Log::error('BankNameId: ' . $this->bankNameId);
-            \Log::error('Endpoint URL: ' . $this->baseUrl);
+            Log::error('BankNameId: ' . $this->bankNameId);
+            Log::error('Endpoint URL: ' . $this->baseUrl);
         }
         curl_close($ch);
 
-        \Log::debug($this->getTransactionsByLastTimeBody($page, $limit));
+        Log::debug($this->getTransactionsByLastTimeBody($page, $limit));
         if (isset($errorMsg)) {
-            \Log::error($errorMsg);
+            Log::error($errorMsg);
         }
-        \Log::debug('TBC SOAP response: ' . substr($response, 0, 1000));
+        Log::debug('TBC SOAP response: ' . substr($response, 0, 1000));
 
         return $response;
     }
@@ -242,8 +239,8 @@ class TransactionRepository extends BaseRepository
                             <myg:pageIndex>' . $page . '</myg:pageIndex>
                             <myg:pageSize>' . $limit . '</myg:pageSize>
                         </myg:pager>
-                        <myg:periodFrom>' . $this->lastTimestamp . '</myg:periodFrom>
-                        <myg:periodTo>' . $this->endTimestamp . '</myg:periodTo>
+                        <myg:periodFrom>2025-07-01</myg:periodFrom>
+                        <myg:periodTo>2025-08-12</myg:periodTo>
                       </myg:accountMovementFilterIo>
                     </myg:GetAccountMovementsRequestIo>
                   </soapenv:Body>
