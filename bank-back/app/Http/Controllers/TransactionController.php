@@ -16,12 +16,20 @@ class TransactionController extends Controller
         $user = $request->user();
         $bankCode = $request->query('bank_code');
         $bankName = $request->query('bank');
+
+        // Get pagination parameters
+        $page = (int) $request->query('page', 1);
+        $pageSize = (int) $request->query('pageSize', 25);
+        $offset = ($page - 1) * $pageSize;
+
+        // Base query
         if (!$request->filled('startDate') && !$request->filled('endDate')) {
             $query = Transaction::query()->whereBetween('transaction_date', [now()->subDays(7), now()]);
         } else {
             $query = Transaction::query();
         }
 
+        // Apply filters based on route and user
         $route = $request->route() ? $request->route()->uri() : '';
         if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
             $query->where('bank_id', 2);
@@ -31,6 +39,7 @@ class TransactionController extends Controller
 
         $isTbc = false;
 
+        // Apply bank filters
         if ($bankCode) {
             $bank = Bank::where('bank_code', $bankCode)->first();
             if ($bank) {
@@ -60,6 +69,7 @@ class TransactionController extends Controller
             }
         }
 
+        // TBC specific filters
         if (!$bankCode && !$request->filled('bank')) {
             $tbcBank = Bank::where('bank_code', 'TBC')->first();
             if ($tbcBank) {
@@ -74,6 +84,7 @@ class TransactionController extends Controller
             $query->where('status_code', 3);
         }
 
+        // Apply other filters
         if ($request->filled('contragent')) {
             $query->where('sender_name', 'like', '%' . $request->query('contragent') . '%');
         }
@@ -98,12 +109,21 @@ class TransactionController extends Controller
             $query->whereDate('transaction_date', '<=', $request->query('endDate'));
         }
 
+        // Join and select fields
         $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
             ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
             ->addSelect('banks.name as bank_name');
 
-        $results = $query->orderBy('transaction_date', 'desc')->get();
+        // Count total before applying pagination
+        $total = $query->count();
 
+        // Apply pagination
+        $results = $query->orderBy('transaction_date', 'desc')
+            ->limit($pageSize)
+            ->offset($offset)
+            ->get();
+
+        // Filter by hidden contragents for non-super_admin users
         if ($user && $user->role !== 'super_admin') {
             $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
                 ->pluck('identification_code')->toArray();
@@ -112,31 +132,31 @@ class TransactionController extends Controller
             })->values();
         }
 
-        $route = $request->route() ? $request->route()->uri() : '';
-        if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
-            $antaAccount = env('ANTA_BOG_ACCOUNT');
-            $antaBank = Bank::where('bank_code', 'BOG')->first();
-            if ($antaBank) {
-                $query->where('bank_type', $antaBank->id)
-                    ->where(function ($q) use ($antaAccount) {
-                        $q->where('bank_statement_id', $antaAccount)
-                            ->orWhereNull('bank_statement_id');
-                    });
-            }
-        } elseif (strpos($route, 'gorgia-transactions') !== false || ($user && $user->bank === 'gorgia')) {
-            $gorgiaAccounts = [env('GORGIA_BOG_ACCOUNT'), env('GORGIA_BOG_ACCOUNT_2')];
-            $gorgiaBank = Bank::where('bank_code', 'BOG')->first();
-            if ($gorgiaBank) {
-                $query->where('bank_type', $gorgiaBank->id)
-                    ->whereIn('bank_statement_id', $gorgiaAccounts);
-            }
-        }
-
-        return $results->map(function ($item) {
+        // Format the data for the response
+        $data = $results->map(function ($item) {
             $arr = $item->toArray();
             $arr['bank_name'] = $item->bank_name ?? null;
+            // Make sure transaction_date is formatted as string
+            if (isset($arr['transaction_date'])) {
+                $arr['transaction_date'] = date('Y-m-d H:i:s', strtotime($arr['transaction_date']));
+            }
+            // Make sure created_at is formatted as string
+            if (isset($arr['created_at'])) {
+                $arr['created_at'] = date('Y-m-d H:i:s', strtotime($arr['created_at']));
+            }
             return $arr;
         });
+
+        // Return data with pagination metadata
+        return response()->json([
+            'data' => $data,
+            'pagination' => [
+                'total' => $total,
+                'page' => $page,
+                'pageSize' => $pageSize,
+                'totalPages' => ceil($total / $pageSize)
+            ]
+        ]);
     }
 
     public function todayActivities(Request $request)
@@ -144,6 +164,11 @@ class TransactionController extends Controller
         try {
             $user = $request->user();
             $query = Transaction::query()->whereDate('transaction_date', now()->toDateString());
+
+            // Get pagination parameters
+            $page = (int) $request->query('page', 1);
+            $pageSize = (int) $request->query('pageSize', 25);
+            $offset = ($page - 1) * $pageSize;
 
             if ($request->filled('contragent')) {
                 $query->where('sender_name', 'like', '%' . $request->query('contragent') . '%');
@@ -166,7 +191,14 @@ class TransactionController extends Controller
 
             $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
 
-            $data = $query->orderBy('transaction_date', 'desc')->get();
+            // Count total before applying pagination
+            $total = $query->count();
+
+            // Apply pagination
+            $data = $query->orderBy('transaction_date', 'desc')
+                ->limit($pageSize)
+                ->offset($offset)
+                ->get();
 
             if ($user && $user->role !== 'super_admin') {
                 $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
@@ -176,7 +208,15 @@ class TransactionController extends Controller
                 })->values();
             }
 
-            return response()->json(['data' => $data]);
+            return response()->json([
+                'data' => $data,
+                'pagination' => [
+                    'total' => $total,
+                    'page' => $page,
+                    'pageSize' => $pageSize,
+                    'totalPages' => ceil($total / $pageSize)
+                ]
+            ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

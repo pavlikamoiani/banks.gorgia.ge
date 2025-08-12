@@ -13,6 +13,10 @@ class ContragentController extends Controller
         $user = $request->user();
         $bankId = $user && $user->bank === 'anta' ? 2 : 1;
 
+        $page = (int) $request->query('page', 1);
+        $pageSize = (int) $request->query('pageSize', 25);
+        $offset = ($page - 1) * $pageSize;
+
         $name = $request->query('name');
         $identification_code = $request->query('identification_code');
 
@@ -25,7 +29,12 @@ class ContragentController extends Controller
             $query->where('identification_code', 'like', '%' . $identification_code . '%');
         }
 
-        $contragents = $query->orderBy('created_at', 'desc')->get();
+        $total = $query->count();
+
+        $contragents = $query->orderBy('created_at', 'desc')
+            ->limit($pageSize)
+            ->offset($offset)
+            ->get();
 
         if ($user && $user->role !== 'super_admin') {
             $contragents = $contragents->filter(function ($contragent) use ($user) {
@@ -34,7 +43,15 @@ class ContragentController extends Controller
             })->values();
         }
 
-        return response()->json($contragents);
+        return response()->json([
+            'data' => $contragents,
+            'pagination' => [
+                'total' => $total,
+                'page' => $page,
+                'pageSize' => $pageSize,
+                'totalPages' => ceil($total / $pageSize)
+            ]
+        ]);
     }
 
     public function store(Request $request)

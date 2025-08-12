@@ -6,8 +6,3 @@
   box-sizing: border-box;
   font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
-
-.app-container {
-  min-height: 100vh;
-  background-color: #f9f9f9;
-}

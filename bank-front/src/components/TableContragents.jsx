@@ -43,24 +43,46 @@ const TableContragents = () => {
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState(null);
 	const [deleteError, setDeleteError] = useState('');
+	const [pagination, setPagination] = useState({
+		total: 0,
+		page: 1,
+		pageSize: PAGE_SIZE_OPTIONS[0],
+		totalPages: 0
+	});
 
-	useEffect(() => {
-		const params = {};
-		if (filters.name) params.name = filters.name;
-		if (filters.identification_code) params.identification_code = filters.identification_code;
+	const loadContragents = async (filterParams = {}) => {
 		setLoading(true);
-		defaultInstance.get('/contragents', { params })
-			.then(res => {
-				setContragents(res.data);
-				setLoading(false);
-			})
-			.catch(() => setLoading(false));
-	}, [filters, user]);
-	const filteredContragents = contragents;
+		try {
+			const params = {
+				...filterParams,
+				page: filterParams.page || page,
+				pageSize: pageSize
+			};
+
+			const response = await defaultInstance.get('/contragents', { params });
+
+			// Check if response has paginated structure
+			if (response.data && response.data.pagination) {
+				setContragents(response.data.data || []);
+				setPagination(response.data.pagination);
+				// Update page state to match response
+				setPage(response.data.pagination.page);
+			} else {
+				// Handle old format for backward compatibility
+				setContragents(response.data || []);
+			}
+		} catch (err) {
+			console.error("Error loading contragents:", err);
+			setError(t('error_loading_data'));
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	useEffect(() => {
-		setPage(1);
-	}, [contragents, filters]);
+		loadContragents(filters);
+		// eslint-disable-next-line
+	}, [filters, pageSize]);
 
 	useEffect(() => {
 		if (!pageSizeDropdownOpen) return;
@@ -72,8 +94,6 @@ const TableContragents = () => {
 		document.addEventListener('mousedown', handler);
 		return () => document.removeEventListener('mousedown', handler);
 	}, [pageSizeDropdownOpen]);
-
-	const pagedData = filteredContragents.slice((page - 1) * pageSize, page * pageSize);
 
 	const handleOpenModal = () => setModalOpen(true);
 	const handleCloseModal = () => {
@@ -105,13 +125,7 @@ const TableContragents = () => {
 				hidden_for_roles: form.hidden_for_roles,
 			});
 			handleCloseModal();
-			setLoading(true);
-			defaultInstance.get(`/contragents`)
-				.then(res => {
-					setContragents(res.data);
-					setLoading(false);
-				})
-				.catch(() => setLoading(false));
+			loadContragents(filters);
 		} catch (err) {
 			setError('შეცდომა დამატებისას');
 		}
@@ -160,13 +174,7 @@ const TableContragents = () => {
 				hidden_for_roles: editForm.hidden_for_roles,
 			});
 			handleCloseEditModal();
-			setLoading(true);
-			defaultInstance.get(`/contragents`)
-				.then(res => {
-					setContragents(res.data);
-					setLoading(false);
-				})
-				.catch(() => setLoading(false));
+			loadContragents(filters);
 		} catch (err) {
 			setEditError(t('error_editing'));
 		}
@@ -183,13 +191,7 @@ const TableContragents = () => {
 			await defaultInstance.delete(`/contragents/${deleteId}`);
 			setDeleteModalOpen(false);
 			setDeleteId(null);
-			setLoading(true);
-			defaultInstance.get(`/contragents`)
-				.then(res => {
-					setContragents(res.data);
-					setLoading(false);
-				})
-				.catch(() => setLoading(false));
+			loadContragents(filters);
 		} catch (err) {
 			setDeleteError(t('error_deleting'));
 		}
@@ -204,13 +206,15 @@ const TableContragents = () => {
 	};
 	const handleFilterApply = () => {
 		setFilters({ ...filterDrafts });
+		setPage(1);
+		loadContragents({ ...filterDrafts, page: 1 });
 	};
 
 	const handleSelectAll = (e) => {
-		if (selectedIds.length === filteredContragents.length) {
+		if (selectedIds.length === contragents.length) {
 			setSelectedIds([]);
 		} else {
-			setSelectedIds(filteredContragents.map(row => row.id));
+			setSelectedIds(contragents.map(row => row.id));
 		}
 	};
 	const handleSelectOne = (id) => {
@@ -232,7 +236,7 @@ const TableContragents = () => {
 					<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 						<input
 							type="checkbox"
-							checked={selectedIds.length === filteredContragents.length && filteredContragents.length > 0}
+							checked={selectedIds.length === contragents.length && contragents.length > 0}
 							onChange={handleSelectAll}
 							aria-label={t('select_all')}
 						/>
@@ -313,6 +317,7 @@ const TableContragents = () => {
 												setPageSize(opt);
 												setPage(1);
 												setPageSizeDropdownOpen(false);
+												loadContragents({ ...filters, page: 1, pageSize: opt });
 											}}
 											aria-current={opt === pageSize ? 'true' : undefined}
 										>
@@ -437,7 +442,7 @@ const TableContragents = () => {
 			<div className="table-wrapper">
 				<SortableTable
 					columns={columns}
-					data={pagedData}
+					data={contragents}
 					loading={loading}
 					emptyText={t('no_data_found') || 'მონაცემები არ მოიძებნა'}
 				/>
@@ -452,10 +457,12 @@ const TableContragents = () => {
 				{deleteError && <div style={{ color: 'red', marginTop: 10 }}>{deleteError}</div>}
 			</div>
 			<Pagination
-				total={filteredContragents.length}
-				page={page}
-				pageSize={pageSize}
-				onChange={setPage}
+				total={pagination.total || 0}
+				page={pagination.page || page}
+				pageSize={pagination.pageSize || pageSize}
+				onChange={(newPage) => {
+					loadContragents({ ...filters, page: newPage });
+				}}
 			/>
 		</div>
 	);

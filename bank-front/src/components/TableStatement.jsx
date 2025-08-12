@@ -146,38 +146,67 @@ const TableStatement = () => {
 		return '/gorgia-transactions';
 	};
 
+	const [pagination, setPagination] = useState({
+		total: 0,
+		page: 1,
+		pageSize: PAGE_SIZE_OPTIONS[0],
+		totalPages: 0
+	});
+
 	const loadDbData = async (filterParams = {}) => {
 		setDbLoading(true);
 		setError(null);
 
 		try {
-			const params = { ...filterParams, bank: currentBank === 'anta' ? 'anta' : 'gorgia' };
+			const params = {
+				...filterParams,
+				bank: currentBank === 'anta' ? 'anta' : 'gorgia',
+				// Use the page from params if provided, otherwise use component state
+				page: filterParams.page || page,
+				// Use the pageSize from params if provided, otherwise use component state
+				pageSize: filterParams.pageSize || pageSize
+			};
 			const endpoint = getEndpoint();
 			const response = await defaultInstance.get(endpoint, { params });
 
-			let combinedRows = [];
-
-			if (response.data) {
-				combinedRows = (response.data || []).map((item, idx) => ({
+			// Check if response has paginated structure
+			if (response.data && response.data.pagination) {
+				const formattedData = (response.data.data || []).map((item, idx) => ({
 					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
 					contragent: item.sender_name || 'ტერმინალით გადახდა',
 					bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
 					amount: (item.amount ?? 0) + ' ₾',
 					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
 					purpose: item.description || '-',
-					syncDate: item.created_at ? item.created_at.slice(0, 19).replace('T', ' ') : '-'
+					syncDate: item.created_at
+						? item.created_at.replace('T', ' ').replace(/\.\d+Z?$/, '').slice(0, 19)
+						: '-'
 				}));
+
+				setData(formattedData);
+				setDbData(formattedData);
+				setPagination(response.data.pagination);
+				// Update the page state to match the response
+				setPage(response.data.pagination.page);
+			} else {
+				// Handle old format for backward compatibility
+				let combinedRows = [];
+				if (response.data) {
+					combinedRows = (response.data || []).map((item, idx) => ({
+						id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
+						contragent: item.sender_name || 'ტერმინალით გადახდა',
+						bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
+						amount: (item.amount ?? 0) + ' ₾',
+						transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+						purpose: item.description || '-',
+						syncDate: item.created_at
+							? item.created_at.replace('T', ' ').replace(/\.\d+Z?$/, '').slice(0, 19)
+							: '-'
+					}));
+				}
+				setData(combinedRows);
+				setDbData(combinedRows);
 			}
-
-			combinedRows.sort((a, b) => {
-				if (a.transferDate === b.transferDate) return 0;
-				if (a.transferDate === '-') return 1;
-				if (b.transferDate === '-') return -1;
-				return new Date(b.transferDate) - new Date(a.transferDate);
-			});
-
-			setDbData(combinedRows);
-			setData(combinedRows);
 		} catch (err) {
 			console.error("Error loading DB transactions:", err);
 		} finally {
@@ -358,7 +387,15 @@ const TableStatement = () => {
 		);
 	}, [sortedData, installmentOnly]);
 
-	const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
+	const pagedData = useMemo(() => {
+		// When using server-side pagination, just use the data as-is
+		if (pagination.total > 0) {
+			return data;
+		}
+
+		// Fall back to client-side pagination if server pagination isn't available
+		return filteredData.slice((page - 1) * pageSize, page * pageSize);
+	}, [pagination, data, filteredData, page, pageSize]);
 
 	useEffect(() => {
 		if (!pageSizeDropdownOpen) return;
@@ -482,9 +519,11 @@ const TableStatement = () => {
 											type="button"
 											className={opt === pageSize ? tableStatementStyles.pageSizeDropdownBtnActive : tableStatementStyles.pageSizeDropdownBtn}
 											onClick={() => {
-												setPageSize(opt);
-												setPage(1);
+												const newPageSize = opt;
 												setPageSizeDropdownOpen(false);
+												loadDbData({ ...filters, page: 1, pageSize: newPageSize });
+												setPageSize(newPageSize);
+												setPage(1);
 											}}
 											aria-current={opt === pageSize ? 'true' : undefined}
 										>
@@ -554,10 +593,16 @@ const TableStatement = () => {
 				/>
 			</div>
 			<Pagination
-				total={filteredData.length}
-				page={page}
-				pageSize={pageSize}
-				onChange={setPage}
+				total={pagination.total || filteredData.length}
+				page={pagination.page || page}
+				pageSize={pagination.pageSize || pageSize}
+				onChange={(newPage) => {
+					if (!liveMode) {
+						loadDbData({ ...filters, page: newPage });
+					} else {
+						setPage(newPage);
+					}
+				}}
 			/>
 		</div >
 	);

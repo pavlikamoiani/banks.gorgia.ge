@@ -69,5 +69,6 @@ class GorgiaBogCommand extends Command
         } catch (\Exception $e) {
             Log::error('BogCommand error: ' . $e->getMessage());
         }
+        $this->info('Gorgia BOG transactions processed.');
     }
 }
