@@ -71,6 +71,6 @@ class GorgiaTbcCommand extends Command
             $transaction->save();
         }
 
-        $this->info('Gorgia TBC transactions processed.');
+        \Log::info('Gorgia TBC transactions processed.');
     }
 }

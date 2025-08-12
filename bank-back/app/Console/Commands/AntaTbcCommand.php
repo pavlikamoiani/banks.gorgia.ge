@@ -71,6 +71,6 @@ class AntaTbcCommand extends Command
             $transaction->save();
         }
 
-        $this->info('Anta TBC transactions processed.');
+        \Log::info('Anta TBC transactions processed.');
     }
 }

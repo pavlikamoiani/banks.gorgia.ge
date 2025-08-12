@@ -17,10 +17,10 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->job(new \App\Jobs\UpdateYesterdayData)->dailyAt('04:00');
 
-        // $schedule->job(new \App\Jobs\Gorgia\GorgiaBogJob)->cron('0 * * * *');
-        // $schedule->job(new \App\Jobs\Gorgia\GorgiaTbcJob)->cron('15 * * * *');
-        // $schedule->job(new \App\Jobs\Anta\AntaBogJob)->cron('30 * * * *');
-        // $schedule->job(new \App\Jobs\Anta\TbcJob)->cron('45 * * * *');  
+        $schedule->job(new \App\Console\Commands\GorgiaBogCommand)->cron('0 * * * *');
+        $schedule->job(new \App\Console\Commands\GorgiaTbcCommand)->cron('15 * * * *');
+        $schedule->job(new \App\Console\Commands\AntaBogCommand)->cron('30 * * * *');
+        $schedule->job(new \App\Console\Commands\AntaTbcCommand)->cron('45 * * * *');
     }
 
     /**
