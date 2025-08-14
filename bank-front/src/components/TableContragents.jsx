@@ -413,7 +413,7 @@ const TableContragents = () => {
 				<HideRoleModal
 					open={hideRolesModalOpen}
 					onClose={closeHideRolesModal}
-					selectedContragents={contragents.filter(c => selectedIds.includes(c.id))}
+					selectedContragents={Array.isArray(contragents) ? contragents.filter(c => selectedIds.includes(c.id)) : []}
 					onSubmit={async (newRoles) => {
 						try {
 							await Promise.all(
@@ -442,9 +442,8 @@ const TableContragents = () => {
 			<div className="table-wrapper">
 				<SortableTable
 					columns={columns}
-					data={contragents}
+					data={Array.isArray(contragents) ? contragents : []} // Ensure array
 					loading={loading}
-					emptyText={t('no_data_found') || 'მონაცემები არ მოიძებნა'}
 				/>
 				<DeleteConfirmModal
 					open={deleteModalOpen}

@@ -28,9 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/contragents/{id}', [ContragentController::class, 'update']);
     Route::delete('/contragents/{id}', [ContragentController::class, 'destroy']);
 
-    Route::middleware('/logout')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-    });
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/users', [AuthController::class, 'store']);
     Route::put('/users/{id}', [AuthController::class, 'update']);
     Route::delete('/users/{id}', [AuthController::class, 'destroy']);
@@ -66,20 +64,3 @@ Route::get('/tbc/todayactivities', [TBCStatementController::class, 'todayActivit
 Route::get('/bog/todayactivities', [BOGStatementController::class, 'todayActivities']);
 
 // Route::get('/live/today-activities', [LiveStatementController::class, 'todayActivities']);
-
-
-// Jobs
-Route::get('/run-gorgia-bog-job', function () {
-    \App\Jobs\Gorgia\GorgiaBogJob::dispatch();
-    return response()->json(['status' => 'GorgiaBogJob dispatched']);
-});
-
-Route::get('/run-anta-bog-job', function () {
-    \App\Jobs\Anta\AntaBogJob::dispatch();
-    return response()->json(['status' => 'AntaBogJob dispatched']);
-});
-
-Route::get('/run-gorgia-tbc-job', function () {
-    \App\Jobs\Gorgia\GorgiaTbcJob::dispatch();
-    return response()->json(['status' => 'GorgiaTbcJob dispatched']);
-});

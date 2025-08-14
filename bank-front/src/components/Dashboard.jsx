@@ -45,7 +45,6 @@ const Dashboard = () => {
     }, []);
 
     if (loading) return <div className={styles.dashboardLoading}>{t('loading')}</div>;
-    if (!stats) return <div className={styles.dashboardNoData}>{t('no_data_found')}</div>;
 
     return (
         <div className={styles.dashboardContainer}>

@@ -12,7 +12,7 @@ import { faFilter, faXmark, faBolt, faChevronDown } from '@fortawesome/free-soli
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
-const MAX_PURPOSE_LENGTH = 20;
+const MAX_PURPOSE_LENGTH = 25;
 const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
 
 const BANK_TYPE_MAP = {
@@ -173,8 +173,10 @@ const TableStatement = () => {
 			const endpoint = getEndpoint();
 			const response = await defaultInstance.get(endpoint, { params });
 
+			const responseDataArray = Array.isArray(response.data?.data) ? response.data.data : [];
+
 			if (response.data && response.data.pagination) {
-				const formattedData = (response.data.data || []).map((item, idx) => ({
+				const formattedData = responseDataArray.map((item, idx) => ({
 					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
 					contragent: item.sender_name || 'ტერმინალით გადახდა',
 					bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
@@ -192,8 +194,8 @@ const TableStatement = () => {
 				setPage(response.data.pagination.page);
 			} else {
 				let combinedRows = [];
-				if (response.data) {
-					combinedRows = (response.data || []).map((item, idx) => ({
+				if (Array.isArray(response.data)) {
+					combinedRows = response.data.map((item, idx) => ({
 						id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
 						contragent: item.sender_name || 'ტერმინალით გადახდა',
 						bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
@@ -422,12 +424,12 @@ const TableStatement = () => {
 		if (liveMode) {
 			const startIdx = (livePagination.page - 1) * livePagination.pageSize;
 			const endIdx = startIdx + livePagination.pageSize;
-			return filteredData.slice(startIdx, endIdx);
+			return Array.isArray(filteredData) ? filteredData.slice(startIdx, endIdx) : [];
 		}
 		if (pagination.total > 0) {
-			return data;
+			return Array.isArray(data) ? data : [];
 		}
-		return filteredData.slice((page - 1) * pageSize, page * pageSize);
+		return Array.isArray(filteredData) ? filteredData.slice((page - 1) * pageSize, page * pageSize) : [];
 	}, [liveMode, filteredData, livePagination, pagination, data, page, pageSize]);
 
 	useEffect(() => {
@@ -615,7 +617,6 @@ const TableStatement = () => {
 				)
 			}
 			<div className="table-wrapper">
-				{error && <div style={{ color: 'red' }}>{error}</div>}
 				<SortableTable
 					columns={columns}
 					data={pagedData}
