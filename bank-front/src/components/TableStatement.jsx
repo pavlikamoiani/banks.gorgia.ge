@@ -152,6 +152,12 @@ const TableStatement = () => {
 		pageSize: PAGE_SIZE_OPTIONS[0],
 		totalPages: 0
 	});
+	const [livePagination, setLivePagination] = useState({
+		total: 0,
+		page: 1,
+		pageSize: PAGE_SIZE_OPTIONS[0],
+		totalPages: 0
+	});
 
 	const loadDbData = async (filterParams = {}) => {
 		setDbLoading(true);
@@ -161,15 +167,12 @@ const TableStatement = () => {
 			const params = {
 				...filterParams,
 				bank: currentBank === 'anta' ? 'anta' : 'gorgia',
-				// Use the page from params if provided, otherwise use component state
 				page: filterParams.page || page,
-				// Use the pageSize from params if provided, otherwise use component state
 				pageSize: filterParams.pageSize || pageSize
 			};
 			const endpoint = getEndpoint();
 			const response = await defaultInstance.get(endpoint, { params });
 
-			// Check if response has paginated structure
 			if (response.data && response.data.pagination) {
 				const formattedData = (response.data.data || []).map((item, idx) => ({
 					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
@@ -186,10 +189,8 @@ const TableStatement = () => {
 				setData(formattedData);
 				setDbData(formattedData);
 				setPagination(response.data.pagination);
-				// Update the page state to match the response
 				setPage(response.data.pagination.page);
 			} else {
-				// Handle old format for backward compatibility
 				let combinedRows = [];
 				if (response.data) {
 					combinedRows = (response.data || []).map((item, idx) => ({
@@ -225,7 +226,7 @@ const TableStatement = () => {
 		setPendingFilters({ ...pendingFilters, [e.target.name]: e.target.value });
 	};
 
-	const loadLiveData = async (bankType) => {
+	const loadLiveData = async (bankType, page = 1, pageSize = PAGE_SIZE_OPTIONS[0]) => {
 		if (!bankType) return;
 
 		setLoading(true);
@@ -234,7 +235,9 @@ const TableStatement = () => {
 			const params = {
 				...filters,
 				bank: currentBank,
-				bankType: bankType
+				bankType: bankType,
+				page,
+				pageSize
 			};
 			let endpoint;
 			if (bankType === 'BOG') {
@@ -255,7 +258,13 @@ const TableStatement = () => {
 			}));
 			setData(rows);
 			setDbData(rows);
-			setPage(1);
+			setLivePagination({
+				total: rows.length,
+				page,
+				pageSize,
+				totalPages: Math.ceil(rows.length / pageSize)
+			});
+			setPage(page);
 		} catch (error) {
 			console.error("Error loading live data:", error);
 		} finally {
@@ -267,7 +276,12 @@ const TableStatement = () => {
 		setSelectedLiveBank(bankType);
 		setLiveMode(true);
 		setLiveBankDropdownOpen(false);
-		loadLiveData(bankType);
+		setPage(1);
+		setLivePagination(prev => ({
+			...prev,
+			page: 1
+		}));
+		loadLiveData(bankType, 1, livePagination.pageSize);
 	};
 
 	const handleApplyFilters = () => {
@@ -275,7 +289,12 @@ const TableStatement = () => {
 			const { startDate, endDate, ...rest } = pendingFilters;
 			setFilters(rest);
 			setPendingFilters(rest);
-			loadLiveData(selectedLiveBank);
+			setPage(1);
+			setLivePagination(prev => ({
+				...prev,
+				page: 1
+			}));
+			loadLiveData(selectedLiveBank, 1, livePagination.pageSize);
 		} else {
 			setFilters({ ...pendingFilters });
 			setPage(1);
@@ -297,7 +316,12 @@ const TableStatement = () => {
 			const { startDate, endDate, ...rest } = resetFilters;
 			setFilters(rest);
 			setPendingFilters(rest);
-			loadLiveData(selectedLiveBank);
+			setPage(1);
+			setLivePagination(prev => ({
+				...prev,
+				page: 1
+			}));
+			loadLiveData(selectedLiveBank, 1, livePagination.pageSize);
 		} else {
 			setFilters(resetFilters);
 			setPendingFilters(resetFilters);
@@ -308,6 +332,13 @@ const TableStatement = () => {
 	const handleExitLiveMode = () => {
 		setLiveMode(false);
 		setSelectedLiveBank(null);
+		setPage(1);
+		setLivePagination({
+			total: 0,
+			page: 1,
+			pageSize: PAGE_SIZE_OPTIONS[0],
+			totalPages: 0
+		});
 		loadDbData(filters);
 	};
 
@@ -388,14 +419,16 @@ const TableStatement = () => {
 	}, [sortedData, installmentOnly]);
 
 	const pagedData = useMemo(() => {
-		// When using server-side pagination, just use the data as-is
+		if (liveMode) {
+			const startIdx = (livePagination.page - 1) * livePagination.pageSize;
+			const endIdx = startIdx + livePagination.pageSize;
+			return filteredData.slice(startIdx, endIdx);
+		}
 		if (pagination.total > 0) {
 			return data;
 		}
-
-		// Fall back to client-side pagination if server pagination isn't available
 		return filteredData.slice((page - 1) * pageSize, page * pageSize);
-	}, [pagination, data, filteredData, page, pageSize]);
+	}, [liveMode, filteredData, livePagination, pagination, data, page, pageSize]);
 
 	useEffect(() => {
 		if (!pageSizeDropdownOpen) return;
@@ -593,14 +626,30 @@ const TableStatement = () => {
 				/>
 			</div>
 			<Pagination
-				total={pagination.total || filteredData.length}
-				page={pagination.page || page}
-				pageSize={pagination.pageSize || pageSize}
+				total={
+					liveMode
+						? filteredData.length
+						: (pagination.total || filteredData.length)
+				}
+				page={
+					liveMode
+						? livePagination.page
+						: (pagination.page || page)
+				}
+				pageSize={
+					liveMode
+						? livePagination.pageSize
+						: (pagination.pageSize || pageSize)
+				}
 				onChange={(newPage) => {
-					if (!liveMode) {
-						loadDbData({ ...filters, page: newPage });
-					} else {
+					if (liveMode) {
+						setLivePagination(prev => ({
+							...prev,
+							page: newPage
+						}));
 						setPage(newPage);
+					} else {
+						loadDbData({ ...filters, page: newPage });
 					}
 				}}
 			/>

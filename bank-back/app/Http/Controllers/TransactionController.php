@@ -17,19 +17,16 @@ class TransactionController extends Controller
         $bankCode = $request->query('bank_code');
         $bankName = $request->query('bank');
 
-        // Get pagination parameters
         $page = (int) $request->query('page', 1);
         $pageSize = (int) $request->query('pageSize', 25);
         $offset = ($page - 1) * $pageSize;
 
-        // Base query
         if (!$request->filled('startDate') && !$request->filled('endDate')) {
             $query = Transaction::query()->whereBetween('transaction_date', [now()->subDays(7), now()]);
         } else {
             $query = Transaction::query();
         }
 
-        // Apply filters based on route and user
         $route = $request->route() ? $request->route()->uri() : '';
         if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
             $query->where('bank_id', 2);
@@ -39,7 +36,6 @@ class TransactionController extends Controller
 
         $isTbc = false;
 
-        // Apply bank filters
         if ($bankCode) {
             $bank = Bank::where('bank_code', $bankCode)->first();
             if ($bank) {
@@ -84,7 +80,6 @@ class TransactionController extends Controller
             $query->where('status_code', 3);
         }
 
-        // Apply other filters
         if ($request->filled('contragent')) {
             $query->where('sender_name', 'like', '%' . $request->query('contragent') . '%');
         }
@@ -109,21 +104,17 @@ class TransactionController extends Controller
             $query->whereDate('transaction_date', '<=', $request->query('endDate'));
         }
 
-        // Join and select fields
         $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
             ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
             ->addSelect('banks.name as bank_name');
 
-        // Count total before applying pagination
         $total = $query->count();
 
-        // Apply pagination
         $results = $query->orderBy('transaction_date', 'desc')
             ->limit($pageSize)
             ->offset($offset)
             ->get();
 
-        // Filter by hidden contragents for non-super_admin users
         if ($user && $user->role !== 'super_admin') {
             $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
                 ->pluck('identification_code')->toArray();
@@ -132,22 +123,18 @@ class TransactionController extends Controller
             })->values();
         }
 
-        // Format the data for the response
         $data = $results->map(function ($item) {
             $arr = $item->toArray();
             $arr['bank_name'] = $item->bank_name ?? null;
-            // Make sure transaction_date is formatted as string
             if (isset($arr['transaction_date'])) {
                 $arr['transaction_date'] = date('Y-m-d H:i:s', strtotime($arr['transaction_date']));
             }
-            // Make sure created_at is formatted as string
             if (isset($arr['created_at'])) {
                 $arr['created_at'] = date('Y-m-d H:i:s', strtotime($arr['created_at']));
             }
             return $arr;
         });
 
-        // Return data with pagination metadata
         return response()->json([
             'data' => $data,
             'pagination' => [
@@ -165,7 +152,6 @@ class TransactionController extends Controller
             $user = $request->user();
             $query = Transaction::query()->whereDate('transaction_date', now()->toDateString());
 
-            // Get pagination parameters
             $page = (int) $request->query('page', 1);
             $pageSize = (int) $request->query('pageSize', 25);
             $offset = ($page - 1) * $pageSize;
@@ -191,10 +177,8 @@ class TransactionController extends Controller
 
             $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
 
-            // Count total before applying pagination
             $total = $query->count();
 
-            // Apply pagination
             $data = $query->orderBy('transaction_date', 'desc')
                 ->limit($pageSize)
                 ->offset($offset)

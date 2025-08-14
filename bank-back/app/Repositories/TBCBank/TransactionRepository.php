@@ -239,8 +239,8 @@ class TransactionRepository extends BaseRepository
                             <myg:pageIndex>' . $page . '</myg:pageIndex>
                             <myg:pageSize>' . $limit . '</myg:pageSize>
                         </myg:pager>
-                        <myg:periodFrom>2025-07-01</myg:periodFrom>
-                        <myg:periodTo>2025-08-12</myg:periodTo>
+                        <myg:periodFrom>' . $this->lastTimestamp . '</myg:periodFrom>
+                        <myg:periodTo>' . $this->endTimestamp . '</myg:periodTo>
                       </myg:accountMovementFilterIo>
                     </myg:GetAccountMovementsRequestIo>
                   </soapenv:Body>
