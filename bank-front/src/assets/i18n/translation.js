@@ -85,6 +85,8 @@ const resources = {
       "exit_live": "Exit Live",
       "installment": "Installment",
       "installment_tooltip": "Show/Hide installments and distributions (TBC)",
+      "transfers": "Transfers",
+      "transfers_tooltip": "Show/Hide transfers",
 
       // Delete confirmation modal
       "delete": "Delete",
@@ -185,6 +187,8 @@ const resources = {
       "exit_live": "Выход из Live",
       "installment": "Рассрочка",
       "installment_tooltip": "Показать/Скрыть рассрочки и распределения (ТБС)",
+      "transfers": "Перевод денег",
+      "transfers_tooltip": "Показать/Скрыть переводы",
 
       // Delete confirmation modal
       "delete": "Удалить",
@@ -285,6 +289,8 @@ const resources = {
       "exit_live": "გამოსვლა Live რეჟიმიდან",
       "installment": "განვადებები",
       "installment_tooltip": "განვადებები/განაწებები(თბს) ჩვენება/დამალვა",
+      "transfers": 'გადარიცხვები',
+      "transfers_tooltip": "გადარიცხვების ჩვენება/დამალვა",
 
       // Delete confirmation modal
       "delete": "წაშლა",

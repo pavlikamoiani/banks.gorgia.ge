@@ -29,6 +29,7 @@
 .tooltip,
 .installmentTooltip {
     visibility: hidden;
+    opacity: 0;
     width: max-content;
     background: gray;
     color: #fff;
@@ -42,7 +43,7 @@
     transform: translateX(-50%);
     font-size: 0.90em;
     pointer-events: none;
-    transition: opacity 0.22s cubic-bezier(.4, 0, .2, 1);
+    transition: opacity 0.22s cubic-bezier(.4, 0, .2, 1), visibility 0.22s cubic-bezier(.4, 0, .2, 1);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
     white-space: pre-line;
     text-wrap: nowrap;
@@ -205,8 +206,7 @@
     border-color: #0173b1;
 }
 
-.installmentBtnWrapper:hover .installmentTooltip,
-.installmentBtnWrapper:focus .installmentTooltip {
+.installmentBtnWrapper:hover .installmentTooltip {
     visibility: visible;
     opacity: 1;
 }
