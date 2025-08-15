@@ -444,11 +444,11 @@ const TableStatement = () => {
 		let base = sortedData;
 		if (installmentOnly) {
 			base = base.filter(row =>
-				(row.purpose || row.description || '').toLowerCase().includes('განვადებ') || (row.purpose || row.description || '').toLowerCase().includes('განაწილება')
+				(row.purpose || row.description || '').toLowerCase().includes('განვსაქონლის') || (row.purpose || row.description || '').toLowerCase().includes('განაწილება')
 			);
 		}
 		if (transfersOnly) {
-			base = base.filter(row => row.contragent === 'შპს გორგია');
+			base = base.filter(row => (row.contragent || row.contragent || '').toLowerCase().includes('შპს გორგია'));
 		}
 		return base;
 	}, [sortedData, installmentOnly, transfersOnly]);
