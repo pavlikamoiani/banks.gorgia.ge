@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import '../assets/css/TableAccounts.css';
 import SortableTable from './SortableTable';
@@ -8,7 +10,7 @@ import defaultInstance from '../api/defaultInstance';
 import Pagination from './Pagination';
 import TableFilter from './TableFilter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faXmark, faBolt, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faXmark, faBolt, faChevronDown, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
@@ -118,7 +120,29 @@ const TableStatement = () => {
 					return '-';
 				}
 			},
-			{ key: 'amount', label: t('amount') },
+			{
+				key: 'amount',
+				label: t('amount'),
+				render: (value, row) => {
+					if (filters.transfersOnly) {
+						const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
+						if (isExchange) {
+							return (
+								<span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 10 }}>
+									<FontAwesomeIcon icon={faExchangeAlt} />
+									{value}
+								</span>
+							);
+						}
+						return (
+							<span style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
+								- {value}
+							</span>
+						);
+					}
+					return value;
+				}
+			},
 			{ key: 'transferDate', label: t('transferDate') },
 			{
 				key: 'purpose',
@@ -158,7 +182,7 @@ const TableStatement = () => {
 		}
 		return baseColumns;
 		// eslint-disable-next-line
-	}, [t, expandedRows, liveMode]);
+	}, [t, expandedRows, liveMode, filters.transfersOnly]);
 
 	const [filterOpen, setFilterOpen] = useState(false);
 
@@ -487,6 +511,19 @@ const TableStatement = () => {
 
 	const handleInstallmentOnlyChange = () => {
 		const newValue = !filters.installmentOnly;
+		if (newValue && filters.transfersOnly) {
+			toast.warning('გადარიცხვები და განვადება ერთად შეუძლებელია!', {
+				position: 'bottom-right',
+				autoClose: 3000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				style: { background: '#0173b1', color: '#fff' }
+			});
+			return;
+		}
 		const newFilters = {
 			...filters,
 			installmentOnly: newValue
@@ -504,6 +541,19 @@ const TableStatement = () => {
 
 	const handleTransfersOnlyChange = () => {
 		const newValue = !filters.transfersOnly;
+		if (newValue && filters.installmentOnly) {
+			toast.warning('გადარიცხვები და განვადება ერთად შეუძლებელია!', {
+				position: 'bottom-right',
+				autoClose: 3000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				style: { background: '#0173b1', color: '#fff' }
+			});
+			return;
+		}
 		const newFilters = {
 			...filters,
 			transfersOnly: newValue
@@ -521,6 +571,7 @@ const TableStatement = () => {
 
 	return (
 		<div className="table-accounts-container">
+			<ToastContainer />
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">
 					{t('statement')}
