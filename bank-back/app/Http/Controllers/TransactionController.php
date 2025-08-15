@@ -104,6 +104,19 @@ class TransactionController extends Controller
             $query->whereDate('transaction_date', '<=', $request->query('endDate'));
         }
 
+        // Add filter for installments
+        if ($request->query('installmentOnly') === 'true') {
+            $query->where(function ($q) {
+                $q->where('description', 'like', '%განვსაქონლის%')
+                    ->orWhere('description', 'like', '%განაწილება%');
+            });
+        }
+
+        // Add filter for transfers
+        if ($request->query('transfersOnly') === 'true') {
+            $query->where('sender_name', 'like', '%შპს გორგია%');
+        }
+
         $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
             ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
             ->addSelect('banks.name as bank_name');
@@ -173,6 +186,19 @@ class TransactionController extends Controller
             }
             if ($request->filled('purpose')) {
                 $query->where('description', 'like', '%' . $request->query('purpose') . '%');
+            }
+
+            // Add filter for installments
+            if ($request->query('installmentOnly') === 'true') {
+                $query->where(function ($q) {
+                    $q->where('description', 'like', '%განვსაქონლის%')
+                        ->orWhere('description', 'like', '%განაწილება%');
+                });
+            }
+
+            // Add filter for transfers
+            if ($request->query('transfersOnly') === 'true') {
+                $query->where('sender_name', 'like', '%შპს გორგია%');
             }
 
             $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");

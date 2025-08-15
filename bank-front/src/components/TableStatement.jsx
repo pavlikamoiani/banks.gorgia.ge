@@ -57,7 +57,9 @@ const TableStatement = () => {
 		transferDate: '',
 		purpose: '',
 		startDate: '',
-		endDate: ''
+		endDate: '',
+		installmentOnly: false,
+		transfersOnly: false
 	});
 	const [pendingFilters, setPendingFilters] = useState({
 		contragent: '',
@@ -66,7 +68,9 @@ const TableStatement = () => {
 		transferDate: '',
 		purpose: '',
 		startDate: '',
-		endDate: ''
+		endDate: '',
+		installmentOnly: false,
+		transfersOnly: false
 	});
 	const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
 	const bankDropdownRef = useRef(null);
@@ -157,8 +161,6 @@ const TableStatement = () => {
 	}, [t, expandedRows, liveMode]);
 
 	const [filterOpen, setFilterOpen] = useState(false);
-	const [installmentOnly, setInstallmentOnly] = useState(false);
-	const [transfersOnly, setTransfersOnly] = useState(false);
 
 	const getEndpoint = () => {
 		if (currentBank === 'anta') return '/anta-transactions';
@@ -194,7 +196,9 @@ const TableStatement = () => {
 				...filterParams,
 				bank: currentBank === 'anta' ? 'anta' : 'gorgia',
 				page: filterParams.page || page,
-				pageSize: filterParams.pageSize || pageSize
+				pageSize: filterParams.pageSize || pageSize,
+				installmentOnly: filterParams.installmentOnly || false,
+				transfersOnly: filterParams.transfersOnly || false
 			};
 			const endpoint = getEndpoint();
 			const response = await defaultInstance.get(endpoint, { params });
@@ -266,7 +270,9 @@ const TableStatement = () => {
 				bank: currentBank,
 				bankType: bankType,
 				page,
-				pageSize
+				pageSize,
+				installmentOnly: filters.installmentOnly || false,
+				transfersOnly: filters.transfersOnly || false
 			};
 			let endpoint;
 			if (bankType === 'BOG') {
@@ -442,16 +448,19 @@ const TableStatement = () => {
 
 	const filteredData = useMemo(() => {
 		let base = sortedData;
-		if (installmentOnly) {
+		if (filters.installmentOnly) {
 			base = base.filter(row =>
-				(row.purpose || row.description || '').toLowerCase().includes('განვსაქონლის') || (row.purpose || row.description || '').toLowerCase().includes('განაწილება')
+				(row.purpose || row.description || '').toLowerCase().includes('განვსაქონლის') ||
+				(row.purpose || row.description || '').toLowerCase().includes('განაწილება')
 			);
 		}
-		if (transfersOnly) {
-			base = base.filter(row => (row.contragent || row.contragent || '').toLowerCase().includes('შპს გორგია'));
+		if (filters.transfersOnly) {
+			base = base.filter(row =>
+				(row.contragent || row.contragent || '').toLowerCase().includes('შპს გორგია')
+			);
 		}
 		return base;
-	}, [sortedData, installmentOnly, transfersOnly]);
+	}, [sortedData, filters.installmentOnly, filters.transfersOnly]);
 
 	const pagedData = useMemo(() => {
 		if (liveMode) {
@@ -476,6 +485,40 @@ const TableStatement = () => {
 		return () => document.removeEventListener('mousedown', handler);
 	}, [pageSizeDropdownOpen]);
 
+	const handleInstallmentOnlyChange = () => {
+		const newValue = !filters.installmentOnly;
+		const newFilters = {
+			...filters,
+			installmentOnly: newValue
+		};
+		setFilters(newFilters);
+		setPendingFilters(newFilters);
+
+		if (liveMode && selectedLiveBank) {
+			loadLiveData(selectedLiveBank, 1, livePagination.pageSize);
+		} else {
+			setPage(1);
+			loadDbData({ ...newFilters, page: 1 });
+		}
+	};
+
+	const handleTransfersOnlyChange = () => {
+		const newValue = !filters.transfersOnly;
+		const newFilters = {
+			...filters,
+			transfersOnly: newValue
+		};
+		setFilters(newFilters);
+		setPendingFilters(newFilters);
+
+		if (liveMode && selectedLiveBank) {
+			loadLiveData(selectedLiveBank, 1, livePagination.pageSize);
+		} else {
+			setPage(1);
+			loadDbData({ ...newFilters, page: 1 });
+		}
+	};
+
 	return (
 		<div className="table-accounts-container">
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -487,19 +530,19 @@ const TableStatement = () => {
 						className={tableStatementStyles.installmentBtnWrapper}
 						tabIndex={0}
 						role="button"
-						aria-pressed={installmentOnly}
-						onClick={() => setInstallmentOnly(v => !v)}
-						onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setInstallmentOnly(v => !v); }}
+						aria-pressed={filters.installmentOnly}
+						onClick={handleInstallmentOnlyChange}
+						onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleInstallmentOnlyChange(); }}
 						style={{ outline: 'none' }}
 					>
 						<span
 							className={
-								installmentOnly
+								filters.installmentOnly
 									? tableStatementStyles.installmentBtnActive
 									: tableStatementStyles.installmentBtn
 							}
 						>
-							{installmentOnly ? (
+							{filters.installmentOnly ? (
 								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
 									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
 									<path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
@@ -519,19 +562,19 @@ const TableStatement = () => {
 						className={tableStatementStyles.installmentBtnWrapper}
 						tabIndex={0}
 						role="button"
-						aria-pressed={transfersOnly}
-						onClick={() => setTransfersOnly(v => !v)}
-						onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setTransfersOnly(v => !v); }}
+						aria-pressed={filters.transfersOnly}
+						onClick={handleTransfersOnlyChange}
+						onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleTransfersOnlyChange(); }}
 						style={{ outline: 'none' }}
 					>
 						<span
 							className={
-								transfersOnly
+								filters.transfersOnly
 									? tableStatementStyles.installmentBtnActive
 									: tableStatementStyles.installmentBtn
 							}
 						>
-							{transfersOnly ? (
+							{filters.transfersOnly ? (
 								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
 									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
 									<path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
