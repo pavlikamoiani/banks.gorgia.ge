@@ -46,6 +46,8 @@ class TransactionController extends Controller
             $bankCodeMap = [
                 'TBC Bank' => 'TBC',
                 'Bank of Georgia' => 'BOG',
+                'სს "თბს ბანკი"' => 'TBC',
+                'სს "საქართველოს ბანკი"' => 'BOG',
             ];
             $bankCodeFromName = $bankCodeMap[$bankName] ?? null;
             if ($bankCodeFromName === 'TBC' || $bankName === 'TBC') {
@@ -86,7 +88,7 @@ class TransactionController extends Controller
 
         if ($request->filled('amount')) {
             $amount = $request->query('amount');
-            $query->where('amount', 'like', '%' . $amount . '%');
+            $query->where('amount', $amount);
         }
 
         if ($request->filled('transferDate')) {
@@ -104,7 +106,6 @@ class TransactionController extends Controller
             $query->whereDate('transaction_date', '<=', $request->query('endDate'));
         }
 
-        // Add filter for installments
         if ($request->query('installmentOnly') === 'true') {
             $query->where(function ($q) {
                 $q->where('description', 'like', '%განვსაქონლის%')
@@ -112,7 +113,6 @@ class TransactionController extends Controller
             });
         }
 
-        // Add filter for transfers
         if ($request->query('transfersOnly') === 'true') {
             $query->where('sender_name', 'like', '%შპს გორგია%');
         }

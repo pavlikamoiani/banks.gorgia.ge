@@ -220,7 +220,7 @@ const TableStatement = () => {
 		try {
 			const params = {
 				...filterParams,
-				bank: currentBank === 'anta' ? 'anta' : 'gorgia',
+				bank: filterParams.bank || '',
 				page: filterParams.page || page,
 				pageSize: filterParams.pageSize || pageSize,
 				installmentOnly: filterParams.installmentOnly || false,

@@ -17,7 +17,6 @@ const TableFilter = ({
     onRoleSelect,
     t,
     onApply,
-    // new props for toggles
     installmentOnly,
     transfersOnly,
     onInstallmentToggle,
