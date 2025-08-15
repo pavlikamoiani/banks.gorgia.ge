@@ -10,8 +10,7 @@ class ContragentController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $bankId = $user && $user->bank === 'anta' ? 2 : 1;
+        $bank = $request->input('bank');
 
         $page = (int) $request->query('page', 1);
         $pageSize = (int) $request->query('pageSize', 25);
@@ -20,7 +19,13 @@ class ContragentController extends Controller
         $name = $request->query('name');
         $identification_code = $request->query('identification_code');
 
-        $query = Contragent::where('bank_id', $bankId);
+        $query = Contragent::query();
+
+        if ($bank === 'anta') {
+            $query->where('bank_id', 2);
+        } elseif ($bank === 'gorgia') {
+            $query->where('bank_id', 1);
+        }
 
         if ($name) {
             $query->where('name', 'like', '%' . $name . '%');
@@ -36,6 +41,7 @@ class ContragentController extends Controller
             ->offset($offset)
             ->get();
 
+        $user = $request->user();
         if ($user && $user->role !== 'super_admin') {
             $contragents = $contragents->filter(function ($contragent) use ($user) {
                 $hidden = $contragent->hidden_for_roles ?? [];

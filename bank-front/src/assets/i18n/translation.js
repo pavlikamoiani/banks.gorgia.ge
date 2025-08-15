@@ -62,6 +62,7 @@ const resources = {
       "identification_code": "Identification Code",
       "search_by_title": "Search by title",
       "search_by_code": "Search by code",
+      "no_contragents_found": "No contragents found",
 
       // table statement
       "contragent": "Contragent",
@@ -161,6 +162,7 @@ const resources = {
       "identification_code": "Идентификационный код",
       "search_by_title": "Поиск по названию",
       "search_by_code": "Поиск по коду",
+      "no_contragents_found": "Контрагенты не найдены",
 
       // table statement
       "contragent": "Контрагент",
@@ -260,6 +262,7 @@ const resources = {
       "identification_code": "საიდენფიკაციო კოდი",
       "search_by_title": "ძებნა დასახელებით",
       "search_by_code": "ძებნა კოდით",
+      "no_contragents_found": "კონტრაგენტები ვერ მოიძებნა",
 
       // table statement
       "contragent": "კონტრაგენტი",

@@ -20,6 +20,24 @@ const BANK_TYPE_MAP = {
 	2: 'სს "საქართველოს ბანკი"'
 };
 
+const INTERLEAVE_CHUNK_SIZE = 3;
+
+function interleaveByBank(rows, chunkSize = INTERLEAVE_CHUNK_SIZE) {
+	const tbcRows = rows.filter(r => r.bank === 'სს "თბს ბანკი"');
+	const bogRows = rows.filter(r => r.bank === 'სს "საქართველოს ბანკი"');
+	const result = [];
+	let tbcIdx = 0, bogIdx = 0;
+	while (tbcIdx < tbcRows.length || bogIdx < bogRows.length) {
+		for (let i = 0; i < chunkSize && tbcIdx < tbcRows.length; i++, tbcIdx++) {
+			result.push(tbcRows[tbcIdx]);
+		}
+		for (let i = 0; i < chunkSize && bogIdx < bogRows.length; i++, bogIdx++) {
+			result.push(bogRows[bogIdx]);
+		}
+	}
+	return result;
+}
+
 const TableStatement = () => {
 	const { t } = useTranslation();
 	const location = useLocation();
@@ -159,6 +177,13 @@ const TableStatement = () => {
 		totalPages: 0
 	});
 
+	const sortByBank = (rows) => {
+		return [...rows].sort((a, b) => {
+			const bankOrder = { 'სს "თბს ბანკი"': 0, 'სს "საქართველოს ბანკი"': 1 };
+			return (bankOrder[a.bank] ?? 2) - (bankOrder[b.bank] ?? 2);
+		});
+	};
+
 	const loadDbData = async (filterParams = {}) => {
 		setDbLoading(true);
 		setError(null);
@@ -187,9 +212,9 @@ const TableStatement = () => {
 						? item.created_at.replace('T', ' ').replace(/\.\d+Z?$/, '').slice(0, 19)
 						: '-'
 				}));
-
-				setData(formattedData);
-				setDbData(formattedData);
+				const interleavedData = interleaveByBank(formattedData);
+				setData(interleavedData);
+				setDbData(interleavedData);
 				setPagination(response.data.pagination);
 				setPage(response.data.pagination.page);
 			} else {
@@ -207,8 +232,9 @@ const TableStatement = () => {
 							: '-'
 					}));
 				}
-				setData(combinedRows);
-				setDbData(combinedRows);
+				const interleavedRows = interleaveByBank(combinedRows);
+				setData(interleavedRows);
+				setDbData(interleavedRows);
 			}
 		} catch (err) {
 			console.error("Error loading DB transactions:", err);
@@ -258,8 +284,9 @@ const TableStatement = () => {
 				purpose: item.EntryComment || item.EntryCommentEn || '-',
 				syncDate: item.syncDate || '-',
 			}));
-			setData(rows);
-			setDbData(rows);
+			const interleavedRows = interleaveByBank(rows);
+			setData(interleavedRows);
+			setDbData(interleavedRows);
 			setLivePagination({
 				total: rows.length,
 				page,

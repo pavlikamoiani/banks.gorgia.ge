@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faXmark, faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faXmark, faPlus, faTrash, faPencil, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
 import defaultInstance from '../api/defaultInstance';
@@ -50,26 +50,30 @@ const TableContragents = () => {
 		totalPages: 0
 	});
 
+	const getCurrentBank = () => {
+		const pathname = window.location.pathname;
+		if (pathname.startsWith('/anta/contragents')) return 'anta';
+		return 'gorgia';
+	};
+
 	const loadContragents = async (filterParams = {}) => {
 		setLoading(true);
 		try {
 			const params = {
 				...filterParams,
+				bank: getCurrentBank(),
 				page: filterParams.page || page,
 				pageSize: pageSize
 			};
 
 			const response = await defaultInstance.get('/contragents', { params });
 
-			// Check if response has paginated structure
 			if (response.data && response.data.pagination) {
-				setContragents(response.data.data || []);
+				setContragents(Array.isArray(response.data.data) ? response.data.data : []);
 				setPagination(response.data.pagination);
-				// Update page state to match response
 				setPage(response.data.pagination.page);
 			} else {
-				// Handle old format for backward compatibility
-				setContragents(response.data || []);
+				setContragents(Array.isArray(response.data) ? response.data : []);
 			}
 		} catch (err) {
 			console.error("Error loading contragents:", err);
@@ -203,11 +207,12 @@ const TableContragents = () => {
 	const handleFilterReset = () => {
 		setFilterDrafts({ name: '', identification_code: '' });
 		setFilters({ name: '', identification_code: '' });
+		loadContragents({ name: '', identification_code: '', bank: getCurrentBank() }); // <-- ensure bank is passed
 	};
 	const handleFilterApply = () => {
 		setFilters({ ...filterDrafts });
 		setPage(1);
-		loadContragents({ ...filterDrafts, page: 1 });
+		loadContragents({ ...filterDrafts, page: 1, bank: getCurrentBank() }); // <-- ensure bank is passed
 	};
 
 	const handleSelectAll = (e) => {
@@ -304,7 +309,7 @@ const TableContragents = () => {
 							aria-haspopup="listbox"
 							aria-expanded={pageSizeDropdownOpen}
 						>
-							{pageSize} <span className={tableStatementStyles.pageSizeArrow}>▼</span>
+							{pageSize}<FontAwesomeIcon icon={faChevronDown} style={{ marginLeft: 6, fontSize: '0.8em' }} />
 						</button>
 						{pageSizeDropdownOpen && (
 							<ul className={tableStatementStyles.pageSizeDropdown} role="listbox">
@@ -430,7 +435,8 @@ const TableContragents = () => {
 							setHideRolesModalOpen(false);
 							setLoading(true);
 							const res = await defaultInstance.get(`/contragents`);
-							setContragents(res.data);
+							setContragents(res.data.data || []);
+							setPagination(res.data.pagination || {});
 							setLoading(false);
 						} catch (err) {
 							alert(t('error_editing'));
@@ -442,8 +448,9 @@ const TableContragents = () => {
 			<div className="table-wrapper">
 				<SortableTable
 					columns={columns}
-					data={Array.isArray(contragents) ? contragents : []} // Ensure array
+					data={Array.isArray(contragents) ? contragents : []}
 					loading={loading}
+					emptyText={t('no_contragents_found') || 'კონტრაგენტები ვერ მოიძებნა'}
 				/>
 				<DeleteConfirmModal
 					open={deleteModalOpen}
@@ -460,7 +467,7 @@ const TableContragents = () => {
 				page={pagination.page || page}
 				pageSize={pagination.pageSize || pageSize}
 				onChange={(newPage) => {
-					loadContragents({ ...filters, page: newPage });
+					loadContragents({ ...filters, page: newPage, bank: getCurrentBank() }); // <-- ensure bank is passed
 				}}
 			/>
 		</div>
