@@ -177,7 +177,6 @@
     position: relative;
     display: flex;
     align-items: center;
-    height: 40px;
 }
 
 .installmentBtn,
@@ -185,7 +184,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 18px;
+    padding: 9px 22px;
     border-radius: 6px;
     font-weight: 600;
     font-size: 1rem;

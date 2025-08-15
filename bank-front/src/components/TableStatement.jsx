@@ -10,7 +10,9 @@ import defaultInstance from '../api/defaultInstance';
 import Pagination from './Pagination';
 import TableFilter from './TableFilter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faXmark, faBolt, faChevronDown, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faXmark, faBolt, faChevronDown, } from '@fortawesome/free-solid-svg-icons';
+import { MdSync } from "react-icons/md";
+import { FaTableColumns } from "react-icons/fa6";
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
 
@@ -128,8 +130,8 @@ const TableStatement = () => {
 						const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
 						if (isExchange) {
 							return (
-								<span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 10 }}>
-									<FontAwesomeIcon icon={faExchangeAlt} />
+								<span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5 }}>
+									<MdSync />
 									{value}
 								</span>
 							);
@@ -577,70 +579,23 @@ const TableStatement = () => {
 					{t('statement')}
 				</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-					<div
-						className={tableStatementStyles.installmentBtnWrapper}
-						tabIndex={0}
-						role="button"
-						aria-pressed={filters.installmentOnly}
-						onClick={handleInstallmentOnlyChange}
-						onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleInstallmentOnlyChange(); }}
-						style={{ outline: 'none' }}
+					<button
+						type="button"
+						style={{
+							background: "#fff",
+							border: "1.5px solid #0173b1",
+							borderRadius: "6px",
+							padding: "8px 12px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+							color: "#0173b1"
+						}}
+						onClick={() => { /* add your sync logic here */ }}
 					>
-						<span
-							className={
-								filters.installmentOnly
-									? tableStatementStyles.installmentBtnActive
-									: tableStatementStyles.installmentBtn
-							}
-						>
-							{filters.installmentOnly ? (
-								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-									<path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-								</svg>
-							) : (
-								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-								</svg>
-							)}
-							{t('installment') || 'განვადება'}
-						</span>
-						<span className={tableStatementStyles.installmentTooltip}>
-							{t('installment_tooltip') || 'განვადებები/განაწილება(თბს) ჩვენება/დამალვა'}
-						</span>
-					</div>
-					<div
-						className={tableStatementStyles.installmentBtnWrapper}
-						tabIndex={0}
-						role="button"
-						aria-pressed={filters.transfersOnly}
-						onClick={handleTransfersOnlyChange}
-						onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleTransfersOnlyChange(); }}
-						style={{ outline: 'none' }}
-					>
-						<span
-							className={
-								filters.transfersOnly
-									? tableStatementStyles.installmentBtnActive
-									: tableStatementStyles.installmentBtn
-							}
-						>
-							{filters.transfersOnly ? (
-								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-									<path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-								</svg>
-							) : (
-								<svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-									<rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-								</svg>
-							)}
-							{t('transfers') || 'გადარიცხვები'}
-						</span>
-						<span className={tableStatementStyles.installmentTooltip}>
-							{t('transfers_tooltip') || 'გადარიცხვების ჩვენება/დამალვა'}
-						</span>
-					</div>
+						<FaTableColumns size={22} />
+					</button>
+					{/* add button */}
 					{!liveMode ? (
 						<div className={tableStatementStyles.liveBankDropdownWrapper} ref={liveBankDropdownRef}>
 							<button className={tableStatementStyles.liveBtn}
@@ -770,6 +725,11 @@ const TableStatement = () => {
 							bankDropdownRef={bankDropdownRef}
 							onBankSelect={handleBankSelect}
 							t={t}
+							// Pass toggles as props
+							installmentOnly={filters.installmentOnly}
+							transfersOnly={filters.transfersOnly}
+							onInstallmentToggle={handleInstallmentOnlyChange}
+							onTransfersToggle={handleTransfersOnlyChange}
 						/>
 					</div>
 				)
