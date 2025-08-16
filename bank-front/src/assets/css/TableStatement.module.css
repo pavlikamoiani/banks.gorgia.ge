@@ -254,3 +254,89 @@
     background: #e6f0ff;
     color: #007bff;
 }
+
+/* Split Table Minimalist Design */
+.splitTableContainer {
+    display: flex;
+    gap: 32px;
+    padding: 18px 0;
+    background: #f7fafd;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(1, 115, 177, 0.07);
+    margin-bottom: 24px;
+}
+
+.splitTableSection {
+    flex: 1;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(1, 115, 177, 0.06);
+    padding: 22px 18px 18px 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.splitTableHeader {
+    text-align: center;
+    font-size: 1.18rem;
+    font-weight: 600;
+    color: #0173b1;
+    margin-bottom: 14px;
+    letter-spacing: 0.02em;
+    border-radius: 8px;
+    padding: 8px 0;
+    box-shadow: 0 1px 4px rgba(1, 115, 177, 0.04);
+}
+
+.splitTableTableWrapper {
+    flex: 1;
+    min-height: 220px;
+    background: none;
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #0173b1 #f7fafd;
+}
+
+.splitTableTableWrapper::-webkit-scrollbar {
+    width: 7px;
+    background: #f7fafd;
+    border-radius: 8px;
+}
+
+.splitTableTableWrapper::-webkit-scrollbar-thumb {
+    background: #0173b1;
+    border-radius: 8px;
+    min-height: 24px;
+}
+
+.infiniteLoader {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px 0 10px 0;
+    background: linear-gradient(180deg, rgba(247, 250, 253, 0) 0%, #f7fafd 90%);
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+}
+
+.spinnerIcon {
+    font-size: 1.7em;
+    color: #0173b1;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

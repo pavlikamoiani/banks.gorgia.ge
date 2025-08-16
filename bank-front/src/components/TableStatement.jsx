@@ -872,44 +872,56 @@ const TableStatement = () => {
 				)
 			}
 			{splitMode ? (
-				<div style={{ display: 'flex', gap: 24 }}>
-					<div style={{ flex: 1 }}>
-						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>{t('incoming') || 'ჩარიცხვები'}</h3>
-						<SortableTable
-							columns={splitColumns}
-							data={rightData.map(row => ({ ...row, _isLeft: false }))}
-							loading={rightLoading}
-							emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
-							sortConfig={sortConfig}
-							setSortConfig={setSortConfig}
-						/>
-						<Pagination
-							total={rightPagination.total}
-							page={rightPagination.page}
-							pageSize={rightPagination.pageSize}
-							onChange={(newPage) => {
-								loadSplitData(filters, leftPagination.page, newPage, rightPagination.pageSize);
-							}}
-						/>
+				<div className={tableStatementStyles.splitTableContainer}>
+					<div className={tableStatementStyles.splitTableSection}>
+						<div className={tableStatementStyles.splitTableHeader}>
+							{t('incoming') || 'ჩარიცხვები'}
+						</div>
+						<div className={tableStatementStyles.splitTableTableWrapper}>
+							<SortableTable
+								columns={splitColumns}
+								data={rightData.map(row => ({ ...row, _isLeft: false }))}
+								loading={rightLoading}
+								emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
+								sortConfig={sortConfig}
+								setSortConfig={setSortConfig}
+							/>
+						</div>
+						<div className={tableStatementStyles.splitTablePagination}>
+							<Pagination
+								total={rightPagination.total}
+								page={rightPagination.page}
+								pageSize={rightPagination.pageSize}
+								onChange={(newPage) => {
+									loadSplitData(filters, leftPagination.page, newPage, rightPagination.pageSize);
+								}}
+							/>
+						</div>
 					</div>
-					<div style={{ flex: 1 }}>
-						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>{t('outgoing') || 'გადარიცხვები'}</h3>
-						<SortableTable
-							columns={splitColumns}
-							data={leftData.map(row => ({ ...row, _isLeft: true }))}
-							loading={leftLoading}
-							emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
-							sortConfig={sortConfig}
-							setSortConfig={setSortConfig}
-						/>
-						<Pagination
-							total={leftPagination.total}
-							page={leftPagination.page}
-							pageSize={leftPagination.pageSize}
-							onChange={(newPage) => {
-								loadSplitData(filters, newPage, rightPagination.page, leftPagination.pageSize);
-							}}
-						/>
+					<div className={tableStatementStyles.splitTableSection}>
+						<div className={tableStatementStyles.splitTableHeader}>
+							{t('outgoing') || 'გადარიცხვები'}
+						</div>
+						<div className={tableStatementStyles.splitTableTableWrapper}>
+							<SortableTable
+								columns={splitColumns}
+								data={leftData.map(row => ({ ...row, _isLeft: true }))}
+								loading={leftLoading}
+								emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
+								sortConfig={sortConfig}
+								setSortConfig={setSortConfig}
+							/>
+						</div>
+						<div className={tableStatementStyles.splitTablePagination}>
+							<Pagination
+								total={leftPagination.total}
+								page={leftPagination.page}
+								pageSize={leftPagination.pageSize}
+								onChange={(newPage) => {
+									loadSplitData(filters, newPage, rightPagination.page, leftPagination.pageSize);
+								}}
+							/>
+						</div>
 					</div>
 					{popupOpen && selectedTransaction && (
 						<div
