@@ -117,6 +117,10 @@ class TransactionController extends Controller
             $query->where('sender_name', 'like', '%შპს გორგია%');
         }
 
+        if ($request->query('transfersOnly') === 'false') {
+            $query->where('sender_name', 'not like', '%შპს გორგია%');
+        }
+
         $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
             ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
             ->addSelect('banks.name as bank_name');
