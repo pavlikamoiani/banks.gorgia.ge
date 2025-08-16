@@ -14,15 +14,12 @@ const SplitStatementTable = ({
     rightTableRef,
     sortConfig,
     setSortConfig,
-    popupOpen,
-    selectedTransaction,
-    popupPos,
-    closePopup,
     leftSearchContragent,
     leftSearchAmount,
     rightSearchContragent,
     rightSearchAmount,
-    onSearch
+    onSearch,
+    handleAmountClick
 }) => {
     // Helper for styled input
     const renderSearchInput = (props) => (
@@ -63,6 +60,47 @@ const SplitStatementTable = ({
         </div>
     );
 
+    const patchedSplitColumns = useMemo(() => {
+        return splitColumns.map(col => {
+            if (col.key === 'amount') {
+                return {
+                    ...col,
+                    render: (value, row) => {
+                        const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
+                        let cellContent;
+                        if (row._isLeft) {
+                            if (isExchange) {
+                                cellContent = (
+                                    <span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                        {value}
+                                    </span>
+                                );
+                            } else {
+                                cellContent = (
+                                    <span style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
+                                        - {value}
+                                    </span>
+                                );
+                            }
+                        } else {
+                            cellContent = value;
+                        }
+                        return (
+                            <span
+                                style={{ cursor: 'pointer' }}
+                                onClick={e => handleAmountClick(row, e)}
+                                title="დეტალური ინფორმაცია"
+                            >
+                                {cellContent}
+                            </span>
+                        );
+                    }
+                };
+            }
+            return col;
+        });
+    }, [splitColumns, handleAmountClick]);
+
     return (
         <div className={tableStatementStyles.splitTableContainer}>
             <div className={tableStatementStyles.splitTableSection}>
@@ -102,7 +140,7 @@ const SplitStatementTable = ({
                     style={{ position: 'relative' }}
                 >
                     <SortableTable
-                        columns={splitColumns}
+                        columns={patchedSplitColumns}
                         data={rightData.map(row => ({ ...row, _isLeft: false }))}
                         loading={rightLoading}
                         emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
@@ -153,7 +191,7 @@ const SplitStatementTable = ({
                     style={{ position: 'relative' }}
                 >
                     <SortableTable
-                        columns={splitColumns}
+                        columns={patchedSplitColumns}
                         data={leftData.map(row => ({ ...row, _isLeft: true }))}
                         loading={leftLoading}
                         emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
@@ -167,39 +205,7 @@ const SplitStatementTable = ({
                     )}
                 </div>
             </div>
-            {popupOpen && selectedTransaction && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        top: popupPos.y + 12,
-                        left: popupPos.x + 12,
-                        background: '#fff',
-                        borderRadius: 10,
-                        padding: '18px 20px',
-                        boxShadow: '0 4px 24px rgba(1,115,177,0.18)',
-                        zIndex: 9999,
-                        minWidth: 260,
-                        maxWidth: 340,
-                        border: '1.5px solid #0173b1',
-                        cursor: 'default'
-                    }}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <h4 style={{ marginBottom: 10, color: '#0173b1', textAlign: 'center' }}>
-                        {t('details') || 'დეტალური ინფორმაცია'}
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                        <div><b>{t('contragent') || 'Contragent'}:</b> {selectedTransaction.contragent}</div>
-                        <div><b>{t('bank') || 'Bank'}:</b> {selectedTransaction.bank}</div>
-                        <div><b>{t('amount') || 'Amount'}:</b> {selectedTransaction.amount}</div>
-                        <div><b>{t('transferDate') || 'Transfer Date'}:</b> {selectedTransaction.transferDate}</div>
-                        <div><b>{t('purpose') || 'Purpose'}:</b> {selectedTransaction.purpose}</div>
-                        {selectedTransaction.syncDate && (
-                            <div><b>{t('syncDate') || 'Sync Date'}:</b> {selectedTransaction.syncDate}</div>
-                        )}
-                    </div>
-                </div>
-            )}
+            {/* Remove modal rendering here, it's handled by TableStatement */}
         </div>
     );
 };

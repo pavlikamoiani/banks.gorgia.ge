@@ -103,23 +103,17 @@ const TableStatement = () => {
 	}, [location.pathname]);
 
 	const [modalOpen, setModalOpen] = useState(false);
-	const [popupOpen, setPopupOpen] = useState(false);
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
-	const [popupPos, setPopupPos] = useState({ x: 0, y: 0 });
 
 	const handleAmountClick = (row, event) => {
 		event.stopPropagation();
 		setSelectedTransaction(row);
-		setPopupOpen(true);
-		setPopupPos({
-			x: event.clientX,
-			y: event.clientY
-		});
+		setModalOpen(true); // <-- open modal instead of popup
 	};
 
 	const closePopup = () => {
-		setPopupOpen(false);
 		setSelectedTransaction(null);
+		setModalOpen(false); // <-- close modal
 	};
 
 	const columns = useMemo(() => {
@@ -983,15 +977,12 @@ const TableStatement = () => {
 					rightTableRef={rightTableRef}
 					sortConfig={sortConfig}
 					setSortConfig={setSortConfig}
-					popupOpen={popupOpen}
-					selectedTransaction={selectedTransaction}
-					popupPos={popupPos}
-					closePopup={closePopup}
 					leftSearchContragent={leftSearchContragent}
 					leftSearchAmount={leftSearchAmount}
 					rightSearchContragent={rightSearchContragent}
 					rightSearchAmount={rightSearchAmount}
 					onSearch={handleSplitSearch}
+					handleAmountClick={handleAmountClick} // <-- pass this for SplitStatementTable
 				/>
 			) : (
 				<div>
@@ -1053,20 +1044,38 @@ const TableStatement = () => {
 					<div
 						style={{
 							background: '#fff',
-							borderRadius: 12,
-							padding: '32px 28px',
-							minWidth: 340,
-							maxWidth: 420,
-							boxShadow: '0 8px 32px rgba(1,115,177,0.18)',
+							borderRadius: 16,
+							padding: '48px 40px',
+							minWidth: 300,
+							maxWidth: 550,
+							boxShadow: '0 12px 48px rgba(1,115,177,0.22)',
 							position: 'relative',
 							cursor: 'default'
 						}}
-						onClick={e => e.stopPropagation()}
 					>
-						<h3 style={{ marginBottom: 18, color: '#0173b1', textAlign: 'center' }}>
+						<button
+							onClick={closePopup}
+							style={{
+								position: 'absolute',
+								top: 18,
+								right: 18,
+								background: 'transparent',
+								border: 'none',
+								fontSize: '1.8em',
+								color: '#0173b1',
+								cursor: 'pointer',
+								zIndex: 2,
+								padding: 0,
+								lineHeight: 1
+							}}
+							aria-label="Close"
+						>
+							&times;
+						</button>
+						<h3 style={{ marginBottom: 24, color: '#0173b1', textAlign: 'center', fontSize: '1.5em' }}>
 							{t('details') || 'დეტალური ინფორმაცია'}
 						</h3>
-						<div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+						<div style={{ display: 'flex', flexDirection: 'column', gap: 18, fontSize: '1.15em' }}>
 							<div><b>{t('contragent') || 'Contragent'}:</b> {selectedTransaction.contragent}</div>
 							<div><b>{t('bank') || 'Bank'}:</b> {selectedTransaction.bank}</div>
 							<div><b>{t('amount') || 'Amount'}:</b> {selectedTransaction.amount}</div>
