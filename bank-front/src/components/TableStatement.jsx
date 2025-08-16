@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -655,7 +655,19 @@ const TableStatement = () => {
 		total: 0, page: 1, pageSize: PAGE_SIZE_OPTIONS[0], totalPages: 0
 	});
 
-	const loadSplitData = async (filters = {}, leftPage = 1, rightPage = 1, pageSize = PAGE_SIZE_OPTIONS[0]) => {
+	const [leftHasMore, setLeftHasMore] = useState(true);
+	const [rightHasMore, setRightHasMore] = useState(true);
+
+	const leftTableRef = useRef(null);
+	const rightTableRef = useRef(null);
+
+	const loadSplitData = async (
+		filters = {},
+		leftPage = 1,
+		rightPage = 1,
+		pageSize = PAGE_SIZE_OPTIONS[0],
+		append = false
+	) => {
 		setLeftLoading(true);
 		setRightLoading(true);
 		try {
@@ -683,10 +695,25 @@ const TableStatement = () => {
 				}));
 			};
 
-			setLeftData(formatRows(leftResp));
-			setRightData(formatRows(rightResp));
+			const leftRows = formatRows(leftResp);
+			const rightRows = formatRows(rightResp);
+
+			if (append) {
+				setLeftData(prev => [...prev, ...leftRows]);
+				setRightData(prev => [...prev, ...rightRows]);
+			} else {
+				setLeftData(leftRows);
+				setRightData(rightRows);
+			}
+
+			const leftTotal = leftResp.data.pagination?.total || 0;
+			const rightTotal = rightResp.data.pagination?.total || 0;
+
 			setLeftPagination(leftResp.data.pagination || { total: 0, page: leftPage, pageSize, totalPages: 0 });
 			setRightPagination(rightResp.data.pagination || { total: 0, page: rightPage, pageSize, totalPages: 0 });
+
+			setLeftHasMore(leftRows.length > 0 && leftData.length + leftRows.length < leftTotal);
+			setRightHasMore(rightRows.length > 0 && rightData.length + rightRows.length < rightTotal);
 		} catch (err) {
 			console.error("Error loading split data:", err);
 		} finally {
@@ -701,6 +728,42 @@ const TableStatement = () => {
 		}
 		// eslint-disable-next-line
 	}, [splitMode, filters, pageSize]);
+
+	// Infinite scroll handlers
+	const handleLeftScroll = useCallback(() => {
+		if (!leftHasMore || leftLoading) return;
+		const el = leftTableRef.current;
+		if (!el) return;
+		if (el.scrollHeight - el.scrollTop - el.clientHeight < 40) {
+			const nextPage = leftPagination.page + 1;
+			loadSplitData(filters, nextPage, rightPagination.page, leftPagination.pageSize, true);
+			setLeftPagination(prev => ({ ...prev, page: nextPage }));
+		}
+	}, [filters, leftHasMore, leftLoading, leftPagination, rightPagination]);
+
+	const handleRightScroll = useCallback(() => {
+		if (!rightHasMore || rightLoading) return;
+		const el = rightTableRef.current;
+		if (!el) return;
+		if (el.scrollHeight - el.scrollTop - el.clientHeight < 40) {
+			const nextPage = rightPagination.page + 1;
+			loadSplitData(filters, leftPagination.page, nextPage, rightPagination.pageSize, true);
+			setRightPagination(prev => ({ ...prev, page: nextPage }));
+		}
+	}, [filters, rightHasMore, rightLoading, leftPagination, rightPagination]);
+
+	useEffect(() => {
+		if (splitMode) {
+			const leftEl = leftTableRef.current;
+			const rightEl = rightTableRef.current;
+			if (leftEl) leftEl.addEventListener('scroll', handleLeftScroll);
+			if (rightEl) rightEl.addEventListener('scroll', handleRightScroll);
+			return () => {
+				if (leftEl) leftEl.removeEventListener('scroll', handleLeftScroll);
+				if (rightEl) rightEl.removeEventListener('scroll', handleRightScroll);
+			};
+		}
+	}, [splitMode, handleLeftScroll, handleRightScroll]);
 
 	return (
 		<div className="table-accounts-container" onClick={closePopup}>
@@ -877,50 +940,48 @@ const TableStatement = () => {
 						<div className={tableStatementStyles.splitTableHeader}>
 							{t('incoming') || 'ჩარიცხვები'}
 						</div>
-						<div className={tableStatementStyles.splitTableTableWrapper}>
+						<div
+							className={tableStatementStyles.splitTableTableWrapper}
+							ref={rightTableRef}
+							style={{ position: 'relative' }}
+						>
 							<SortableTable
 								columns={splitColumns}
 								data={rightData.map(row => ({ ...row, _isLeft: false }))}
-								loading={rightLoading}
+								loading={false}
 								emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
 								sortConfig={sortConfig}
 								setSortConfig={setSortConfig}
 							/>
-						</div>
-						<div className={tableStatementStyles.splitTablePagination}>
-							<Pagination
-								total={rightPagination.total}
-								page={rightPagination.page}
-								pageSize={rightPagination.pageSize}
-								onChange={(newPage) => {
-									loadSplitData(filters, leftPagination.page, newPage, rightPagination.pageSize);
-								}}
-							/>
+							{rightLoading && (
+								<div className={tableStatementStyles.infiniteLoader}>
+									<span className={tableStatementStyles.spinnerIcon}></span>
+								</div>
+							)}
 						</div>
 					</div>
 					<div className={tableStatementStyles.splitTableSection}>
 						<div className={tableStatementStyles.splitTableHeader}>
 							{t('outgoing') || 'გადარიცხვები'}
 						</div>
-						<div className={tableStatementStyles.splitTableTableWrapper}>
+						<div
+							className={tableStatementStyles.splitTableTableWrapper}
+							ref={leftTableRef}
+							style={{ position: 'relative' }}
+						>
 							<SortableTable
 								columns={splitColumns}
 								data={leftData.map(row => ({ ...row, _isLeft: true }))}
-								loading={leftLoading}
+								loading={false}
 								emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
 								sortConfig={sortConfig}
 								setSortConfig={setSortConfig}
 							/>
-						</div>
-						<div className={tableStatementStyles.splitTablePagination}>
-							<Pagination
-								total={leftPagination.total}
-								page={leftPagination.page}
-								pageSize={leftPagination.pageSize}
-								onChange={(newPage) => {
-									loadSplitData(filters, newPage, rightPagination.page, leftPagination.pageSize);
-								}}
-							/>
+							{leftLoading && (
+								<div className={tableStatementStyles.infiniteLoader}>
+									<span className={tableStatementStyles.spinnerIcon}></span>
+								</div>
+							)}
 						</div>
 					</div>
 					{popupOpen && selectedTransaction && (
