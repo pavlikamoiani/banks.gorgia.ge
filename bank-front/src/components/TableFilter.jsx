@@ -20,7 +20,8 @@ const TableFilter = ({
     installmentOnly,
     transfersOnly,
     onInstallmentToggle,
-    onTransfersToggle
+    onTransfersToggle,
+    showStatementButtons // <-- add this prop
 }) => {
     const { t: tHook } = useTranslation();
     const translate = t || tHook;
@@ -170,73 +171,74 @@ const TableFilter = ({
                             {translate('reset')}
                         </button>
                     </div>
-                    <div style={{ display: 'flex', gap: 10, }}>
-                        <div
-                            className={tableStatementStyles.installmentBtnWrapper}
-                            tabIndex={0}
-                            role="button"
-                            aria-pressed={installmentOnly}
-                            onClick={onInstallmentToggle}
-                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onInstallmentToggle(); }}
-                            style={{ outline: 'none' }}
-                        >
-                            <span
-                                className={
-                                    installmentOnly
-                                        ? tableStatementStyles.installmentBtnActive
-                                        : tableStatementStyles.installmentBtn
-                                }
+                    {showStatementButtons && (
+                        <div style={{ display: 'flex', gap: 10, }}>
+                            <div
+                                className={tableStatementStyles.installmentBtnWrapper}
+                                tabIndex={0}
+                                role="button"
+                                aria-pressed={installmentOnly}
+                                onClick={onInstallmentToggle}
+                                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onInstallmentToggle(); }}
+                                style={{ outline: 'none' }}
                             >
-                                {installmentOnly ? (
-                                    <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-                                        <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-                                        <path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-                                    </svg>
-                                ) : (
-                                    <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-                                        <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-                                    </svg>
-                                )}
-                                {translate('installment') || 'განვადება'}
-                            </span>
-                            <span className={tableStatementStyles.installmentTooltip}>
-                                {translate('installment_tooltip') || 'განვადებები/განაწილება(თბს) ჩვენება/დამალვა'}
-                            </span>
-                        </div>
-                        <div
-                            className={tableStatementStyles.installmentBtnWrapper}
-                            tabIndex={0}
-                            role="button"
-                            aria-pressed={transfersOnly}
-                            onClick={onTransfersToggle}
-                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onTransfersToggle(); }}
-                            style={{ outline: 'none' }}
-                        >
-                            <span
-                                className={
-                                    transfersOnly
-                                        ? tableStatementStyles.installmentBtnActive
-                                        : tableStatementStyles.installmentBtn
-                                }
+                                <span
+                                    className={
+                                        installmentOnly
+                                            ? tableStatementStyles.installmentBtnActive
+                                            : tableStatementStyles.installmentBtn
+                                    }
+                                >
+                                    {installmentOnly ? (
+                                        <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
+                                            <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
+                                            <path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                                        </svg>
+                                    ) : (
+                                        <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
+                                            <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
+                                        </svg>
+                                    )}
+                                    {translate('installment') || 'განვადება'}
+                                </span>
+                                <span className={tableStatementStyles.installmentTooltip}>
+                                    {translate('installment_tooltip') || 'განვადებები/განაწილება(თბს) ჩვენება/დამალვა'}
+                                </span>
+                            </div>
+                            <div
+                                className={tableStatementStyles.installmentBtnWrapper}
+                                tabIndex={0}
+                                role="button"
+                                aria-pressed={transfersOnly}
+                                onClick={onTransfersToggle}
+                                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onTransfersToggle(); }}
+                                style={{ outline: 'none' }}
                             >
-                                {transfersOnly ? (
-                                    <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-                                        <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-                                        <path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-                                    </svg>
-                                ) : (
-                                    <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
-                                        <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
-                                    </svg>
-                                )}
-                                {translate('transfers') || 'გადარიცხვები'}
-                            </span>
-                            <span className={tableStatementStyles.installmentTooltip}>
-                                {translate('transfers_tooltip') || 'გადარიცხვების ჩვენება/დამალვა'}
-                            </span>
+                                <span
+                                    className={
+                                        transfersOnly
+                                            ? tableStatementStyles.installmentBtnActive
+                                            : tableStatementStyles.installmentBtn
+                                    }
+                                >
+                                    {transfersOnly ? (
+                                        <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
+                                            <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
+                                            <path d="M6 10l2 2 4-4" stroke="#0173b1" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                                        </svg>
+                                    ) : (
+                                        <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 6 }}>
+                                            <rect x="2" y="2" width="14" height="14" rx="5" fill="#fff" stroke="#0173b1" strokeWidth="2" />
+                                        </svg>
+                                    )}
+                                    {translate('transfers') || 'გადარიცხვები'}
+                                </span>
+                                <span className={tableStatementStyles.installmentTooltip}>
+                                    {translate('transfers_tooltip') || 'გადარიცხვების ჩვენება/დამალვა'}
+                                </span>
+                            </div>
                         </div>
-                    </div>
-
+                    )}
                 </div>
             </form>
         </div>

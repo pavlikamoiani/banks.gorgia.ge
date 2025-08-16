@@ -15,6 +15,7 @@ import { MdSync } from "react-icons/md";
 import { FaTableColumns } from "react-icons/fa6";
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
+import SplitStatementTable from './SplitStatementTable';
 
 const MAX_PURPOSE_LENGTH = 25;
 const PAGE_SIZE_OPTIONS = [25, 50, 75, 100];
@@ -666,14 +667,16 @@ const TableStatement = () => {
 		leftPage = 1,
 		rightPage = 1,
 		pageSize = PAGE_SIZE_OPTIONS[0],
-		append = false
+		append = false,
+		leftExtra = {},
+		rightExtra = {}
 	) => {
 		setLeftLoading(true);
 		setRightLoading(true);
 		try {
 			const endpoint = getEndpoint();
-			const leftParams = { ...filters, transfersOnly: true, page: leftPage, pageSize };
-			const rightParams = { ...filters, transfersOnly: false, page: rightPage, pageSize };
+			const leftParams = { ...filters, transfersOnly: true, page: leftPage, pageSize, ...leftExtra };
+			const rightParams = { ...filters, transfersOnly: false, page: rightPage, pageSize, ...rightExtra };
 
 			const [leftResp, rightResp] = await Promise.all([
 				defaultInstance.get(endpoint, { params: leftParams }),
@@ -764,6 +767,39 @@ const TableStatement = () => {
 			};
 		}
 	}, [splitMode, handleLeftScroll, handleRightScroll]);
+
+	const [leftSearchContragent, setLeftSearchContragent] = useState('');
+	const [leftSearchAmount, setLeftSearchAmount] = useState('');
+	const [rightSearchContragent, setRightSearchContragent] = useState('');
+	const [rightSearchAmount, setRightSearchAmount] = useState('');
+
+	const handleSplitSearch = (side, { contragent, amount }) => {
+		if (side === 'left') {
+			setLeftSearchContragent(contragent);
+			setLeftSearchAmount(amount);
+			loadSplitData(
+				{ ...filters },
+				leftPagination.page,
+				rightPagination.page,
+				leftPagination.pageSize,
+				false,
+				{ contragent, amount },
+				{ contragent: rightSearchContragent, amount: rightSearchAmount }
+			);
+		} else {
+			setRightSearchContragent(contragent);
+			setRightSearchAmount(amount);
+			loadSplitData(
+				{ ...filters },
+				leftPagination.page,
+				rightPagination.page,
+				rightPagination.pageSize,
+				false,
+				{ contragent: leftSearchContragent, amount: leftSearchAmount },
+				{ contragent, amount }
+			);
+		}
+	};
 
 	return (
 		<div className="table-accounts-container" onClick={closePopup}>
@@ -930,94 +966,33 @@ const TableStatement = () => {
 							transfersOnly={filters.transfersOnly}
 							onInstallmentToggle={handleInstallmentOnlyChange}
 							onTransfersToggle={handleTransfersOnlyChange}
+							showStatementButtons={true}
 						/>
 					</div>
 				)
 			}
 			{splitMode ? (
-				<div className={tableStatementStyles.splitTableContainer}>
-					<div className={tableStatementStyles.splitTableSection}>
-						<div className={tableStatementStyles.splitTableHeader}>
-							{t('incoming') || 'ჩარიცხვები'}
-						</div>
-						<div
-							className={tableStatementStyles.splitTableTableWrapper}
-							ref={rightTableRef}
-							style={{ position: 'relative' }}
-						>
-							<SortableTable
-								columns={splitColumns}
-								data={rightData.map(row => ({ ...row, _isLeft: false }))}
-								loading={false}
-								emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
-								sortConfig={sortConfig}
-								setSortConfig={setSortConfig}
-							/>
-							{rightLoading && (
-								<div className={tableStatementStyles.infiniteLoader}>
-									<span className={tableStatementStyles.spinnerIcon}></span>
-								</div>
-							)}
-						</div>
-					</div>
-					<div className={tableStatementStyles.splitTableSection}>
-						<div className={tableStatementStyles.splitTableHeader}>
-							{t('outgoing') || 'გადარიცხვები'}
-						</div>
-						<div
-							className={tableStatementStyles.splitTableTableWrapper}
-							ref={leftTableRef}
-							style={{ position: 'relative' }}
-						>
-							<SortableTable
-								columns={splitColumns}
-								data={leftData.map(row => ({ ...row, _isLeft: true }))}
-								loading={false}
-								emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
-								sortConfig={sortConfig}
-								setSortConfig={setSortConfig}
-							/>
-							{leftLoading && (
-								<div className={tableStatementStyles.infiniteLoader}>
-									<span className={tableStatementStyles.spinnerIcon}></span>
-								</div>
-							)}
-						</div>
-					</div>
-					{popupOpen && selectedTransaction && (
-						<div
-							style={{
-								position: 'fixed',
-								top: popupPos.y + 12,
-								left: popupPos.x + 12,
-								background: '#fff',
-								borderRadius: 10,
-								padding: '18px 20px',
-								boxShadow: '0 4px 24px rgba(1,115,177,0.18)',
-								zIndex: 9999,
-								minWidth: 260,
-								maxWidth: 340,
-								border: '1.5px solid #0173b1',
-								cursor: 'default'
-							}}
-							onClick={e => e.stopPropagation()}
-						>
-							<h4 style={{ marginBottom: 10, color: '#0173b1', textAlign: 'center' }}>
-								{t('details') || 'დეტალური ინფორმაცია'}
-							</h4>
-							<div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-								<div><b>{t('contragent') || 'Contragent'}:</b> {selectedTransaction.contragent}</div>
-								<div><b>{t('bank') || 'Bank'}:</b> {selectedTransaction.bank}</div>
-								<div><b>{t('amount') || 'Amount'}:</b> {selectedTransaction.amount}</div>
-								<div><b>{t('transferDate') || 'Transfer Date'}:</b> {selectedTransaction.transferDate}</div>
-								<div><b>{t('purpose') || 'Purpose'}:</b> {selectedTransaction.purpose}</div>
-								{selectedTransaction.syncDate && (
-									<div><b>{t('syncDate') || 'Sync Date'}:</b> {selectedTransaction.syncDate}</div>
-								)}
-							</div>
-						</div>
-					)}
-				</div>
+				<SplitStatementTable
+					t={t}
+					splitColumns={splitColumns}
+					leftData={leftData}
+					rightData={rightData}
+					leftLoading={leftLoading}
+					rightLoading={rightLoading}
+					leftTableRef={leftTableRef}
+					rightTableRef={rightTableRef}
+					sortConfig={sortConfig}
+					setSortConfig={setSortConfig}
+					popupOpen={popupOpen}
+					selectedTransaction={selectedTransaction}
+					popupPos={popupPos}
+					closePopup={closePopup}
+					leftSearchContragent={leftSearchContragent}
+					leftSearchAmount={leftSearchAmount}
+					rightSearchContragent={rightSearchContragent}
+					rightSearchAmount={rightSearchAmount}
+					onSearch={handleSplitSearch}
+				/>
 			) : (
 				<div>
 					<div className="table-wrapper">
