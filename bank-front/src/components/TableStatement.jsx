@@ -647,7 +647,27 @@ const TableStatement = () => {
 		{
 			key: 'amount',
 			label: 'თანხა',
-			render: (value) => value
+			render: (value, row) => {
+				// Always render leftData ("გადარიცხვები") in red and with "-"
+				if (row._isLeft) {
+					const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
+					if (isExchange) {
+						return (
+							<span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5 }}>
+								<MdSync />
+								{value}
+							</span>
+						);
+					}
+					return (
+						<span style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
+							- {value}
+						</span>
+					);
+				}
+				// For rightData ("ჩარიცხვები"), just show value
+				return value;
+			}
 		}
 	], []);
 
@@ -827,7 +847,7 @@ const TableStatement = () => {
 						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>ჩარიცხვები</h3>
 						<SortableTable
 							columns={splitColumns}
-							data={rightData}
+							data={rightData.map(row => ({ ...row, _isLeft: false }))}
 							loading={rightLoading}
 							emptyText="ამონაწერი არ მოიძებნა"
 							sortConfig={sortConfig}
@@ -846,7 +866,7 @@ const TableStatement = () => {
 						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>გადარიცხვები</h3>
 						<SortableTable
 							columns={splitColumns}
-							data={leftData}
+							data={leftData.map(row => ({ ...row, _isLeft: true }))}
 							loading={leftLoading}
 							emptyText="ამონაწერი არ მოიძებნა"
 							sortConfig={sortConfig}
