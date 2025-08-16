@@ -101,6 +101,26 @@ const TableStatement = () => {
 		return 'gorgia';
 	}, [location.pathname]);
 
+	const [modalOpen, setModalOpen] = useState(false);
+	const [popupOpen, setPopupOpen] = useState(false);
+	const [selectedTransaction, setSelectedTransaction] = useState(null);
+	const [popupPos, setPopupPos] = useState({ x: 0, y: 0 });
+
+	const handleAmountClick = (row, event) => {
+		event.stopPropagation();
+		setSelectedTransaction(row);
+		setPopupOpen(true);
+		setPopupPos({
+			x: event.clientX,
+			y: event.clientY
+		});
+	};
+
+	const closePopup = () => {
+		setPopupOpen(false);
+		setSelectedTransaction(null);
+	};
+
 	const columns = useMemo(() => {
 		const baseColumns = [
 			{
@@ -126,18 +146,19 @@ const TableStatement = () => {
 				key: 'amount',
 				label: t('amount'),
 				render: (value, row) => {
+					// Remove all styles for main table
 					if (filters.transfersOnly) {
 						const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
 						if (isExchange) {
 							return (
-								<span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5 }}>
+								<span>
 									<MdSync />
 									{value}
 								</span>
 							);
 						}
 						return (
-							<span style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
+							<span>
 								- {value}
 							</span>
 						);
@@ -185,6 +206,57 @@ const TableStatement = () => {
 		return baseColumns;
 		// eslint-disable-next-line
 	}, [t, expandedRows, liveMode, filters.transfersOnly]);
+
+	const splitColumns = useMemo(() => [
+		{
+			key: 'bank',
+			label: 'დანიშნული ბანკი',
+			render: (value, row) => (
+				<div>
+					{value}
+					<br />
+					<small style={{ color: '#888', fontSize: '0.95em' }}>
+						{row.transferDate}
+					</small>
+				</div>
+			)
+		},
+		{
+			key: 'amount',
+			label: 'თანხა',
+			render: (value, row) => {
+				const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
+				let cellContent;
+				if (row._isLeft) {
+					if (isExchange) {
+						cellContent = (
+							<span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5 }}>
+								<MdSync />
+								{value}
+							</span>
+						);
+					} else {
+						cellContent = (
+							<span style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
+								- {value}
+							</span>
+						);
+					}
+				} else {
+					cellContent = value;
+				}
+				return (
+					<span
+						style={{ cursor: 'pointer' }}
+						onClick={e => handleAmountClick(row, e)}
+						title="დეტალური ინფორმაცია"
+					>
+						{cellContent}
+					</span>
+				);
+			}
+		}
+	], []);
 
 	const [filterOpen, setFilterOpen] = useState(false);
 
@@ -630,53 +702,12 @@ const TableStatement = () => {
 		// eslint-disable-next-line
 	}, [splitMode, filters, pageSize]);
 
-	const splitColumns = useMemo(() => [
-		{
-			key: 'bank',
-			label: 'დანიშნული ბანკი',
-			render: (value, row) => (
-				<div>
-					{value}
-					<br />
-					<small style={{ color: '#888', fontSize: '0.95em' }}>
-						{row.transferDate}
-					</small>
-				</div>
-			)
-		},
-		{
-			key: 'amount',
-			label: 'თანხა',
-			render: (value, row) => {
-				// Always render leftData ("გადარიცხვები") in red and with "-"
-				if (row._isLeft) {
-					const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
-					if (isExchange) {
-						return (
-							<span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5 }}>
-								<MdSync />
-								{value}
-							</span>
-						);
-					}
-					return (
-						<span style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
-							- {value}
-						</span>
-					);
-				}
-				// For rightData ("ჩარიცხვები"), just show value
-				return value;
-			}
-		}
-	], []);
-
 	return (
-		<div className="table-accounts-container">
+		<div className="table-accounts-container" onClick={closePopup}>
 			<ToastContainer />
 			<div className="table-accounts-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<h2 className="table-heading">
-					{t('statement')}
+					{t('statement') || 'Statement'}
 				</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
 					<button
@@ -726,7 +757,7 @@ const TableStatement = () => {
 											className={tableStatementStyles.liveBankDropdownBtn}
 											onClick={() => handleSelectLiveBank('BOG')}
 										>
-											Bank of Georgia
+											{t('bank_of_georgia') || 'Bank of Georgia'}
 										</button>
 									</li>
 									<li className={tableStatementStyles.liveBankDropdownItem}>
@@ -735,7 +766,7 @@ const TableStatement = () => {
 											className={tableStatementStyles.liveBankDropdownBtn}
 											onClick={() => handleSelectLiveBank('TBC')}
 										>
-											TBC Bank
+											{t('tbc_bank') || 'TBC Bank'}
 										</button>
 									</li>
 								</ul>
@@ -811,19 +842,19 @@ const TableStatement = () => {
 							onReset={handleFilterReset}
 							onApply={handleApplyFilters}
 							fields={[
-								{ name: 'contragent', label: t('contragent'), placeholder: t('search_by_contragent') },
+								{ name: 'contragent', label: t('contragent') || 'Contragent', placeholder: t('search_by_contragent') || 'Search by contragent' },
 								{
 									name: 'bank',
-									label: t('bank'),
-									placeholder: t('search_by_bank'),
+									label: t('bank') || 'Bank',
+									placeholder: t('search_by_bank') || 'Search by bank',
 									type: 'bankDropdown'
 								},
-								{ name: 'amount', label: t('amount'), placeholder: t('search_by_amount') },
-								{ name: 'transferDate', label: t('transferDate'), placeholder: t('search_by_transferDate') },
-								{ name: 'purpose', label: t('purpose'), placeholder: t('search_by_purpose') },
+								{ name: 'amount', label: t('amount') || 'Amount', placeholder: t('search_by_amount') || 'Search by amount' },
+								{ name: 'transferDate', label: t('transferDate') || 'Transfer Date', placeholder: t('search_by_transferDate') || 'Search by transfer date' },
+								{ name: 'purpose', label: t('purpose') || 'Purpose', placeholder: t('search_by_purpose') || 'Search by purpose' },
 								...(!liveMode ? [
-									{ name: 'startDate', label: t('Start Date'), type: 'date' },
-									{ name: 'endDate', label: t('End Date'), type: 'date' }
+									{ name: 'startDate', label: t('Start Date') || 'Start Date', type: 'date' },
+									{ name: 'endDate', label: t('End Date') || 'End Date', type: 'date' }
 								] : [])
 							]}
 							bankOptions={bankOptions}
@@ -832,7 +863,6 @@ const TableStatement = () => {
 							bankDropdownRef={bankDropdownRef}
 							onBankSelect={handleBankSelect}
 							t={t}
-							// Pass toggles as props
 							installmentOnly={filters.installmentOnly}
 							transfersOnly={filters.transfersOnly}
 							onInstallmentToggle={handleInstallmentOnlyChange}
@@ -844,12 +874,12 @@ const TableStatement = () => {
 			{splitMode ? (
 				<div style={{ display: 'flex', gap: 24 }}>
 					<div style={{ flex: 1 }}>
-						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>ჩარიცხვები</h3>
+						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>{t('incoming') || 'ჩარიცხვები'}</h3>
 						<SortableTable
 							columns={splitColumns}
 							data={rightData.map(row => ({ ...row, _isLeft: false }))}
 							loading={rightLoading}
-							emptyText="ამონაწერი არ მოიძებნა"
+							emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
 							sortConfig={sortConfig}
 							setSortConfig={setSortConfig}
 						/>
@@ -863,12 +893,12 @@ const TableStatement = () => {
 						/>
 					</div>
 					<div style={{ flex: 1 }}>
-						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>გადარიცხვები</h3>
+						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>{t('outgoing') || 'გადარიცხვები'}</h3>
 						<SortableTable
 							columns={splitColumns}
 							data={leftData.map(row => ({ ...row, _isLeft: true }))}
 							loading={leftLoading}
-							emptyText="ამონაწერი არ მოიძებნა"
+							emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
 							sortConfig={sortConfig}
 							setSortConfig={setSortConfig}
 						/>
@@ -881,6 +911,39 @@ const TableStatement = () => {
 							}}
 						/>
 					</div>
+					{popupOpen && selectedTransaction && (
+						<div
+							style={{
+								position: 'fixed',
+								top: popupPos.y + 12,
+								left: popupPos.x + 12,
+								background: '#fff',
+								borderRadius: 10,
+								padding: '18px 20px',
+								boxShadow: '0 4px 24px rgba(1,115,177,0.18)',
+								zIndex: 9999,
+								minWidth: 260,
+								maxWidth: 340,
+								border: '1.5px solid #0173b1',
+								cursor: 'default'
+							}}
+							onClick={e => e.stopPropagation()}
+						>
+							<h4 style={{ marginBottom: 10, color: '#0173b1', textAlign: 'center' }}>
+								{t('details') || 'დეტალური ინფორმაცია'}
+							</h4>
+							<div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+								<div><b>{t('contragent') || 'Contragent'}:</b> {selectedTransaction.contragent}</div>
+								<div><b>{t('bank') || 'Bank'}:</b> {selectedTransaction.bank}</div>
+								<div><b>{t('amount') || 'Amount'}:</b> {selectedTransaction.amount}</div>
+								<div><b>{t('transferDate') || 'Transfer Date'}:</b> {selectedTransaction.transferDate}</div>
+								<div><b>{t('purpose') || 'Purpose'}:</b> {selectedTransaction.purpose}</div>
+								{selectedTransaction.syncDate && (
+									<div><b>{t('syncDate') || 'Sync Date'}:</b> {selectedTransaction.syncDate}</div>
+								)}
+							</div>
+						</div>
+					)}
 				</div>
 			) : (
 				<div>
@@ -889,7 +952,7 @@ const TableStatement = () => {
 							columns={columns}
 							data={pagedData}
 							loading={loading || dbLoading}
-							emptyText="ამონაწერი არ მოიძებნა"
+							emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
 							sortConfig={sortConfig}
 							setSortConfig={setSortConfig}
 						/>
@@ -923,6 +986,51 @@ const TableStatement = () => {
 						}}
 					/>
 				</div>)}
+
+			{modalOpen && selectedTransaction && (
+				<div
+					style={{
+						position: 'fixed',
+						top: 0,
+						left: 0,
+						width: '100vw',
+						height: '100vh',
+						background: 'rgba(0,0,0,0.35)',
+						zIndex: 9999,
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center'
+					}}
+				>
+					<div
+						style={{
+							background: '#fff',
+							borderRadius: 12,
+							padding: '32px 28px',
+							minWidth: 340,
+							maxWidth: 420,
+							boxShadow: '0 8px 32px rgba(1,115,177,0.18)',
+							position: 'relative',
+							cursor: 'default'
+						}}
+						onClick={e => e.stopPropagation()}
+					>
+						<h3 style={{ marginBottom: 18, color: '#0173b1', textAlign: 'center' }}>
+							{t('details') || 'დეტალური ინფორმაცია'}
+						</h3>
+						<div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+							<div><b>{t('contragent') || 'Contragent'}:</b> {selectedTransaction.contragent}</div>
+							<div><b>{t('bank') || 'Bank'}:</b> {selectedTransaction.bank}</div>
+							<div><b>{t('amount') || 'Amount'}:</b> {selectedTransaction.amount}</div>
+							<div><b>{t('transferDate') || 'Transfer Date'}:</b> {selectedTransaction.transferDate}</div>
+							<div><b>{t('purpose') || 'Purpose'}:</b> {selectedTransaction.purpose}</div>
+							{selectedTransaction.syncDate && (
+								<div><b>{t('syncDate') || 'Sync Date'}:</b> {selectedTransaction.syncDate}</div>
+							)}
+						</div>
+					</div>
+				</div>
+			)}
 		</div >
 	);
 };

@@ -70,6 +70,10 @@ const resources = {
       "transferDate": "Transfer Date",
       "purpose": "Purpose",
       "syncDate": "Sync Date",
+      "details": "Details information",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing",
+      "no_statement_found": "No statement found",
 
       // Statement filter
       "search_by_contragent": "Search by contragent",
@@ -172,6 +176,10 @@ const resources = {
       "transferDate": "Дата перевода",
       "purpose": "Назначение",
       "syncDate": "Дата синхронизации",
+      "details": "Детали",
+      "incoming": "Входящие",
+      "outgoing": "Исходящие",
+      "no_statement_found": "Выписка не найдена",
 
       // Statement filter
       "search_by_contragent": "Поиск по контрагенту",
@@ -274,6 +282,10 @@ const resources = {
       "transferDate": "გადმორიცხვის თარიღი",
       "purpose": "დანიშნულება",
       "syncDate": "სინქრონიზაციის თარიღი",
+      "details": "დეტალური ინფორმაცია",
+      "incoming": "ჩარიცხული",
+      "outgoing": "გადარიცხული",
+      "no_statement_found": "ამონაწერი არ მოიძებნა",
 
       // Statement filter
       "search_by_contragent": "ძებნა კონტრაგენტით",
