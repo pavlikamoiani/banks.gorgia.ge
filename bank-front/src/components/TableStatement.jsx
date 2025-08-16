@@ -571,6 +571,86 @@ const TableStatement = () => {
 		}
 	};
 
+	const [splitMode, setSplitMode] = useState(false);
+	const [leftData, setLeftData] = useState([]);
+	const [rightData, setRightData] = useState([]);
+	const [leftLoading, setLeftLoading] = useState(false);
+	const [rightLoading, setRightLoading] = useState(false);
+	const [leftPagination, setLeftPagination] = useState({
+		total: 0, page: 1, pageSize: PAGE_SIZE_OPTIONS[0], totalPages: 0
+	});
+	const [rightPagination, setRightPagination] = useState({
+		total: 0, page: 1, pageSize: PAGE_SIZE_OPTIONS[0], totalPages: 0
+	});
+
+	const loadSplitData = async (filters = {}, leftPage = 1, rightPage = 1, pageSize = PAGE_SIZE_OPTIONS[0]) => {
+		setLeftLoading(true);
+		setRightLoading(true);
+		try {
+			const endpoint = getEndpoint();
+			const leftParams = { ...filters, transfersOnly: true, page: leftPage, pageSize };
+			const rightParams = { ...filters, transfersOnly: false, page: rightPage, pageSize };
+
+			const [leftResp, rightResp] = await Promise.all([
+				defaultInstance.get(endpoint, { params: leftParams }),
+				defaultInstance.get(endpoint, { params: rightParams })
+			]);
+
+			const formatRows = (response) => {
+				const arr = Array.isArray(response.data?.data) ? response.data.data : [];
+				return arr.map((item, idx) => ({
+					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
+					contragent: item.sender_name || 'ტერმინალით გადახდა',
+					bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
+					amount: (item.amount ?? 0) + ' ₾',
+					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
+					purpose: item.description || '-',
+					syncDate: item.created_at
+						? item.created_at.replace('T', ' ').replace(/\.\d+Z?$/, '').slice(0, 19)
+						: '-'
+				}));
+			};
+
+			setLeftData(formatRows(leftResp));
+			setRightData(formatRows(rightResp));
+			setLeftPagination(leftResp.data.pagination || { total: 0, page: leftPage, pageSize, totalPages: 0 });
+			setRightPagination(rightResp.data.pagination || { total: 0, page: rightPage, pageSize, totalPages: 0 });
+		} catch (err) {
+			console.error("Error loading split data:", err);
+		} finally {
+			setLeftLoading(false);
+			setRightLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		if (splitMode) {
+			loadSplitData(filters, 1, 1, pageSize);
+		}
+		// eslint-disable-next-line
+	}, [splitMode, filters, pageSize]);
+
+	const splitColumns = useMemo(() => [
+		{
+			key: 'bank',
+			label: 'დანიშნული ბანკი',
+			render: (value, row) => (
+				<div>
+					{value}
+					<br />
+					<small style={{ color: '#888', fontSize: '0.95em' }}>
+						{row.transferDate}
+					</small>
+				</div>
+			)
+		},
+		{
+			key: 'amount',
+			label: 'თანხა',
+			render: (value) => value
+		}
+	], []);
+
 	return (
 		<div className="table-accounts-container">
 			<ToastContainer />
@@ -591,11 +671,18 @@ const TableStatement = () => {
 							cursor: "pointer",
 							color: "#0173b1"
 						}}
-						onClick={() => { /* add your sync logic here */ }}
+						onClick={() => {
+							setSplitMode(prev => {
+								const newValue = !prev;
+								if (newValue) {
+									loadSplitData(filters, 1, 1, pageSize);
+								}
+								return newValue;
+							});
+						}}
 					>
 						<FaTableColumns size={22} />
 					</button>
-					{/* add button */}
 					{!liveMode ? (
 						<div className={tableStatementStyles.liveBankDropdownWrapper} ref={liveBankDropdownRef}>
 							<button className={tableStatementStyles.liveBtn}
@@ -604,7 +691,7 @@ const TableStatement = () => {
 									background: "#0173b1",
 									cursor: loading ? "not-allowed" : "pointer",
 								}}
-								onClick={() => setLiveBankDropdownOpen(!liveBankDropdownOpen)}
+								onClick={() => setLiveBankDropdownOpen(open => !open)}
 								disabled={loading}
 							>
 								<FontAwesomeIcon icon={faBolt} style={{ marginRight: 6 }} />
@@ -734,44 +821,88 @@ const TableStatement = () => {
 					</div>
 				)
 			}
-			<div className="table-wrapper">
-				<SortableTable
-					columns={columns}
-					data={pagedData}
-					loading={loading || dbLoading}
-					emptyText="ამონაწერი არ მოიძებნა"
-					sortConfig={sortConfig}
-					setSortConfig={setSortConfig}
-				/>
-			</div>
-			<Pagination
-				total={
-					liveMode
-						? filteredData.length
-						: (pagination.total || filteredData.length)
-				}
-				page={
-					liveMode
-						? livePagination.page
-						: (pagination.page || page)
-				}
-				pageSize={
-					liveMode
-						? livePagination.pageSize
-						: (pagination.pageSize || pageSize)
-				}
-				onChange={(newPage) => {
-					if (liveMode) {
-						setLivePagination(prev => ({
-							...prev,
-							page: newPage
-						}));
-						setPage(newPage);
-					} else {
-						loadDbData({ ...filters, page: newPage });
-					}
-				}}
-			/>
+			{splitMode ? (
+				<div style={{ display: 'flex', gap: 24 }}>
+					<div style={{ flex: 1 }}>
+						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>ჩარიცხვები</h3>
+						<SortableTable
+							columns={splitColumns}
+							data={rightData}
+							loading={rightLoading}
+							emptyText="ამონაწერი არ მოიძებნა"
+							sortConfig={sortConfig}
+							setSortConfig={setSortConfig}
+						/>
+						<Pagination
+							total={rightPagination.total}
+							page={rightPagination.page}
+							pageSize={rightPagination.pageSize}
+							onChange={(newPage) => {
+								loadSplitData(filters, leftPagination.page, newPage, rightPagination.pageSize);
+							}}
+						/>
+					</div>
+					<div style={{ flex: 1 }}>
+						<h3 style={{ textAlign: 'center', marginBottom: 8 }}>გადარიცხვები</h3>
+						<SortableTable
+							columns={splitColumns}
+							data={leftData}
+							loading={leftLoading}
+							emptyText="ამონაწერი არ მოიძებნა"
+							sortConfig={sortConfig}
+							setSortConfig={setSortConfig}
+						/>
+						<Pagination
+							total={leftPagination.total}
+							page={leftPagination.page}
+							pageSize={leftPagination.pageSize}
+							onChange={(newPage) => {
+								loadSplitData(filters, newPage, rightPagination.page, leftPagination.pageSize);
+							}}
+						/>
+					</div>
+				</div>
+			) : (
+				<div>
+					<div className="table-wrapper">
+						<SortableTable
+							columns={columns}
+							data={pagedData}
+							loading={loading || dbLoading}
+							emptyText="ამონაწერი არ მოიძებნა"
+							sortConfig={sortConfig}
+							setSortConfig={setSortConfig}
+						/>
+					</div>
+					<Pagination
+						total={
+							liveMode
+								? filteredData.length
+								: (pagination.total || filteredData.length)
+						}
+						page={
+							liveMode
+								? livePagination.page
+								: (pagination.page || page)
+						}
+						pageSize={
+							liveMode
+								? livePagination.pageSize
+								: (pagination.pageSize || pageSize)
+						}
+						onChange={(newPage) => {
+							if (liveMode) {
+								setLivePagination(prev => ({
+									...prev,
+									page: newPage
+								}));
+								setPage(newPage);
+							} else {
+								loadDbData({ ...filters, page: newPage });
+							}
+						}}
+					/>
+				</div>)}
 		</div >
 	);
 };
