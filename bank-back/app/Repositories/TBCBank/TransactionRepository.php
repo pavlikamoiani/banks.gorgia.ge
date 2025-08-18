@@ -139,6 +139,7 @@ class TransactionRepository extends BaseRepository
         $transaction->sender_name = $transactionData->partnerName ?? null;
         $bankNameModel = BankName::where('name', 'Gorgia')->first();
         $transaction->bank_name_id = $bankNameModel ? $bankNameModel->id : null;
+        $transaction->created_at = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
         $transaction->save();
     }
 

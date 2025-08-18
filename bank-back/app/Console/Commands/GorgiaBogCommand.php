@@ -62,6 +62,7 @@ class GorgiaBogCommand extends Command
                         'sender_name' => $item['Sender']['Name'] ?? null,
                         'description' => $item['EntryComment'] ?? $item['EntryCommentEn'] ?? null,
                         'status_code' => $item['EntryType'] ?? null,
+                        'created_at' => isset($item['PostDate']) ? date('Y-m-d H:i:s', strtotime($item['PostDate'])) : now(),
                     ]);
                 }
             }

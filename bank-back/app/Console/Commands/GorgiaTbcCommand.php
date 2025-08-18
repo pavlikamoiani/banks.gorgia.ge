@@ -68,6 +68,7 @@ class GorgiaTbcCommand extends Command
             $transaction->status_code = $transactionData->statusCode;
             $transaction->description = $transactionData->description;
             $transaction->sender_name = $transactionData->partnerName ?? null;
+            $transaction->created_at = $transactionDate;
             $transaction->save();
         }
 
