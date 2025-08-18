@@ -74,6 +74,8 @@ const resources = {
       "incoming": "Incoming",
       "outgoing": "Outgoing",
       "no_statement_found": "No statement found",
+      "bank_of_georgia": "Bank of Georgia",
+      "tbc_bank": "TBC Bank",
 
       // Statement filter
       "search_by_contragent": "Search by contragent",
@@ -84,7 +86,7 @@ const resources = {
       "all": "All",
       "show_more": "Show more",
       "show_less": "Show less",
-      "apply": "Apply",
+      "apply": "Search",
       "live_today_transactions": "Today's Transactions",
       "exit_live": "Exit Live",
       "installment": "Installment",
@@ -180,6 +182,8 @@ const resources = {
       "incoming": "Входящие",
       "outgoing": "Исходящие",
       "no_statement_found": "Выписка не найдена",
+      "bank_of_georgia": "Bank of Georgia",
+      "tbc_bank": "TBC Bank",
 
       // Statement filter
       "search_by_contragent": "Поиск по контрагенту",
@@ -190,7 +194,7 @@ const resources = {
       "all": "Все",
       "show_more": "Показать больше",
       "show_less": "Показать меньше",
-      "apply": "Применить",
+      "apply": "Поиск",
       "live_today_transactions": "Сегодняшние транзакции",
       "exit_live": "Выход из Live",
       "installment": "Рассрочка",
@@ -286,6 +290,8 @@ const resources = {
       "incoming": "ჩარიცხული",
       "outgoing": "გადარიცხული",
       "no_statement_found": "ამონაწერი არ მოიძებნა",
+      "bank_of_georgia": "Bank of Georgia",
+      "tbc_bank": "TBC Bank",
 
       // Statement filter
       "search_by_contragent": "ძებნა კონტრაგენტით",
@@ -296,7 +302,7 @@ const resources = {
       "all": "ყველა",
       "show_more": "მეტის ნახვა",
       "show_less": "ნაკლების ნახვა",
-      "apply": "გამოყენება",
+      "apply": "ძებნა",
       "live_today_transactions": "დღევანდელი ტრანზაქციები",
       "exit_live": "გამოსვლა Live რეჟიმიდან",
       "installment": "განვადებები",

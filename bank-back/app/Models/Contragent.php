@@ -14,11 +14,6 @@ class Contragent extends Model
         'bank_id',
         'identification_code',
         'company',
-        'hidden_for_roles',
-    ];
-
-    protected $casts = [
-        'hidden_for_roles' => 'array',
     ];
 
     public function bank()

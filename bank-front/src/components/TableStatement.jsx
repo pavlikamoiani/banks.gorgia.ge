@@ -982,7 +982,7 @@ const TableStatement = () => {
 					rightSearchContragent={rightSearchContragent}
 					rightSearchAmount={rightSearchAmount}
 					onSearch={handleSplitSearch}
-					handleAmountClick={handleAmountClick} // <-- pass this for SplitStatementTable
+					handleAmountClick={handleAmountClick}
 				/>
 			) : (
 				<div>

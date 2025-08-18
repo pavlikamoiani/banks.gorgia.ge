@@ -18,7 +18,6 @@ return new class extends Migration
             $table->unsignedBigInteger('bank_id')->nullable();
             $table->string('name');
             $table->string('identification_code');
-            $table->json('hidden_for_roles')->nullable();
             $table->timestamps();
 
             if (Schema::hasTable('banks')) {

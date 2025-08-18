@@ -10,7 +10,6 @@ import SortableTable from './SortableTable';
 import AddContragentModal from './AddContragentModal';
 import EditContragentModal from './EditContragentModal';
 import Pagination from './Pagination';
-import HideRoleModal from './HideRoleModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
 import filterStyles from '../assets/css/filter.module.css';
@@ -23,7 +22,7 @@ const TableContragents = () => {
 	const { t } = useTranslation();
 	const [contragents, setContragents] = useState([]);
 	const [modalOpen, setModalOpen] = useState(false);
-	const [form, setForm] = useState({ name: '', identification_code: '', hidden_for_roles: [] });
+	const [form, setForm] = useState({ name: '', identification_code: '' });
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [filterOpen, setFilterOpen] = useState(false);
@@ -31,7 +30,7 @@ const TableContragents = () => {
 	const [filterDrafts, setFilterDrafts] = useState({ name: '', identification_code: '' });
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [editContragent, setEditContragent] = useState(null);
-	const [editForm, setEditForm] = useState({ name: '', identification_code: '', hidden_for_roles: [] });
+	const [editForm, setEditForm] = useState({ name: '', identification_code: '' });
 	const [editError, setEditError] = useState('');
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
@@ -39,7 +38,6 @@ const TableContragents = () => {
 	const pageSizeDropdownRef = useRef(null);
 	const user = useSelector(state => state.user.user);
 	const [selectedIds, setSelectedIds] = useState([]);
-	const [hideRolesModalOpen, setHideRolesModalOpen] = useState(false);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState(null);
 	const [deleteError, setDeleteError] = useState('');
@@ -106,18 +104,8 @@ const TableContragents = () => {
 		setError('');
 	};
 	const handleChange = (e) => {
-		const { name, value, checked } = e.target;
-		if (name === 'hidden_for_roles') {
-			let updated = [...form.hidden_for_roles];
-			if (checked) {
-				updated.push(value);
-			} else {
-				updated = updated.filter(r => r !== value);
-			}
-			setForm({ ...form, hidden_for_roles: updated });
-		} else {
-			setForm({ ...form, [name]: value });
-		}
+		const { name, value } = e.target;
+		setForm({ ...form, [name]: value });
 	};
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -126,7 +114,6 @@ const TableContragents = () => {
 			await defaultInstance.post('/contragents', {
 				name: form.name,
 				identification_code: form.identification_code,
-				hidden_for_roles: form.hidden_for_roles,
 			});
 			handleCloseModal();
 			loadContragents(filters);
@@ -140,7 +127,6 @@ const TableContragents = () => {
 		setEditForm({
 			name: contragent.name || '',
 			identification_code: contragent.identification_code || '',
-			hidden_for_roles: contragent.hidden_for_roles || []
 		});
 		setEditError('');
 		setEditModalOpen(true);
@@ -152,18 +138,8 @@ const TableContragents = () => {
 		setEditError('');
 	};
 	const handleEditChange = (e) => {
-		const { name, value, checked } = e.target;
-		if (name === 'hidden_for_roles') {
-			let updated = [...editForm.hidden_for_roles];
-			if (checked) {
-				updated.push(value);
-			} else {
-				updated = updated.filter(r => r !== value);
-			}
-			setEditForm({ ...editForm, hidden_for_roles: updated });
-		} else {
-			setEditForm({ ...editForm, [name]: value });
-		}
+		const { name, value } = e.target;
+		setEditForm({ ...editForm, [name]: value });
 	};
 	const handleEditSubmit = async (e) => {
 		e.preventDefault();
@@ -175,7 +151,6 @@ const TableContragents = () => {
 			await defaultInstance.put(`/contragents/${editContragent.id}`, {
 				name: editForm.name,
 				identification_code: editForm.identification_code,
-				hidden_for_roles: editForm.hidden_for_roles,
 			});
 			handleCloseEditModal();
 			loadContragents(filters);
@@ -227,11 +202,6 @@ const TableContragents = () => {
 			ids.includes(id) ? ids.filter(_id => _id !== id) : [...ids, id]
 		);
 	};
-
-	const openHideRolesModal = () => {
-		setHideRolesModalOpen(true);
-	};
-	const closeHideRolesModal = () => setHideRolesModalOpen(false);
 
 	const columns = [
 		...(user && (user.role === 'super_admin') ? [
@@ -349,24 +319,6 @@ const TableContragents = () => {
 						<FontAwesomeIcon icon={faPlus} style={{ marginRight: 5 }} />
 						{t('add_contragent')}
 					</button>
-					{user && user.role === 'super_admin' && selectedIds.length > 0 && (
-						<button
-							style={{
-								background: "#e67e22",
-								color: "#fff",
-								border: "none",
-								borderRadius: 6,
-								padding: "8px 16px",
-								cursor: "pointer",
-								fontWeight: 500,
-								minHeight: '40px',
-							}}
-							onClick={openHideRolesModal}
-						>
-							<FontAwesomeIcon icon={faXmark} style={{ marginRight: 5 }} />
-							{t('hide_for_roles') || 'დამალვა როლებისთვის'}
-						</button>
-					)}
 					<button
 						className={filterStyles.filterToggleBtn}
 						onClick={() => setFilterOpen(open => !open)}
@@ -411,37 +363,6 @@ const TableContragents = () => {
 					form={editForm}
 					onChange={handleEditChange}
 					error={editError}
-					t={t}
-				/>
-			)}
-			{hideRolesModalOpen && (
-				<HideRoleModal
-					open={hideRolesModalOpen}
-					onClose={closeHideRolesModal}
-					selectedContragents={Array.isArray(contragents) ? contragents.filter(c => selectedIds.includes(c.id)) : []}
-					onSubmit={async (newRoles) => {
-						try {
-							await Promise.all(
-								selectedIds.map(async (id) => {
-									const contragent = contragents.find(c => c.id === id);
-									await defaultInstance.put(`/contragents/${id}`, {
-										name: contragent.name,
-										identification_code: contragent.identification_code,
-										hidden_for_roles: newRoles,
-									});
-								})
-							);
-							setSelectedIds([]);
-							setHideRolesModalOpen(false);
-							setLoading(true);
-							const res = await defaultInstance.get(`/contragents`);
-							setContragents(res.data.data || []);
-							setPagination(res.data.pagination || {});
-							setLoading(false);
-						} catch (err) {
-							alert(t('error_editing'));
-						}
-					}}
 					t={t}
 				/>
 			)}

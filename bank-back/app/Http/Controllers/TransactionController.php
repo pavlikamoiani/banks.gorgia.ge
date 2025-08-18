@@ -133,11 +133,11 @@ class TransactionController extends Controller
             ->get();
 
         if ($user && $user->role !== 'super_admin') {
-            $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
-                ->pluck('identification_code')->toArray();
-            $results = $results->filter(function ($item) use ($hiddenContragents) {
-                return !in_array($item->contragent_id, $hiddenContragents);
-            })->values();
+            // $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
+            //     ->pluck('identification_code')->toArray();
+            // $results = $results->filter(function ($item) use ($hiddenContragents) {
+            //     return !in_array($item->contragent_id, $hiddenContragents);
+            // })->values();
         }
 
         $data = $results->map(function ($item) {
@@ -215,11 +215,11 @@ class TransactionController extends Controller
                 ->get();
 
             if ($user && $user->role !== 'super_admin') {
-                $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
-                    ->pluck('identification_code')->toArray();
-                $data = $data->filter(function ($item) use ($hiddenContragents) {
-                    return !in_array($item->contragent_id, $hiddenContragents);
-                })->values();
+                // $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
+                //     ->pluck('identification_code')->toArray();
+                // $data = $data->filter(function ($item) use ($hiddenContragents) {
+                //     return !in_array($item->contragent_id, $hiddenContragents);
+                // })->values();
             }
 
             return response()->json([

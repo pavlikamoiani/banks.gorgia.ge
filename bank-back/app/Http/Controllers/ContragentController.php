@@ -41,14 +41,6 @@ class ContragentController extends Controller
             ->offset($offset)
             ->get();
 
-        $user = $request->user();
-        if ($user && $user->role !== 'super_admin') {
-            $contragents = $contragents->filter(function ($contragent) use ($user) {
-                $hidden = $contragent->hidden_for_roles ?? [];
-                return !in_array($user->role, $hidden);
-            })->values();
-        }
-
         return response()->json([
             'data' => $contragents,
             'pagination' => [
@@ -68,7 +60,6 @@ class ContragentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identification_code' => 'required|string|max:255',
-            'hidden_for_roles' => 'nullable|array',
         ]);
         $validated['bank_id'] = $bankId;
 
@@ -94,7 +85,6 @@ class ContragentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identification_code' => 'required|string|max:255',
-            'hidden_for_roles' => 'nullable|array',
         ]);
         $contragent->update($validated);
         return response()->json($contragent);
