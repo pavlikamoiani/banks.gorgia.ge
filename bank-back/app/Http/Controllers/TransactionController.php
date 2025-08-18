@@ -117,17 +117,38 @@ class TransactionController extends Controller
             $query->where('sender_name', 'like', '%შპს გორგია%');
         }
 
-        if ($request->query('transfersOnly') === 'false') {
-            $query->where('sender_name', 'not like', '%შპს გორგია%');
-        }
 
-        $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
-            ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
-            ->addSelect('banks.name as bank_name');
+
+        // if ($request->query('transfersOnly') === 'false') {
+        //     $query->where('sender_name', 'not like', '%შპს გორგია%');
+        // }
+
+        // $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
+        //     ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
+        //     ->addSelect('banks.name as bank_name');
 
         $total = $query->count();
 
-        $results = $query->orderBy('transaction_date', 'desc')
+        $sortKey = $request->query('sortKey');
+        $sortDirection = $request->query('sortDirection', 'desc');
+
+        if ($sortKey) {
+            // Map frontend keys to DB columns if needed
+            $sortMap = [
+                'contragent' => 'sender_name',
+                'bank' => 'bank_type',
+                'amount' => 'amount',
+                'transferDate' => 'transaction_date',
+                'purpose' => 'description',
+                'syncDate' => 'created_at'
+            ];
+            $dbSortKey = $sortMap[$sortKey] ?? $sortKey;
+            $query->orderBy($dbSortKey, $sortDirection);
+        } else {
+            $query->orderBy('transaction_date', 'desc');
+        }
+
+        $results = $query
             ->limit($pageSize)
             ->offset($offset)
             ->get();

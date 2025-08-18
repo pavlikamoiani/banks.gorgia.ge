@@ -559,13 +559,13 @@ const TableStatement = () => {
 		if (liveMode) {
 			const startIdx = (livePagination.page - 1) * livePagination.pageSize;
 			const endIdx = startIdx + livePagination.pageSize;
-			return Array.isArray(filteredData) ? filteredData.slice(startIdx, endIdx) : [];
+			return Array.isArray(data) ? data.slice(startIdx, endIdx) : [];
 		}
 		if (pagination.total > 0) {
 			return Array.isArray(data) ? data : [];
 		}
-		return Array.isArray(filteredData) ? filteredData.slice((page - 1) * pageSize, page * pageSize) : [];
-	}, [liveMode, filteredData, livePagination, pagination, data, page, pageSize]);
+		return Array.isArray(data) ? data.slice((page - 1) * pageSize, page * pageSize) : [];
+	}, [liveMode, data, livePagination, pagination, page, pageSize]);
 
 	useEffect(() => {
 		if (!pageSizeDropdownOpen) return;
@@ -795,6 +795,13 @@ const TableStatement = () => {
 		}
 	};
 
+	const handleSortChange = (newSortConfig) => {
+		setSortConfig(newSortConfig);
+		// Reload data from backend with new sort params
+		loadDbData({ ...filters, sortKey: newSortConfig.key, sortDirection: newSortConfig.direction, page: 1 });
+		setPage(1);
+	};
+
 	return (
 		<div className="table-accounts-container" onClick={closePopup}>
 			<ToastContainer />
@@ -994,6 +1001,7 @@ const TableStatement = () => {
 							emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
 							sortConfig={sortConfig}
 							setSortConfig={setSortConfig}
+							onSortChange={handleSortChange}
 						/>
 					</div>
 					<Pagination

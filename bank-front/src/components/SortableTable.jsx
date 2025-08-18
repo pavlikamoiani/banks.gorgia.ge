@@ -1,16 +1,25 @@
 import { useTranslation } from 'react-i18next';
 import styles from '../assets/css/SortableTable.module.css';
 
-const SortableTable = ({ columns, data, loading, emptyText, sortConfig, setSortConfig }) => {
+const SortableTable = ({
+    columns,
+    data,
+    loading,
+    emptyText,
+    sortConfig,
+    setSortConfig,
+    onSortChange // <-- new prop
+}) => {
     const { t } = useTranslation();
 
     const handleSort = (key) => {
-        setSortConfig(prev => {
-            if (prev.key === key) {
-                return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
-            }
-            return { key, direction: 'asc' };
-        });
+        // Only trigger sort if not actions/select
+        if (key === 'actions' || key === 'select') return;
+        const newSortConfig = sortConfig?.key === key
+            ? { key, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' }
+            : { key, direction: 'asc' };
+        setSortConfig && setSortConfig(newSortConfig);
+        onSortChange && onSortChange(newSortConfig); // <-- trigger parent to reload data from backend
     };
 
     return (
@@ -20,7 +29,7 @@ const SortableTable = ({ columns, data, loading, emptyText, sortConfig, setSortC
                     {columns.map(col => (
                         <th
                             key={col.key}
-                            onClick={() => (col.key !== 'actions' && col.key !== 'select') && handleSort(col.key)}
+                            onClick={() => handleSort(col.key)}
                             className={styles.sortableTh}
                         >
                             <span className={styles.thContent}>
