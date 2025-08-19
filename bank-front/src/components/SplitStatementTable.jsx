@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import SortableTable from './SortableTable';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
-import { FaSearch } from 'react-icons/fa'; // Add search icon
+import { FaSearch } from 'react-icons/fa';
 
 const SplitStatementTable = ({
     t,
@@ -21,7 +21,6 @@ const SplitStatementTable = ({
     onSearch,
     handleAmountClick
 }) => {
-    // Helper for styled input
     const renderSearchInput = (props) => (
         <div style={{
             position: 'relative',
@@ -101,6 +100,59 @@ const SplitStatementTable = ({
         });
     }, [splitColumns, handleAmountClick]);
 
+    const [localLeftContragent, setLocalLeftContragent] = useState(leftSearchContragent);
+    const [localLeftAmount, setLocalLeftAmount] = useState(leftSearchAmount);
+    const [localRightContragent, setLocalRightContragent] = useState(rightSearchContragent);
+    const [localRightAmount, setLocalRightAmount] = useState(rightSearchAmount);
+
+    const leftDebounceRef = useRef(null);
+    const rightDebounceRef = useRef(null);
+
+    useEffect(() => {
+        if (leftDebounceRef.current) clearTimeout(leftDebounceRef.current);
+        leftDebounceRef.current = setTimeout(() => {
+            onSearch('left', { contragent: localLeftContragent, amount: localLeftAmount });
+        }, 3000);
+        return () => {
+            if (leftDebounceRef.current) clearTimeout(leftDebounceRef.current);
+        };
+    }, [localLeftContragent, localLeftAmount]);
+
+    useEffect(() => {
+        if (rightDebounceRef.current) clearTimeout(rightDebounceRef.current);
+        rightDebounceRef.current = setTimeout(() => {
+            onSearch('right', { contragent: localRightContragent, amount: localRightAmount });
+        }, 3000);
+        return () => {
+            if (rightDebounceRef.current) clearTimeout(rightDebounceRef.current);
+        };
+    }, [localRightContragent, localRightAmount]);
+
+    useEffect(() => {
+        setLocalLeftContragent(leftSearchContragent);
+    }, [leftSearchContragent]);
+    useEffect(() => {
+        setLocalLeftAmount(leftSearchAmount);
+    }, [leftSearchAmount]);
+    useEffect(() => {
+        setLocalRightContragent(rightSearchContragent);
+    }, [rightSearchContragent]);
+    useEffect(() => {
+        setLocalRightAmount(rightSearchAmount);
+    }, [rightSearchAmount]);
+
+    const handleLeftSearchEnter = (e) => {
+        if (e.key === 'Enter') {
+            onSearch('left', { contragent: localLeftContragent, amount: localLeftAmount });
+        }
+    };
+
+    const handleRightSearchEnter = (e) => {
+        if (e.key === 'Enter') {
+            onSearch('right', { contragent: localRightContragent, amount: localRightAmount });
+        }
+    };
+
     return (
         <div className={tableStatementStyles.splitTableContainer}>
             <div className={tableStatementStyles.splitTableSection}>
@@ -121,16 +173,18 @@ const SplitStatementTable = ({
                     {renderSearchInput({
                         type: "text",
                         placeholder: t('search_by_contragent') || 'Contragent',
-                        value: rightSearchContragent,
-                        onChange: e => onSearch('right', { contragent: e.target.value, amount: rightSearchAmount }),
+                        value: localRightContragent,
+                        onChange: e => setLocalRightContragent(e.target.value),
+                        onKeyDown: handleRightSearchEnter,
                         flex: 1,
                         minWidth: 0
                     })}
                     {renderSearchInput({
                         type: "text",
                         placeholder: t('search_by_amount') || 'Amount',
-                        value: rightSearchAmount,
-                        onChange: e => onSearch('right', { contragent: rightSearchContragent, amount: e.target.value }),
+                        value: localRightAmount,
+                        onChange: e => setLocalRightAmount(e.target.value),
+                        onKeyDown: handleRightSearchEnter,
                         width: 180
                     })}
                 </div>
@@ -172,16 +226,18 @@ const SplitStatementTable = ({
                     {renderSearchInput({
                         type: "text",
                         placeholder: t('search_by_contragent') || 'Contragent',
-                        value: leftSearchContragent,
-                        onChange: e => onSearch('left', { contragent: e.target.value, amount: leftSearchAmount }),
+                        value: localLeftContragent,
+                        onChange: e => setLocalLeftContragent(e.target.value),
+                        onKeyDown: handleLeftSearchEnter,
                         flex: 1,
                         minWidth: 0
                     })}
                     {renderSearchInput({
                         type: "text",
                         placeholder: t('search_by_amount') || 'Amount',
-                        value: leftSearchAmount,
-                        onChange: e => onSearch('left', { contragent: leftSearchContragent, amount: e.target.value }),
+                        value: localLeftAmount,
+                        onChange: e => setLocalLeftAmount(e.target.value),
+                        onKeyDown: handleLeftSearchEnter,
                         width: 180
                     })}
                 </div>
@@ -205,7 +261,6 @@ const SplitStatementTable = ({
                     )}
                 </div>
             </div>
-            {/* Remove modal rendering here, it's handled by TableStatement */}
         </div>
     );
 };

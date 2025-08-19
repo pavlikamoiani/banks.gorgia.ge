@@ -252,7 +252,7 @@ const TableUsers = () => {
 							color: "#fff",
 							border: "none",
 							borderRadius: 6,
-							padding: "12px 14px",
+							padding: "11px 14px",
 							cursor: "pointer",
 							fontWeight: 500,
 						}}

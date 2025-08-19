@@ -273,13 +273,6 @@ const TableStatement = () => {
 		totalPages: 0
 	});
 
-	const sortByBank = (rows) => {
-		return [...rows].sort((a, b) => {
-			const bankOrder = { 'სს "თბს ბანკი"': 0, 'სს "საქართველოს ბანკი"': 1 };
-			return (bankOrder[a.bank] ?? 2) - (bankOrder[b.bank] ?? 2);
-		});
-	};
-
 	const loadDbData = async (filterParams = {}) => {
 		setDbLoading(true);
 		setError(null);
@@ -823,13 +816,7 @@ const TableStatement = () => {
 							color: "#0173b1"
 						}}
 						onClick={() => {
-							setSplitMode(prev => {
-								const newValue = !prev;
-								if (newValue) {
-									loadSplitData(filters, 1, 1, pageSize);
-								}
-								return newValue;
-							});
+							setSplitMode(prev => !prev);
 						}}
 					>
 						<FaTableColumns size={22} />
