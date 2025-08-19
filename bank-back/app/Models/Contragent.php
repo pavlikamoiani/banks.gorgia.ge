@@ -14,6 +14,7 @@ class Contragent extends Model
         'bank_id',
         'identification_code',
         'company',
+        'visible_for_roles',
     ];
 
     public function bank()

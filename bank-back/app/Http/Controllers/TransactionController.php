@@ -127,6 +127,13 @@ class TransactionController extends Controller
         //     ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
         //     ->addSelect('banks.name as bank_name');
 
+        // Only show transactions for contragents visible for user's role
+        if ($user && $user->role !== 'super_admin') {
+            $visibleContragents = \App\Models\Contragent::whereJsonContains('visible_for_roles', $user->role)
+                ->pluck('identification_code')->toArray();
+            $query->whereIn('contragent_id', $visibleContragents);
+        }
+
         $total = $query->count();
 
         $sortKey = $request->query('sortKey');
@@ -152,14 +159,6 @@ class TransactionController extends Controller
             ->limit($pageSize)
             ->offset($offset)
             ->get();
-
-        if ($user && $user->role !== 'super_admin') {
-            // $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
-            //     ->pluck('identification_code')->toArray();
-            // $results = $results->filter(function ($item) use ($hiddenContragents) {
-            //     return !in_array($item->contragent_id, $hiddenContragents);
-            // })->values();
-        }
 
         $data = $results->map(function ($item) {
             $arr = $item->toArray();

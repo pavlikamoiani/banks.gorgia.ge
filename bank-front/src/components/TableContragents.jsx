@@ -11,6 +11,7 @@ import AddContragentModal from './AddContragentModal';
 import EditContragentModal from './EditContragentModal';
 import Pagination from './Pagination';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import HideRoleModal from './VisibilityRoleModal';
 
 import filterStyles from '../assets/css/filter.module.css';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
@@ -47,6 +48,10 @@ const TableContragents = () => {
 		pageSize: PAGE_SIZE_OPTIONS[0],
 		totalPages: 0
 	});
+	const [hideRoleModalOpen, setHideRoleModalOpen] = useState(false);
+	const [selectedContragentForRole, setSelectedContragentForRole] = useState(null);
+	const [roleUpdateLoading, setRoleUpdateLoading] = useState(false);
+	const [roleUpdateError, setRoleUpdateError] = useState('');
 
 	const getCurrentBank = () => {
 		const pathname = window.location.pathname;
@@ -203,6 +208,38 @@ const TableContragents = () => {
 		);
 	};
 
+	const handleOpenHideRoleModal = async (contragentsToEdit) => {
+		setRoleUpdateError('');
+		setSelectedContragentForRole(contragentsToEdit);
+		setHideRoleModalOpen(true);
+	};
+
+	const handleCloseHideRoleModal = () => {
+		setHideRoleModalOpen(false);
+		setSelectedContragentForRole(null);
+		setRoleUpdateError('');
+	};
+
+	const handleSubmitHideRoleModal = async (roles) => {
+		if (!selectedContragentForRole || !Array.isArray(selectedContragentForRole)) return;
+		setRoleUpdateLoading(true);
+		setRoleUpdateError('');
+		try {
+			const ids = selectedContragentForRole.map(c => c.id);
+			await defaultInstance.put('/contragents/batch-roles', {
+				ids: selectedIds,
+				visible_for_roles: roles
+			});
+			await loadContragents(filters);
+			setHideRoleModalOpen(false);
+			setSelectedContragentForRole(null);
+		} catch (err) {
+			setRoleUpdateError('შეცდომა როლების განახლებაში');
+		} finally {
+			setRoleUpdateLoading(false);
+		}
+	};
+
 	const columns = [
 		...(user && (user.role === 'super_admin') ? [
 			{
@@ -260,6 +297,16 @@ const TableContragents = () => {
 						>
 							<FontAwesomeIcon icon={faTrash} color="#fff" />
 						</button>
+						{user.role === 'super_admin' && (
+							<button
+								className="icon-btn"
+								style={{ background: '#0173b1', marginLeft: 4 }}
+								onClick={() => handleOpenHideRoleModal(row)}
+								title={t('manage_role_visibility') || 'როლების მართვა'}
+							>
+								<FontAwesomeIcon icon={faFilter} color="#fff" />
+							</button>
+						)}
 					</>
 				)
 			}
@@ -330,6 +377,32 @@ const TableContragents = () => {
 					</button>
 				</div>
 			</div>
+			{/* Show button if multiple selected */}
+			{user && user.role === 'super_admin' && selectedIds.length > 0 && (
+				<div style={{ margin: '10px 0' }}>
+					<button
+						type="button"
+						style={{
+							background: "#0173b1",
+							color: "#fff",
+							border: "none",
+							borderRadius: 6,
+							padding: "8px 16px",
+							cursor: "pointer",
+							fontWeight: 500,
+						}}
+						onClick={() => {
+							const selectedContragents = contragents.filter(c => selectedIds.includes(c.id));
+							if (selectedContragents.length > 0) {
+								handleOpenHideRoleModal(selectedContragents);
+							}
+						}}
+					>
+						<FontAwesomeIcon icon={faFilter} style={{ marginRight: 5 }} />
+						{t('manage_role_visibility') || 'როლების მართვა'}
+					</button>
+				</div>
+			)}
 			{filterOpen && (
 				<div className={filterStyles.filterDrawer}>
 					<TableFilter
@@ -363,6 +436,15 @@ const TableContragents = () => {
 					form={editForm}
 					onChange={handleEditChange}
 					error={editError}
+					t={t}
+				/>
+			)}
+			{hideRoleModalOpen && selectedContragentForRole && (
+				<HideRoleModal
+					open={hideRoleModalOpen}
+					onClose={handleCloseHideRoleModal}
+					selectedContragents={selectedContragentForRole}
+					onSubmit={handleSubmitHideRoleModal}
 					t={t}
 				/>
 			)}

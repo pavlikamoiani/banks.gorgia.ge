@@ -25,6 +25,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Contragents
     Route::get('/contragents', [ContragentController::class, 'index']);
     Route::post('/contragents', [ContragentController::class, 'store']);
+    Route::put('/contragents/batch-roles', [ContragentController::class, 'batchUpdateRoles']);
+    Route::get('/contragents/{id}', [ContragentController::class, 'show']);
     Route::put('/contragents/{id}', [ContragentController::class, 'update']);
     Route::delete('/contragents/{id}', [ContragentController::class, 'destroy']);
 

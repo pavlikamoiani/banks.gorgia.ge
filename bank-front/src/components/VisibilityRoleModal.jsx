@@ -23,18 +23,27 @@ const HideRoleModal = ({
     const [closing, setClosing] = useState(false);
 
     useEffect(() => {
+        const allVisibleRoles = selectedContragents.reduce((acc, c) => {
+            let roles = c.visible_for_roles;
+            if (typeof roles === 'string') {
+                try {
+                    roles = JSON.parse(roles);
+                } catch {
+                    roles = [];
+                }
+            }
+            if (Array.isArray(roles)) {
+                roles.forEach(role => {
+                    if (!acc.includes(role)) acc.push(role);
+                });
+            }
+            return acc;
+        }, []);
+        setHideRoles(allVisibleRoles);
+
         if (open) {
             setShow(true);
             setClosing(false);
-            const allHiddenRoles = selectedContragents.reduce((acc, c) => {
-                if (Array.isArray(c.hidden_for_roles)) {
-                    c.hidden_for_roles.forEach(role => {
-                        if (!acc.includes(role)) acc.push(role);
-                    });
-                }
-                return acc;
-            }, []);
-            setHideRoles(allHiddenRoles);
         } else if (show) {
             setClosing(true);
             const timer = setTimeout(() => {
@@ -87,10 +96,10 @@ const HideRoleModal = ({
                 >
                     &times;
                 </button>
-                <h3 className={styles.modalTitle}>{_t('hide_for_roles') || 'დამალვა როლებისთვის'}</h3>
+                <h3 className={styles.modalTitle}>{_t('manage_role_visibility') || 'როლების მართვა'}</h3>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.modalFormGroup}>
-                        <label style={{ marginBottom: '15px' }}>{_t('select_roles_to_hide') || 'აირჩიეთ როლები, ვისთვისაც დამალავთ'}</label>
+                        <label style={{ marginBottom: '15px' }}>{_t('select_roles_to_show') || 'აირჩიეთ როლები, ვისაც ექნება ნახვის უფლება'}</label>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {roleOptions.map(opt => {
                                 const checked = hideRoles.includes(opt.value);
@@ -139,7 +148,7 @@ const HideRoleModal = ({
                                                 className={role.allowViewBtn}
                                                 onClick={() => handleAllowRole(opt.value)}
                                             >
-                                                {_t('allow_view') || 'ნებართვა ნახვაზე'}
+                                                {_t('remove_view') || 'მოხსნა ნახვაზე'}
                                             </button>
                                         )}
                                     </label>

@@ -11,6 +11,8 @@ class ContragentController extends Controller
     public function index(Request $request)
     {
         $bank = $request->input('bank');
+        $user = $request->user();
+        $role = $user ? $user->role : null;
 
         $page = (int) $request->query('page', 1);
         $pageSize = (int) $request->query('pageSize', 25);
@@ -32,6 +34,10 @@ class ContragentController extends Controller
         }
         if ($identification_code) {
             $query->where('identification_code', 'like', '%' . $identification_code . '%');
+        }
+
+        if ($role && $role !== 'super_admin') {
+            $query->whereJsonContains('visible_for_roles', $role);
         }
 
         $total = $query->count();
@@ -60,8 +66,12 @@ class ContragentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identification_code' => 'required|string|max:255',
+            'visible_for_roles' => 'nullable|array'
         ]);
         $validated['bank_id'] = $bankId;
+        if (!isset($validated['visible_for_roles'])) {
+            $validated['visible_for_roles'] = [];
+        }
 
         $contragent = Contragent::create($validated);
         return response()->json($contragent, 201);
@@ -83,8 +93,9 @@ class ContragentController extends Controller
             return response()->json(['message' => 'Contragent not found'], 404);
         }
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'identification_code' => 'required|string|max:255',
+            'name' => 'sometimes|string|max:255',
+            'identification_code' => 'sometimes|string|max:255',
+            'visible_for_roles' => 'nullable|array'
         ]);
         $contragent->update($validated);
         return response()->json($contragent);
@@ -98,5 +109,36 @@ class ContragentController extends Controller
         }
         $contragent->delete();
         return response()->json(['message' => 'Deleted']);
+    }
+
+    public function batchUpdateRoles(Request $request)
+    {
+        $input = $request->only(['ids', 'visible_for_roles']);
+        $input['ids'] = array_values(is_array($input['ids']) ? $input['ids'] : []);
+        $input['visible_for_roles'] = array_values(is_array($input['visible_for_roles']) ? $input['visible_for_roles'] : []);
+
+        $validated = validator($input, [
+            'ids' => 'required|array',
+            'visible_for_roles' => 'nullable|array'
+        ])->validate();
+
+        $existingContragents = Contragent::whereIn('id', $validated['ids'])->get();
+        $existingIds = $existingContragents->pluck('id')->toArray();
+        $missingIds = array_diff($validated['ids'], $existingIds);
+
+        if (empty($existingIds)) {
+            return response()->json(['message' => 'Contragent not found'], 404);
+        }
+
+        foreach ($existingContragents as $contragent) {
+            $contragent->visible_for_roles = $validated['visible_for_roles'];
+            $contragent->save();
+        }
+
+        return response()->json([
+            'message' => 'Updated',
+            'updated_ids' => $existingIds,
+            'missing_ids' => array_values($missingIds)
+        ]);
     }
 }

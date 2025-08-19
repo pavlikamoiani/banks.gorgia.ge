@@ -26,10 +26,12 @@ const resources = {
       "transactions_by_day": "Transactions by Day",
       "loading_data": "Loading data...",
 
-      // Hide roles
-      "hide_for_roles": "Hide for roles",
+      // Visibility
+      "manage_role_visibility": "Manage Role Visibility",
       "select_roles_to_hide": "Select roles to hide for",
       "allow_view": "Allow view",
+      "select_roles_to_show": "Select roles to show for",
+      "remove_view": "Remove view",
 
       // Table users
       "users_title": "Users",
@@ -134,10 +136,12 @@ const resources = {
       "transactions_by_day": "Транзакции по дням",
       "loading_data": "Загрузка данных...",
 
-      // Hide roles
-      "hide_for_roles": "Скрыть для ролей",
+      // Visibility
+      "manage_role_visibility": "Управление видимостью ролей",
       "select_roles_to_hide": "Выберите роли для скрытия",
       "allow_view": "Разрешить просмотр",
+      "select_roles_to_show": "Выберите роли для отображения",
+      "remove_view": "Удалить просмотр",
 
       // Table users
       "users_title": "Пользователи",
@@ -241,10 +245,12 @@ const resources = {
       "transactions_by_day": "დღის ტრანზაქციები",
       "loading_data": "მონაცემების ჩატვირთვა...",
 
-      // Hide roles
-      "hide_for_roles": "მომხმარებლის როლის დამალვა",
+      // Visibility
+      "manage_role_visibility": "მომხმარებლის როლის მართვა",
       "select_roles_to_hide": "აირჩიეთ როლიები, რომლებსაც უნდა დაემალოს",
       "allow_view": "დაშვება ნახვისთვის",
+      "select_roles_to_show": "აირჩიეთ როლები, ვისაც ექნება ნახვის უფლება",
+      "remove_view": "ნახვის უფლების გაუქმება",
 
       // Table users
       "users_title": "მომხმარებლები",
