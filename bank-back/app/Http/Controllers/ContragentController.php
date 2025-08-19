@@ -58,6 +58,38 @@ class ContragentController extends Controller
         ]);
     }
 
+    public function getAllIds(Request $request)
+    {
+        $bank = $request->input('bank');
+        $user = $request->user();
+        $role = $user ? $user->role : null;
+
+        $name = $request->query('name');
+        $identification_code = $request->query('identification_code');
+
+        $query = Contragent::query()->select('id');
+
+        if ($bank === 'anta') {
+            $query->where('bank_id', 2);
+        } elseif ($bank === 'gorgia') {
+            $query->where('bank_id', 1);
+        }
+
+        if ($name) {
+            $query->where('name', 'like', '%' . $name . '%');
+        }
+        if ($identification_code) {
+            $query->where('identification_code', 'like', '%' . $identification_code . '%');
+        }
+
+        if ($role && $role !== 'super_admin') {
+            $query->whereJsonContains('visible_for_roles', $role);
+        }
+
+        $ids = $query->pluck('id')->toArray();
+        return response()->json($ids);
+    }
+
     public function store(Request $request)
     {
         $user = $request->user();

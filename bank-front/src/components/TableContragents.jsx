@@ -39,6 +39,9 @@ const TableContragents = () => {
 	const pageSizeDropdownRef = useRef(null);
 	const user = useSelector(state => state.user.user);
 	const [selectedIds, setSelectedIds] = useState([]);
+	const [allContragentIds, setAllContragentIds] = useState([]);
+	const [selectAllChecked, setSelectAllChecked] = useState(false);
+	const [totalContragents, setTotalContragents] = useState(0);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState(null);
 	const [deleteError, setDeleteError] = useState('');
@@ -59,6 +62,23 @@ const TableContragents = () => {
 		return 'gorgia';
 	};
 
+	const loadAllContragentIds = async () => {
+		try {
+			const params = {
+				bank: getCurrentBank(),
+				getAllIds: true
+			};
+
+			const response = await defaultInstance.get('/contragents/all-ids', { params });
+			if (response.data && Array.isArray(response.data)) {
+				setAllContragentIds(response.data);
+				setTotalContragents(response.data.length);
+			}
+		} catch (err) {
+			console.error("Error loading all contragent IDs:", err);
+		}
+	};
+
 	const loadContragents = async (filterParams = {}) => {
 		setLoading(true);
 		try {
@@ -75,6 +95,14 @@ const TableContragents = () => {
 				setContragents(Array.isArray(response.data.data) ? response.data.data : []);
 				setPagination(response.data.pagination);
 				setPage(response.data.pagination.page);
+				setTotalContragents(response.data.pagination.total);
+
+				// Check if all contragents are selected
+				if (selectedIds.length > 0 && selectedIds.length === response.data.pagination.total) {
+					setSelectAllChecked(true);
+				} else {
+					setSelectAllChecked(false);
+				}
 			} else {
 				setContragents(Array.isArray(response.data) ? response.data : []);
 			}
@@ -88,6 +116,7 @@ const TableContragents = () => {
 
 	useEffect(() => {
 		loadContragents(filters);
+		loadAllContragentIds();
 		// eslint-disable-next-line
 	}, [filters, pageSize]);
 
@@ -122,6 +151,8 @@ const TableContragents = () => {
 			});
 			handleCloseModal();
 			loadContragents(filters);
+			loadAllContragentIds();
+			// eslint-disable-next-line
 		} catch (err) {
 			setError('შეცდომა დამატებისას');
 		}
@@ -159,6 +190,7 @@ const TableContragents = () => {
 			});
 			handleCloseEditModal();
 			loadContragents(filters);
+			// eslint-disable-next-line
 		} catch (err) {
 			setEditError(t('error_editing'));
 		}
@@ -176,6 +208,9 @@ const TableContragents = () => {
 			setDeleteModalOpen(false);
 			setDeleteId(null);
 			loadContragents(filters);
+			loadAllContragentIds();
+			setSelectedIds(prev => prev.filter(id => id !== deleteId));
+			// eslint-disable-next-line
 		} catch (err) {
 			setDeleteError(t('error_deleting'));
 		}
@@ -187,25 +222,50 @@ const TableContragents = () => {
 	const handleFilterReset = () => {
 		setFilterDrafts({ name: '', identification_code: '' });
 		setFilters({ name: '', identification_code: '' });
-		loadContragents({ name: '', identification_code: '', bank: getCurrentBank() }); // <-- ensure bank is passed
+		loadContragents({ name: '', identification_code: '', bank: getCurrentBank() });
 	};
 	const handleFilterApply = () => {
 		setFilters({ ...filterDrafts });
 		setPage(1);
-		loadContragents({ ...filterDrafts, page: 1, bank: getCurrentBank() }); // <-- ensure bank is passed
+		loadContragents({ ...filterDrafts, page: 1, bank: getCurrentBank() });
 	};
 
-	const handleSelectAll = (e) => {
-		if (selectedIds.length === contragents.length) {
+	const handleSelectAll = async (e) => {
+		if (selectAllChecked) {
 			setSelectedIds([]);
+			setSelectAllChecked(false);
 		} else {
-			setSelectedIds(contragents.map(row => row.id));
+			try {
+				const params = {
+					bank: getCurrentBank(),
+					getAllIds: true,
+					...filters
+				};
+				const response = await defaultInstance.get('/contragents/all-ids', { params });
+				if (response.data && Array.isArray(response.data)) {
+					setSelectedIds(response.data);
+					setSelectAllChecked(true);
+				}
+			} catch (err) {
+				console.error("Error selecting all contragents:", err);
+			}
 		}
 	};
+
 	const handleSelectOne = (id) => {
-		setSelectedIds(ids =>
-			ids.includes(id) ? ids.filter(_id => _id !== id) : [...ids, id]
-		);
+		setSelectedIds(ids => {
+			const newIds = ids.includes(id)
+				? ids.filter(_id => _id !== id)
+				: [...ids, id];
+
+			if (newIds.length === totalContragents) {
+				setSelectAllChecked(true);
+			} else {
+				setSelectAllChecked(false);
+			}
+
+			return newIds;
+		});
 	};
 
 	const handleOpenHideRoleModal = async (contragentsToEdit) => {
@@ -225,6 +285,7 @@ const TableContragents = () => {
 		setRoleUpdateLoading(true);
 		setRoleUpdateError('');
 		try {
+			// eslint-disable-next-line
 			const ids = selectedContragentForRole.map(c => c.id);
 			await defaultInstance.put('/contragents/batch-roles', {
 				ids: selectedIds,
@@ -233,6 +294,7 @@ const TableContragents = () => {
 			await loadContragents(filters);
 			setHideRoleModalOpen(false);
 			setSelectedContragentForRole(null);
+			// eslint-disable-next-line
 		} catch (err) {
 			setRoleUpdateError('შეცდომა როლების განახლებაში');
 		} finally {
@@ -248,12 +310,41 @@ const TableContragents = () => {
 					<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 						<input
 							type="checkbox"
-							checked={selectedIds.length === contragents.length && contragents.length > 0}
+							checked={selectAllChecked}
 							onChange={handleSelectAll}
 							aria-label={t('select_all')}
+							style={{
+								width: 18,
+								height: 18,
+								accentColor: "#0173b1",
+								cursor: "pointer",
+								boxShadow: selectAllChecked ? "0 0 0 2px #0173b1" : "none",
+								border: "2px solid #0173b1",
+								borderRadius: 4,
+								outline: "none",
+								transition: "box-shadow 0.2s"
+							}}
 						/>
+						<span
+							style={{
+								fontWeight: 'bold',
+								color: selectAllChecked ? '#0173b1' : '#fff',
+								background: selectAllChecked ? '#e6f4fa' : 'transparent',
+								borderRadius: 4,
+								padding: "2px 8px",
+								fontSize: 13,
+								transition: "background 0.2s"
+							}}
+						>
+							{t('select_all')}
+						</span>
 						{selectedIds.length > 0 && (
-							<span style={{ fontWeight: 'bold', color: '#0173b1' }}>
+							<span style={{
+								fontWeight: 'bold',
+								color: '#0173b1',
+								fontSize: 13,
+								marginLeft: 4
+							}}>
 								{selectedIds.length} {t('selected')}
 							</span>
 						)}
@@ -265,9 +356,18 @@ const TableContragents = () => {
 						checked={selectedIds.includes(row.id)}
 						onChange={() => handleSelectOne(row.id)}
 						aria-label={t('select')}
+						style={{
+							width: 18,
+							height: 18,
+							accentColor: "#0173b1",
+							cursor: "pointer",
+							border: "2px solid #0173b1",
+							borderRadius: 4,
+							outline: "none"
+						}}
 					/>
 				),
-				width: 32
+				width: 60
 			}
 		] : []),
 		{ key: 'name', label: t('title') },
@@ -297,16 +397,6 @@ const TableContragents = () => {
 						>
 							<FontAwesomeIcon icon={faTrash} color="#fff" />
 						</button>
-						{user.role === 'super_admin' && (
-							<button
-								className="icon-btn"
-								style={{ background: '#0173b1', marginLeft: 4 }}
-								onClick={() => handleOpenHideRoleModal(row)}
-								title={t('manage_role_visibility') || 'როლების მართვა'}
-							>
-								<FontAwesomeIcon icon={faFilter} color="#fff" />
-							</button>
-						)}
 					</>
 				)
 			}
@@ -377,7 +467,6 @@ const TableContragents = () => {
 					</button>
 				</div>
 			</div>
-			{/* Show button if multiple selected */}
 			{user && user.role === 'super_admin' && selectedIds.length > 0 && (
 				<div style={{ margin: '10px 0' }}>
 					<button

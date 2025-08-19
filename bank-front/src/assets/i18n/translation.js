@@ -65,6 +65,7 @@ const resources = {
       "search_by_title": "Search by title",
       "search_by_code": "Search by code",
       "no_contragents_found": "No contragents found",
+      "select_all": "Select All",
 
       // table statement
       "contragent": "Contragent",
@@ -175,6 +176,7 @@ const resources = {
       "search_by_title": "Поиск по названию",
       "search_by_code": "Поиск по коду",
       "no_contragents_found": "Контрагенты не найдены",
+      "select_all": "Выбрать все",
 
       // table statement
       "contragent": "Контрагент",
@@ -285,6 +287,7 @@ const resources = {
       "search_by_title": "ძებნა დასახელებით",
       "search_by_code": "ძებნა კოდით",
       "no_contragents_found": "კონტრაგენტები ვერ მოიძებნა",
+      "select_all": "ყველას არჩევა",
 
       // table statement
       "contragent": "კონტრაგენტი",
