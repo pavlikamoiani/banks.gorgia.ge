@@ -17,8 +17,8 @@ class GorgiaTbcCommand extends Command
     {
         $bankNameId = 1;
         $repository = new TransactionRepository($bankNameId);
-        $from = Carbon::parse('2025-08-05')->startOfDay();
-        $to = Carbon::parse('2025-08-05')->endOfDay();
+        $from = Carbon::now()->startOfDay();
+        $to = Carbon::now()->endOfDay();
         $repository->setPeriod($from, $to);
 
         $page = 0;
