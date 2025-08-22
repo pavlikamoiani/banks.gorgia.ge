@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -108,12 +108,12 @@ const TableStatement = () => {
 	const handleAmountClick = (row, event) => {
 		event.stopPropagation();
 		setSelectedTransaction(row);
-		setModalOpen(true); // <-- open modal instead of popup
+		setModalOpen(true);
 	};
 
 	const closePopup = () => {
 		setSelectedTransaction(null);
-		setModalOpen(false); // <-- close modal
+		setModalOpen(false);
 	};
 
 	const columns = useMemo(() => {
@@ -204,8 +204,8 @@ const TableStatement = () => {
 
 	const splitColumns = useMemo(() => [
 		{
-			key: 'bank',
-			label: 'დანიშნული ბანკი',
+			key: 'contragent',
+			label: t('contragent') || 'Contragent',
 			render: (value, row) => (
 				<div>
 					{value}
@@ -251,7 +251,7 @@ const TableStatement = () => {
 				);
 			}
 		}
-	], []);
+	], [t]);
 
 	const [filterOpen, setFilterOpen] = useState(false);
 
@@ -649,6 +649,9 @@ const TableStatement = () => {
 	const leftTableRef = useRef(null);
 	const rightTableRef = useRef(null);
 
+	const leftScrollPosRef = useRef(0);
+	const rightScrollPosRef = useRef(0);
+
 	const loadSplitData = async (
 		filters = {},
 		leftPage = 1,
@@ -664,6 +667,11 @@ const TableStatement = () => {
 			const endpoint = getEndpoint();
 			const leftParams = { ...filters, transfersOnly: true, page: leftPage, pageSize, ...leftExtra };
 			const rightParams = { ...filters, transfersOnly: false, page: rightPage, pageSize, ...rightExtra };
+
+			if (append) {
+				if (leftTableRef.current) leftScrollPosRef.current = leftTableRef.current.scrollTop;
+				if (rightTableRef.current) rightScrollPosRef.current = rightTableRef.current.scrollTop;
+			}
 
 			const [leftResp, rightResp] = await Promise.all([
 				defaultInstance.get(endpoint, { params: leftParams }),
@@ -794,6 +802,28 @@ const TableStatement = () => {
 		loadDbData({ ...filters, sortKey: newSortConfig.key, sortDirection: newSortConfig.direction, page: 1 });
 		setPage(1);
 	};
+
+	useLayoutEffect(() => {
+		if (
+			splitMode &&
+			leftTableRef.current &&
+			leftScrollPosRef.current &&
+			!leftLoading
+		) {
+			leftTableRef.current.scrollTop = leftScrollPosRef.current;
+		}
+	}, [leftData, leftLoading, splitMode]);
+
+	useLayoutEffect(() => {
+		if (
+			splitMode &&
+			rightTableRef.current &&
+			rightScrollPosRef.current &&
+			!rightLoading
+		) {
+			rightTableRef.current.scrollTop = rightScrollPosRef.current;
+		}
+	}, [rightData, rightLoading, splitMode]);
 
 	return (
 		<div className="table-accounts-container" onClick={closePopup}>

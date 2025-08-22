@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import SortableTable from './SortableTable';
 import tableStatementStyles from '../assets/css/TableStatement.module.css';
 import { FaSearch } from 'react-icons/fa';
+import { IoMdSync } from "react-icons/io";
 
 const SplitStatementTable = ({
     t,
@@ -70,14 +71,28 @@ const SplitStatementTable = ({
                         if (row._isLeft) {
                             if (isExchange) {
                                 cellContent = (
-                                    <span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5, fontWeight: "bold" }}>
+                                        <IoMdSync fontSize={20} /> {value}
+                                    </span>
+                                );
+                            } else {
+                                cellContent = (
+                                    <span style={{ color: 'red', display: 'flex', alignItems: 'center', fontWeight: "bold" }}>
+                                        - {value}
+                                    </span>
+                                );
+                            }
+                        } else if (row._isLeft === false) {
+                            if (isExchange) {
+                                cellContent = (
+                                    <span style={{ color: '#0173b1', display: 'flex', alignItems: 'center', gap: 5, fontWeight: "bold" }}>
                                         {value}
                                     </span>
                                 );
                             } else {
                                 cellContent = (
-                                    <span style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
-                                        - {value}
+                                    <span style={{ color: 'green', display: 'flex', alignItems: 'center', fontWeight: "bold" }}>
+                                        + {value}
                                     </span>
                                 );
                             }
@@ -85,11 +100,7 @@ const SplitStatementTable = ({
                             cellContent = value;
                         }
                         return (
-                            <span
-                                style={{ cursor: 'pointer' }}
-                                onClick={e => handleAmountClick(row, e)}
-                                title="დეტალური ინფორმაცია"
-                            >
+                            <span style={{ fontWeight: "bold", color: 'green' }}>
                                 {cellContent}
                             </span>
                         );
@@ -98,7 +109,7 @@ const SplitStatementTable = ({
             }
             return col;
         });
-    }, [splitColumns, handleAmountClick]);
+    }, [splitColumns]);
 
     const [localLeftContragent, setLocalLeftContragent] = useState(leftSearchContragent);
     const [localLeftAmount, setLocalLeftAmount] = useState(leftSearchAmount);
@@ -153,6 +164,11 @@ const SplitStatementTable = ({
         }
     };
 
+    const handleRowClick = (row, e) => {
+        e.stopPropagation();
+        handleAmountClick(row, e);
+    };
+
     return (
         <div className={tableStatementStyles.splitTableContainer}>
             <div className={tableStatementStyles.splitTableSection}>
@@ -200,6 +216,7 @@ const SplitStatementTable = ({
                         emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
                         sortConfig={sortConfig}
                         setSortConfig={setSortConfig}
+                        onRowClick={handleRowClick}
                     />
                     {rightLoading && (
                         <div className={tableStatementStyles.infiniteLoader}>
@@ -253,6 +270,7 @@ const SplitStatementTable = ({
                         emptyText={t('no_statement_found') || "ამონაწერი არ მოიძებნა"}
                         sortConfig={sortConfig}
                         setSortConfig={setSortConfig}
+                        onRowClick={handleRowClick}
                     />
                     {leftLoading && (
                         <div className={tableStatementStyles.infiniteLoader}>

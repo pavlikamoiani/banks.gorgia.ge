@@ -8,7 +8,8 @@ const SortableTable = ({
     emptyText,
     sortConfig,
     setSortConfig,
-    onSortChange // <-- new prop
+    onSortChange,
+    onRowClick // <-- add this prop
 }) => {
     const { t } = useTranslation();
 
@@ -62,7 +63,11 @@ const SortableTable = ({
                     </tr>
                 ) : data.length > 0 ? (
                     data.map((row, idx) => (
-                        <tr key={row.id || idx}>
+                        <tr
+                            key={row.id || idx}
+                            onClick={e => onRowClick && onRowClick(row, e)}
+                            style={{ cursor: onRowClick ? 'pointer' : undefined }}
+                        >
                             {columns.map(col => (
                                 <td key={col.key}>
                                     {col.render
