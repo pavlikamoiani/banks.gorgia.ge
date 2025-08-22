@@ -17,8 +17,8 @@ class GorgiaTbcCommand extends Command
     {
         $bankNameId = 1;
         $repository = new TransactionRepository($bankNameId);
-        $from = Carbon::today();
-        $to = Carbon::today()->endOfDay();
+        $from = Carbon::parse('2025-08-05')->startOfDay();
+        $to = Carbon::parse('2025-08-05')->endOfDay();
         $repository->setPeriod($from, $to);
 
         $page = 0;
@@ -57,7 +57,8 @@ class GorgiaTbcCommand extends Command
                 if (
                     isset($transactionData->partnerTaxCode, $transactionData->partnerName) &&
                     trim($transactionData->partnerTaxCode) !== '' &&
-                    trim($transactionData->partnerName) !== ''
+                    trim($transactionData->partnerName) !== '' &&
+                    (strpos($transactionData->description, 'თვის ხელფასი') === false)
                 ) {
                     Contragent::findOrCreateByInnAndName(
                         trim($transactionData->partnerTaxCode),

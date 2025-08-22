@@ -22,7 +22,7 @@ class TransactionController extends Controller
         $offset = ($page - 1) * $pageSize;
 
         if (!$request->filled('startDate') && !$request->filled('endDate')) {
-            $query = Transaction::query()->whereBetween('transaction_date', [now()->subDays(7), now()]);
+            $query = Transaction::query();
         } else {
             $query = Transaction::query();
         }
@@ -117,21 +117,17 @@ class TransactionController extends Controller
             $query->where('sender_name', 'like', '%შპს გორგია%');
         }
 
-
-
-        // if ($request->query('transfersOnly') === 'false') {
-        //     $query->where('sender_name', 'not like', '%შპს გორგია%');
-        // }
+        // Always exclude transactions with "თვის ხელფასი" in description
 
         // $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
         //     ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
         //     ->addSelect('banks.name as bank_name');
 
-        // Only show transactions for contragents visible for user's role
         if ($user && $user->role !== 'super_admin') {
             $visibleContragents = \App\Models\Contragent::whereJsonContains('visible_for_roles', $user->role)
                 ->pluck('identification_code')->toArray();
             $query->whereIn('contragent_id', $visibleContragents);
+            $query->where('description', 'not like', '%თვის ხელფასი%');
         }
 
         $total = $query->count();
@@ -140,7 +136,6 @@ class TransactionController extends Controller
         $sortDirection = $request->query('sortDirection', 'desc');
 
         if ($sortKey) {
-            // Map frontend keys to DB columns if needed
             $sortMap = [
                 'contragent' => 'sender_name',
                 'bank' => 'bank_type',

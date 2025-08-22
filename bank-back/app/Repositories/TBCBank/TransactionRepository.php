@@ -126,6 +126,19 @@ class TransactionRepository extends BaseRepository
             return;
         }
 
+        if (
+            isset($transactionData->partnerTaxCode, $transactionData->partnerName) &&
+            trim($transactionData->partnerTaxCode) !== '' &&
+            trim($transactionData->partnerName) !== '' &&
+            (strpos($transactionData->description, 'თვის ხელფასი') === false)
+        ) {
+            \App\Models\Contragent::findOrCreateByInnAndName(
+                trim($transactionData->partnerTaxCode),
+                trim($transactionData->partnerName),
+                $bank ? $bank->id : null
+            );
+        }
+
         $transaction = new Transaction();
         $transaction->contragent_id = $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode ?? null;
         $bank = Bank::where('bank_code', 'TBC')->first();
