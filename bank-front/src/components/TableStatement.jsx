@@ -294,7 +294,15 @@ const TableStatement = () => {
 			if (response.data && response.data.pagination) {
 				const formattedData = responseDataArray.map((item, idx) => ({
 					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
-					contragent: item.sender_name || 'ტერმინალით გადახდა',
+					contragent: (
+						item.sender_name &&
+						(
+							item.sender_name.includes('TBCBank_ის') ||
+							item.sender_name.includes('Wallet/domestic/')
+						)
+					)
+						? 'ტერმინალით გადახდა'
+						: (item.sender_name || 'ტერმინალით გადახდა'),
 					bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
 					amount: (item.amount ?? 0) + ' ₾',
 					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
@@ -313,7 +321,15 @@ const TableStatement = () => {
 				if (Array.isArray(response.data)) {
 					combinedRows = response.data.map((item, idx) => ({
 						id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
-						contragent: item.sender_name || 'ტერმინალით გადახდა',
+						contragent: (
+							item.sender_name &&
+							(
+								item.sender_name.includes('TBCBank_ის') ||
+								item.sender_name.includes('Wallet/domestic/')
+							)
+						)
+							? 'ტერმინალით გადახდა'
+							: (item.sender_name || 'ტერმინალით გადახდა'),
 						bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
 						amount: (item.amount ?? 0) + ' ₾',
 						transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',
@@ -369,7 +385,15 @@ const TableStatement = () => {
 			const resp = await defaultInstance.get(endpoint, { params });
 			const rows = (resp.data?.data || []).map((item, idx) => ({
 				id: item.Id || item.DocKey || idx + 1,
-				contragent: item?.Sender?.Name || 'ტერმინალით გადახდა',
+				contragent: (
+					item?.Sender?.Name &&
+					(
+						item?.Sender?.Name.includes('TBCBank_ის') ||
+						item?.Sender?.Name.includes('Wallet/domestic/')
+					)
+				)
+					? 'ტერმინალით გადახდა'
+					: (item?.Sender?.Name || 'ტერმინალით გადახდა'),
 				bank: item?.Sender?.BankName || 'სს "საქართველოს ბანკი"',
 				bank_id: currentBank === 'anta' ? 2 : 1,
 				amount: (item.Amount ?? 0) + ' ₾',
@@ -682,7 +706,15 @@ const TableStatement = () => {
 				const arr = Array.isArray(response.data?.data) ? response.data.data : [];
 				return arr.map((item, idx) => ({
 					id: `${item.bank_id === 1 ? 'tbc' : 'bog'}-${item.id || idx + 1}`,
-					contragent: item.sender_name || 'ტერმინალით გადახდა',
+					contragent: (
+						item.sender_name &&
+						(
+							item.sender_name.includes('TBCBank_ის') ||
+							item.sender_name.includes('Wallet/domestic/')
+						)
+					)
+						? 'ტერმინალით გადახდა'
+						: (item.sender_name || 'ტერმინალით გადახდა'),
 					bank: BANK_TYPE_MAP[item.bank_type] || BANK_TYPE_MAP[item.bank_id] || '-',
 					amount: (item.amount ?? 0) + ' ₾',
 					transferDate: item.transaction_date ? item.transaction_date.slice(0, 10) : '-',

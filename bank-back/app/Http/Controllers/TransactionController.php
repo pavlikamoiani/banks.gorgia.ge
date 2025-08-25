@@ -117,16 +117,34 @@ class TransactionController extends Controller
             $query->where('sender_name', 'like', '%შპს გორგია%');
         }
 
-        // Always exclude transactions with "თვის ხელფასი" in description
-
-        // $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name")
-        //     ->leftJoin('banks', 'transactions.bank_id', '=', 'banks.id')
-        //     ->addSelect('banks.name as bank_name');
-
+        // Filter by role-based payment type visibility
         if ($user && $user->role !== 'super_admin') {
+            // Apply contragent visibility filtering
             $visibleContragents = \App\Models\Contragent::whereJsonContains('visible_for_roles', $user->role)
                 ->pluck('identification_code')->toArray();
-            $query->whereIn('contragent_id', $visibleContragents);
+
+            // Get role-based payment type visibility settings
+            $roleSettings = json_decode(optional(\App\Models\Setting::where('key', 'payment_type_visibility')->first())->value, true) ?? [];
+            $userVisiblePaymentTypes = $roleSettings[$user->role] ?? [];
+
+            // Base query that checks for visible contragents
+            $query->where(function ($q) use ($visibleContragents, $user, $userVisiblePaymentTypes) {
+                // Always include transactions for visible contragents
+                $q->whereIn('contragent_id', $visibleContragents);
+
+                // If terminal payments are visible for this role, include them too
+                if (in_array('terminal', $userVisiblePaymentTypes)) {
+                    $q->orWhere(function ($sq) {
+                        $sq->where(function ($innerQ) {
+                            $innerQ->where('sender_name', 'like', '%TBCBank_ის%')
+                                ->orWhere('sender_name', 'like', '%Wallet/domestic/%')
+                                ->orWhereNull('sender_name')
+                                ->orWhere('sender_name', '');
+                        });
+                    });
+                }
+            });
+
             $query->where('description', 'not like', '%თვის ხელფასი%');
         }
 
@@ -222,20 +240,43 @@ class TransactionController extends Controller
 
             $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
 
+            // Filter by role-based payment type visibility for today's activities as well
+            if ($user && $user->role !== 'super_admin') {
+                // Apply contragent visibility filtering
+                $visibleContragents = \App\Models\Contragent::whereJsonContains('visible_for_roles', $user->role)
+                    ->pluck('identification_code')->toArray();
+
+                // Get role-based payment type visibility settings
+                $roleSettings = json_decode(optional(\App\Models\Setting::where('key', 'payment_type_visibility')->first())->value, true) ?? [];
+                $userVisiblePaymentTypes = $roleSettings[$user->role] ?? [];
+
+                // Base query that checks for visible contragents
+                $query->where(function ($q) use ($visibleContragents, $user, $userVisiblePaymentTypes) {
+                    // Always include transactions for visible contragents
+                    $q->whereIn('contragent_id', $visibleContragents);
+
+                    // If terminal payments are visible for this role, include them too
+                    if (in_array('terminal', $userVisiblePaymentTypes)) {
+                        $q->orWhere(function ($sq) {
+                            $sq->where(function ($innerQ) {
+                                $innerQ->where('sender_name', 'like', '%TBCBank_ის%')
+                                    ->orWhere('sender_name', 'like', '%Wallet/domestic/%')
+                                    ->orWhereNull('sender_name')
+                                    ->orWhere('sender_name', '');
+                            });
+                        });
+                    }
+                });
+
+                $query->where('description', 'not like', '%თვის ხელფასი%');
+            }
+
             $total = $query->count();
 
             $data = $query->orderBy('transaction_date', 'desc')
                 ->limit($pageSize)
                 ->offset($offset)
                 ->get();
-
-            if ($user && $user->role !== 'super_admin') {
-                // $hiddenContragents = Contragent::whereJsonContains('hidden_for_roles', $user->role)
-                //     ->pluck('identification_code')->toArray();
-                // $data = $data->filter(function ($item) use ($hiddenContragents) {
-                //     return !in_array($item->contragent_id, $hiddenContragents);
-                // })->values();
-            }
 
             return response()->json([
                 'data' => $data,

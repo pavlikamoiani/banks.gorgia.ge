@@ -9,10 +9,13 @@ import defaultInstance from '../api/defaultInstance';
 import UserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import VisibilityPaymentTypeModal from './VisibilityPaymentTypeModal';
 
 import filterStyles from '../assets/css/filter.module.css';
 import TableFilter from './TableFilter';
 import { useSelector } from 'react-redux';
+import { LuUserPen } from "react-icons/lu";
+
 
 const TableUsers = () => {
 	const { t } = useTranslation();
@@ -40,6 +43,8 @@ const TableUsers = () => {
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState(null);
 	const [deleteError, setDeleteError] = useState('');
+	const [paymentTypeModalOpen, setPaymentTypeModalOpen] = useState(false);
+	const [selectedPaymentTypes, setSelectedPaymentTypes] = useState([]);
 
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [filters, setFilters] = useState({ name: '', email: '', role: '', bank: '' });
@@ -191,6 +196,29 @@ const TableUsers = () => {
 	const handleRoleSelect = (role) => {
 		setFilterDrafts(f => ({ ...f, role }));
 	};
+	const handleOpenPaymentTypeModal = async () => {
+		try {
+			const response = await defaultInstance.get('/settings/payment-type-visibility');
+			setSelectedPaymentTypes(response.data || {});
+			setPaymentTypeModalOpen(true);
+		} catch (error) {
+			console.error("Error loading payment type visibility settings:", error);
+			setSelectedPaymentTypes({});
+			setPaymentTypeModalOpen(true);
+		}
+	};
+	const handleClosePaymentTypeModal = () => setPaymentTypeModalOpen(false);
+	const handlePaymentTypeSubmit = async (types) => {
+		try {
+			await defaultInstance.post('/settings/payment-type-visibility', {
+				role_payment_types: types
+			});
+			setSelectedPaymentTypes(types);
+			setPaymentTypeModalOpen(false);
+		} catch (error) {
+			console.error("Error saving payment type visibility settings:", error);
+		}
+	};
 
 	const columns = [
 		{ key: 'name', label: t('name') },
@@ -244,6 +272,22 @@ const TableUsers = () => {
 			<div className="table-accounts-header">
 				<h2 className="table-heading">{t('users_title')}</h2>
 				<div style={{ display: 'flex', gap: 10, maxHeight: '40px', alignItems: 'center', justifyContent: 'center' }}>
+					<button
+						style={{
+							textAlign: "center",
+							textJustify: "center",
+							background: "#0173b1",
+							color: "#fff",
+							border: "none",
+							borderRadius: 6,
+							padding: "6.5px 12px",
+							cursor: "pointer",
+							fontWeight: 500,
+						}}
+						onClick={handleOpenPaymentTypeModal}
+					>
+						<LuUserPen fontSize={'23px'} />
+					</button>
 					<button
 						style={{
 							textAlign: "center",
@@ -338,6 +382,13 @@ const TableUsers = () => {
 				form={editForm}
 				onChange={handleEditChange}
 				error={editError}
+				t={t}
+			/>
+			<VisibilityPaymentTypeModal
+				open={paymentTypeModalOpen}
+				onClose={handleClosePaymentTypeModal}
+				selectedPaymentTypes={selectedPaymentTypes}
+				onSubmit={handlePaymentTypeSubmit}
 				t={t}
 			/>
 			<div className="table-wrapper">

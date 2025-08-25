@@ -24,6 +24,7 @@ class User extends Authenticatable
         'role',
         'department_id',
         'bank',
+        'visible_payment_types',
     ];
 
     /**
@@ -43,5 +44,6 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'visible_payment_types' => 'array',
     ];
 }

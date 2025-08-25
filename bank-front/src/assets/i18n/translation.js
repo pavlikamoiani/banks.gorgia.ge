@@ -56,6 +56,9 @@ const resources = {
       "no_data": "No data found",
       "delete_user_confirm": "Are you sure you want to delete this user?",
       "error_deleting": "Error deleting",
+      "manage_payment_type_visibility": "Manage Payment Type Visibility",
+      "select_payment_types_to_show": "Select Payment Types to Show",
+      "select_role_first": "Select Role First",
 
       // table contragents
       "add_contragent": "Add Contragents",
@@ -167,6 +170,9 @@ const resources = {
       "no_data": "Данные не найдены",
       "delete_user_confirm": "Вы уверены, что хотите удалить этого пользователя?",
       "error_deleting": "Ошибка при удалении",
+      "manage_payment_type_visibility": "Управление видимостью типов платежей",
+      "select_payment_types_to_show": "Выберите типы платежей для отображения",
+      "select_role_first": "Сначала выберите роль",
 
       // table contragents
       "add_contragent": "Добавить контрагента",
@@ -278,6 +284,10 @@ const resources = {
       "no_data": "მონაცემები არ მოიძებნა",
       "delete_user_confirm": "ნამდვილად გსურთ მომხმარებლის წაშლა?",
       "error_deleting": "შეცდომა წაშლისას",
+      "manage_payment_type_visibility": "გადახდის ტიპების ხილვადობის მართვა",
+      "select_payment_types_to_show": "აირჩიეთ გადახდის ტიპები, რომლებიც გამოჩნდება",
+      "select_role_first": "როლის არჩევა",
+
 
       // table contragents
       "add_contragent": "კონტრაგენტის დამატება",

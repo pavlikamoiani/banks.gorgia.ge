@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BOGStatementController;
 use App\Http\Controllers\TBCStatementController;
 use App\Http\Controllers\LiveStatementController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TBCPasswordController;
@@ -30,6 +31,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/contragents/{id}', [ContragentController::class, 'show']);
     Route::put('/contragents/{id}', [ContragentController::class, 'update']);
     Route::delete('/contragents/{id}', [ContragentController::class, 'destroy']);
+
+    // Settings
+    Route::get('/settings/payment-type-visibility', [SettingController::class, 'getPaymentTypeVisibility']);
+    Route::post('/settings/payment-type-visibility', [SettingController::class, 'updatePaymentTypeVisibility']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/users', [AuthController::class, 'store']);
