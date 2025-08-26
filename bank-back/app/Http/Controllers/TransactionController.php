@@ -67,7 +67,6 @@ class TransactionController extends Controller
             }
         }
 
-        // TBC specific filters
         if (!$bankCode && !$request->filled('bank')) {
             $tbcBank = Bank::where('bank_code', 'TBC')->first();
             if ($tbcBank) {
@@ -117,22 +116,16 @@ class TransactionController extends Controller
             $query->where('sender_name', 'like', '%შპს გორგია%');
         }
 
-        // Filter by role-based payment type visibility
         if ($user && $user->role !== 'super_admin') {
-            // Apply contragent visibility filtering
             $visibleContragents = \App\Models\Contragent::whereJsonContains('visible_for_roles', $user->role)
                 ->pluck('identification_code')->toArray();
 
-            // Get role-based payment type visibility settings
             $roleSettings = json_decode(optional(\App\Models\Setting::where('key', 'payment_type_visibility')->first())->value, true) ?? [];
             $userVisiblePaymentTypes = $roleSettings[$user->role] ?? [];
 
-            // Base query that checks for visible contragents
-            $query->where(function ($q) use ($visibleContragents, $user, $userVisiblePaymentTypes) {
-                // Always include transactions for visible contragents
+            $query->where(function ($q) use ($visibleContragents, $userVisiblePaymentTypes) {
                 $q->whereIn('contragent_id', $visibleContragents);
 
-                // If terminal payments are visible for this role, include them too
                 if (in_array('terminal', $userVisiblePaymentTypes)) {
                     $q->orWhere(function ($sq) {
                         $sq->where(function ($innerQ) {
@@ -140,6 +133,22 @@ class TransactionController extends Controller
                                 ->orWhere('sender_name', 'like', '%Wallet/domestic/%')
                                 ->orWhereNull('sender_name')
                                 ->orWhere('sender_name', '');
+                        });
+                    });
+                }
+
+                if (in_array('enrollments', $userVisiblePaymentTypes)) {
+                    $q->orWhere(function ($sq) {
+                        $sq->where(function ($innerQ) {
+                            $innerQ->where(function ($notTerminalQ) {
+                                $notTerminalQ
+                                    ->where(function ($subQ) {
+                                        $subQ->where('sender_name', 'not like', '%TBCBank_ის%')
+                                            ->where('sender_name', 'not like', '%Wallet/domestic/%')
+                                            ->whereRaw('(sender_name IS NOT NULL AND sender_name != "")')
+                                            ->where('sender_name', 'not like', '%შპს გორგია%');
+                                    });
+                            });
                         });
                     });
                 }
@@ -225,7 +234,6 @@ class TransactionController extends Controller
                 $query->where('description', 'like', '%' . $request->query('purpose') . '%');
             }
 
-            // Add filter for installments
             if ($request->query('installmentOnly') === 'true') {
                 $query->where(function ($q) {
                     $q->where('description', 'like', '%განვსაქონლის%')
@@ -233,29 +241,22 @@ class TransactionController extends Controller
                 });
             }
 
-            // Add filter for transfers
             if ($request->query('transfersOnly') === 'true') {
                 $query->where('sender_name', 'like', '%შპს გორგია%');
             }
 
             $query->selectRaw("*, REPLACE(sender_name, 'Wallet/domestic/', '') as sender_name");
 
-            // Filter by role-based payment type visibility for today's activities as well
             if ($user && $user->role !== 'super_admin') {
-                // Apply contragent visibility filtering
                 $visibleContragents = \App\Models\Contragent::whereJsonContains('visible_for_roles', $user->role)
                     ->pluck('identification_code')->toArray();
 
-                // Get role-based payment type visibility settings
                 $roleSettings = json_decode(optional(\App\Models\Setting::where('key', 'payment_type_visibility')->first())->value, true) ?? [];
                 $userVisiblePaymentTypes = $roleSettings[$user->role] ?? [];
 
-                // Base query that checks for visible contragents
                 $query->where(function ($q) use ($visibleContragents, $user, $userVisiblePaymentTypes) {
-                    // Always include transactions for visible contragents
                     $q->whereIn('contragent_id', $visibleContragents);
 
-                    // If terminal payments are visible for this role, include them too
                     if (in_array('terminal', $userVisiblePaymentTypes)) {
                         $q->orWhere(function ($sq) {
                             $sq->where(function ($innerQ) {

@@ -37,7 +37,13 @@ class ContragentController extends Controller
         }
 
         if ($role && $role !== 'super_admin') {
-            $query->whereJsonContains('visible_for_roles', $role);
+            $roleSettings = json_decode(optional(\App\Models\Setting::where('key', 'payment_type_visibility')->first())->value, true) ?? [];
+            $userVisiblePaymentTypes = $roleSettings[$role] ?? [];
+            if (!in_array('enrollments', $userVisiblePaymentTypes)) {
+                $query->whereJsonContains('visible_for_roles', $role);
+            } else {
+                $query->where('name', 'not like', '%შპს გორგია%');
+            }
         }
 
         $total = $query->count();

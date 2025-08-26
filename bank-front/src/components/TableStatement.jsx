@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -54,6 +55,7 @@ const TableStatement = () => {
 	const [pageSizeDropdownOpen, setPageSizeDropdownOpen] = useState(false);
 	const pageSizeDropdownRef = useRef(null);
 	const [expandedRows, setExpandedRows] = useState({});
+	const user = useSelector(state => state.user.user);
 
 	const [filters, setFilters] = useState({
 		contragent: '',
@@ -865,24 +867,26 @@ const TableStatement = () => {
 					{t('statement') || 'Statement'}
 				</h2>
 				<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-					<button
-						type="button"
-						style={{
-							background: "#fff",
-							border: "1.5px solid #0173b1",
-							borderRadius: "6px",
-							padding: "8px 12px",
-							display: "flex",
-							alignItems: "center",
-							cursor: "pointer",
-							color: "#0173b1"
-						}}
-						onClick={() => {
-							setSplitMode(prev => !prev);
-						}}
-					>
-						<FaTableColumns size={22} />
-					</button>
+					{user && user.role == 'super_admin' && (
+						<button
+							type="button"
+							style={{
+								background: "#fff",
+								border: "1.5px solid #0173b1",
+								borderRadius: "6px",
+								padding: "8px 12px",
+								display: "flex",
+								alignItems: "center",
+								cursor: "pointer",
+								color: "#0173b1"
+							}}
+							onClick={() => {
+								setSplitMode(prev => !prev);
+							}}
+						>
+							<FaTableColumns size={22} />
+						</button>
+					)}
 					{!liveMode ? (
 						<div className={tableStatementStyles.liveBankDropdownWrapper} ref={liveBankDropdownRef}>
 							<button className={tableStatementStyles.liveBtn}
