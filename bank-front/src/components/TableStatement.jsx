@@ -145,7 +145,7 @@ const TableStatement = () => {
 				render: (value, row) => {
 					// Remove all styles for main table
 					if (filters.transfersOnly) {
-						const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
+						const isExchange = ((row.purpose || row.description || '').includes('გაცვლითი ოპერაცია') || (row.purpose || row.description || '').includes('კონვერტაცია'));
 						if (isExchange) {
 							return (
 								<span>
@@ -222,7 +222,7 @@ const TableStatement = () => {
 			key: 'amount',
 			label: 'თანხა',
 			render: (value, row) => {
-				const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
+				const isExchange = ((row.purpose || row.description || '').includes('გაცვლითი ოპერაცია') || (row.purpose || row.description || '').includes('კონვერტაცია'));
 				let cellContent;
 				if (row._isLeft) {
 					if (isExchange) {
@@ -300,7 +300,8 @@ const TableStatement = () => {
 						item.sender_name &&
 						(
 							item.sender_name.includes('TBCBank_ის') ||
-							item.sender_name.includes('Wallet/domestic/')
+							item.sender_name.includes('Wallet/domestic/') ||
+							item.sender_name.includes('ECOM/POS')
 						)
 					)
 						? 'ტერმინალით გადახდა'
@@ -327,7 +328,8 @@ const TableStatement = () => {
 							item.sender_name &&
 							(
 								item.sender_name.includes('TBCBank_ის') ||
-								item.sender_name.includes('Wallet/domestic/')
+								item.sender_name.includes('Wallet/domestic/') ||
+								item.sender_name.includes('ECOM/POS')
 							)
 						)
 							? 'ტერმინალით გადახდა'
@@ -385,24 +387,24 @@ const TableStatement = () => {
 				endpoint = '/tbc/todayactivities';
 			}
 			const resp = await defaultInstance.get(endpoint, { params });
-			const rows = (resp.data?.data || []).map((item, idx) => ({
-				id: item.Id || item.DocKey || idx + 1,
-				contragent: (
-					item?.Sender?.Name &&
-					(
-						item?.Sender?.Name.includes('TBCBank_ის') ||
-						item?.Sender?.Name.includes('Wallet/domestic/')
-					)
-				)
-					? 'ტერმინალით გადახდა'
-					: (item?.Sender?.Name || 'ტერმინალით გადახდა'),
-				bank: item?.Sender?.BankName || 'სს "საქართველოს ბანკი"',
-				bank_id: currentBank === 'anta' ? 2 : 1,
-				amount: (item.Amount ?? 0) + ' ₾',
-				transferDate: item.PostDate ? item.PostDate.slice(0, 10) : '-',
-				purpose: item.EntryComment || item.EntryCommentEn || '-',
-				syncDate: item.syncDate || '-',
-			}));
+			const rows = (resp.data?.data || []).map((item, idx) => {
+				const contragentName =
+					item?.Sender?.Name ||
+					item?.Beneficiary?.Name ||
+					item.EntryComment ||
+					'ტერმინალით გადახდა';
+
+				return {
+					id: item.Id || item.DocKey || idx + 1,
+					contragent: contragentName,
+					bank: item?.Sender?.BankName || item?.Beneficiary?.BankName || 'სს "საქართველოს ბანკი"',
+					bank_id: currentBank === 'anta' ? 2 : 1,
+					amount: (item.Amount ?? 0) + ' ₾',
+					transferDate: item.PostDate ? item.PostDate.slice(0, 10) : '-',
+					purpose: item.EntryComment || item.EntryCommentEn || '-',
+					syncDate: item.syncDate || '-',
+				};
+			});
 			const interleavedRows = interleaveByBank(rows);
 			setData(interleavedRows);
 			setDbData(interleavedRows);
@@ -712,7 +714,8 @@ const TableStatement = () => {
 						item.sender_name &&
 						(
 							item.sender_name.includes('TBCBank_ის') ||
-							item.sender_name.includes('Wallet/domestic/')
+							item.sender_name.includes('Wallet/domestic/') ||
+							item.sender_name.includes('ECOM/POS')
 						)
 					)
 						? 'ტერმინალით გადახდა'

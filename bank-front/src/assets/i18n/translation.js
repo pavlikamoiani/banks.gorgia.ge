@@ -69,6 +69,7 @@ const resources = {
       "search_by_code": "Search by code",
       "no_contragents_found": "No contragents found",
       "select_all": "Select All",
+      "upload_excel": "Upload Excel",
 
       // table statement
       "contragent": "Contragent",
@@ -183,6 +184,7 @@ const resources = {
       "search_by_code": "Поиск по коду",
       "no_contragents_found": "Контрагенты не найдены",
       "select_all": "Выбрать все",
+      "upload_excel": "Загрузить Excel",
 
       // table statement
       "contragent": "Контрагент",
@@ -298,6 +300,7 @@ const resources = {
       "search_by_code": "ძებნა კოდით",
       "no_contragents_found": "კონტრაგენტები ვერ მოიძებნა",
       "select_all": "ყველას არჩევა",
+      "upload_excel": "Excel-ის ატვირთვა",
 
       // table statement
       "contragent": "კონტრაგენტი",

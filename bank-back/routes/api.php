@@ -56,6 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // All Gorgia Transactions
     Route::get('/gorgia-transactions', [TransactionController::class, 'index']);
 
+    Route::post('/contragents/upload-excel', [ContragentController::class, 'uploadExcel']);
+
     // Live Statement
 });
 

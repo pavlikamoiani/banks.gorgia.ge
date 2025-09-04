@@ -131,6 +131,7 @@ class TransactionController extends Controller
                         $sq->where(function ($innerQ) {
                             $innerQ->where('sender_name', 'like', '%TBCBank_ის%')
                                 ->orWhere('sender_name', 'like', '%Wallet/domestic/%')
+                                ->orWhere('sender_name', 'like', '%ECOM/POS%')
                                 ->orWhereNull('sender_name')
                                 ->orWhere('sender_name', '');
                         });
@@ -145,8 +146,26 @@ class TransactionController extends Controller
                                     ->where(function ($subQ) {
                                         $subQ->where('sender_name', 'not like', '%TBCBank_ის%')
                                             ->where('sender_name', 'not like', '%Wallet/domestic/%')
+                                            ->where('sender_name', 'not like', '%ECOM/POS%')
                                             ->whereRaw('(sender_name IS NOT NULL AND sender_name != "")')
                                             ->where('sender_name', 'not like', '%შპს გორგია%');
+                                    });
+                            });
+                        });
+                    });
+                }
+
+                if (in_array('transfers', $userVisiblePaymentTypes)) {
+                    $q->orWhere(function ($sq) {
+                        $sq->where(function ($innerQ) {
+                            $innerQ->where(function ($notTerminalQ) {
+                                $notTerminalQ
+                                    ->where(function ($subQ) {
+                                        $subQ->where('sender_name', 'not like', '%TBCBank_ის%')
+                                            ->where('sender_name', 'not like', '%Wallet/domestic/%')
+                                            ->where('sender_name', 'not like', '%ECOM/POS%')
+                                            ->whereRaw('(sender_name IS NOT NULL AND sender_name != "")')
+                                            ->where('sender_name', 'like', '%შპს გორგია%');
                                     });
                             });
                         });
@@ -262,6 +281,7 @@ class TransactionController extends Controller
                             $sq->where(function ($innerQ) {
                                 $innerQ->where('sender_name', 'like', '%TBCBank_ის%')
                                     ->orWhere('sender_name', 'like', '%Wallet/domestic/%')
+                                    ->orWhere('sender_name', 'like', '%ECOM/POS%')
                                     ->orWhereNull('sender_name')
                                     ->orWhere('sender_name', '');
                             });

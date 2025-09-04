@@ -66,7 +66,7 @@ const SplitStatementTable = ({
                 return {
                     ...col,
                     render: (value, row) => {
-                        const isExchange = (row.purpose || row.description || '').includes('გაცვლითი ოპერაცია');
+                        const isExchange = ((row.purpose || row.description || '').includes('გაცვლითი ოპერაცია') || (row.purpose || row.description || '').includes('კონვერტაცია'));
                         let cellContent;
                         if (row._isLeft) {
                             if (isExchange) {

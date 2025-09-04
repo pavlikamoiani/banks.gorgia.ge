@@ -54,6 +54,8 @@ class TBCStatementController extends Controller
                     $partnerName = substr($partnerName, strlen('Wallet/domestic/'));
                 } elseif (strpos($partnerName, 'TBCBank_ის') === 0) {
                     $partnerName = substr($partnerName, strlen('TBCBank_ის'));
+                } elseif (strpos($partnerName, 'ECOM/POS') === 0) {
+                    $partnerName = substr($partnerName, strlen('ECOM/POS'));
                 }
                 return [
                     'Id' => $item->movementId ?? ($item->documentNumber ?? $idx + 1),

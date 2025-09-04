@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Contragent;
+use \PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ContragentController extends Controller
 {
@@ -177,6 +178,73 @@ class ContragentController extends Controller
             'message' => 'Updated',
             'updated_ids' => $existingIds,
             'missing_ids' => array_values($missingIds)
+        ]);
+    }
+
+    public function uploadExcel(Request $request)
+    {
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '1024M');
+
+        if (!$request->hasFile('file')) {
+            return response()->json(['message' => 'No file uploaded'], 400);
+        }
+
+        $added = [];
+        $errors = [];
+        $user = $request->user();
+        $bankId = $user && $user->bank === 'anta' ? 2 : 1;
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray();
+
+            foreach ($rows as $row) {
+                if (!isset($row[0]) || !isset($row[2])) {
+                    $errors[] = ['row' => $row, 'error' => 'Not enough columns'];
+                    continue;
+                }
+                $name = trim($row[0]);
+                $identification_code = trim($row[2]);
+
+                if ($name === '' || $identification_code === '' || mb_strtolower($name) === 'პარტნიორი') {
+                    continue;
+                }
+
+                $exists = Contragent::where('name', $name)
+                    ->where('identification_code', $identification_code)
+                    ->where('bank_id', $bankId)
+                    ->exists();
+
+                if ($exists) {
+                    $errors[] = ['row' => $row, 'error' => 'Duplicate contragent'];
+                    continue;
+                }
+
+                try {
+                    $contragent = Contragent::create([
+                        'name' => $name,
+                        'identification_code' => $identification_code,
+                        'bank_id' => $bankId,
+                        'visible_for_roles' => [],
+                    ]);
+                    $added[] = $contragent->id;
+                } catch (\Exception $e) {
+                    $errors[] = ['row' => $row, 'error' => $e->getMessage()];
+                }
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'added' => [],
+                'errors' => [['row' => [], 'error' => 'Excel parsing error: ' . $e->getMessage()]]
+            ], 400);
+        }
+
+        return response()->json([
+            'added' => $added,
+            'errors' => $errors
         ]);
     }
 }

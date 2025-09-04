@@ -10,7 +10,8 @@ const roleOptions = [
 
 const paymentTypeOptions = [
     { value: 'terminal', label: 'ტერმინალით გადახდა' },
-    { value: 'enrollments', label: 'ჩარიცხვები' }
+    { value: 'enrollments', label: 'ჩარიცხვები' },
+    { value: 'transfers', label: 'გადარიცხვები' }
 ];
 
 const ANIMATION_DURATION = 220;

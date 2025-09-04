@@ -17,6 +17,10 @@ class Contragent extends Model
         'visible_for_roles',
     ];
 
+    protected $casts = [
+        'visible_for_roles' => 'array',
+    ];
+
     public function bank()
     {
         return $this->belongsTo(BankName::class, 'bank_id');
