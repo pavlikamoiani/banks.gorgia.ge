@@ -61,6 +61,7 @@ const EditUserModal = ({
                             required
                         >
                             <option value="">{t('select_role')}</option>
+                            <option value="VIP">{t('VIP')}</option>
                             <option value="distribution_operator">{t('distribution_operator')}</option>
                             <option value="corporate_sales_manager">{t('corporate_sales_manager')}</option>
                             {user && user.role === 'super_admin' && (

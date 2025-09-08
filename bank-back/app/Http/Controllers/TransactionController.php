@@ -171,6 +171,12 @@ class TransactionController extends Controller
                         });
                     });
                 }
+
+                if (in_array('VIP', $userVisiblePaymentTypes)) {
+                    $q->orWhere(function ($sq) {
+                        $sq->where('description', 'like', '%ტენდ.%');
+                    });
+                }
             });
 
             $query->where('description', 'not like', '%თვის ხელფასი%');

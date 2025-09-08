@@ -5,13 +5,15 @@ import roleStyles from '../assets/css/HideRoleModal.module.css';
 const roleOptions = [
     { value: 'admin', label: 'ადმინისტრატორი' },
     { value: 'distribution_operator', label: 'დისტრიბუციის ოპერატორი' },
-    { value: 'corporate_sales_manager', label: 'კორპორატიული გაყიდვების მენეჯერი' }
+    { value: 'corporate_sales_manager', label: 'კორპორატიული გაყიდვების მენეჯერი' },
+    { value: 'VIP', label: 'VIP' }
 ];
 
 const paymentTypeOptions = [
     { value: 'terminal', label: 'ტერმინალით გადახდა' },
     { value: 'enrollments', label: 'ჩარიცხვები' },
-    { value: 'transfers', label: 'გადარიცხვები' }
+    { value: 'transfers', label: 'გადარიცხვები' },
+    { value: 'VIP', label: 'VIP' },
 ];
 
 const ANIMATION_DURATION = 220;
