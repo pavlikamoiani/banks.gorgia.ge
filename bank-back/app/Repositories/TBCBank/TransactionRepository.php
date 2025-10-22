@@ -107,53 +107,85 @@ class TransactionRepository extends BaseRepository
      */
     private function saveInLocalDB($transactionData)
     {
-        $transactionDate = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
-        $reflectionDate = date('Y-m-d H:i:s', strtotime($transactionData->valueDate));
-        $bank = \App\Models\Bank::where('bank_code', 'TBC')->first();
+        try {
+            $transactionDate = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
+            $reflectionDate = date('Y-m-d H:i:s', strtotime($transactionData->valueDate));
+            $bank = \App\Models\Bank::where('bank_code', 'TBC')->first();
 
-        $exists = Transaction::where([
-            ['bank_statement_id', $transactionData->movementId],
-            ['contragent_id', $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode] ?? null,
-            ['bank_id', $bank ? $bank->id : null],
-            ['amount', $transactionData->amount->amount],
-            ['transaction_date', $transactionDate],
-            ['reflection_date', $reflectionDate],
-            ['status_code', $transactionData->statusCode],
-            ['description', $transactionData->description],
-        ])->exists();
+            $exists = Transaction::where([
+                ['bank_statement_id', $transactionData->movementId],
+                ['contragent_id', $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode] ?? null,
+                ['bank_id', $bank ? $bank->id : null],
+                ['amount', $transactionData->amount->amount],
+                ['transaction_date', $transactionDate],
+                ['reflection_date', $reflectionDate],
+                ['status_code', $transactionData->statusCode],
+                ['description', $transactionData->description],
+            ])->exists();
 
-        if ($exists) {
-            return;
+            if ($exists) {
+                \Log::debug('TBC Transaction already exists', [
+                    'movementId' => $transactionData->movementId,
+                    'amount' => $transactionData->amount->amount,
+                    'transaction_date' => $transactionDate,
+                    'reflection_date' => $reflectionDate,
+                ]);
+                return;
+            }
+
+            if (
+                isset($transactionData->partnerTaxCode, $transactionData->partnerName) &&
+                trim($transactionData->partnerTaxCode) !== '' &&
+                trim($transactionData->partnerName) !== '' &&
+                (strpos($transactionData->description, 'თვის ხელფასი') === false)
+            ) {
+                \App\Models\Contragent::findOrCreateByInnAndName(
+                    trim($transactionData->partnerTaxCode),
+                    trim($transactionData->partnerName),
+                    $bank ? $bank->id : null
+                );
+            }
+
+            $transaction = new Transaction();
+            $transaction->contragent_id = $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode ?? null;
+            $bank = Bank::where('bank_code', 'TBC')->first();
+            $transaction->bank_id = $bank ? $bank->id : null;
+            $transaction->bank_statement_id = $transactionData->movementId;
+            $transaction->amount = $transactionData->amount->amount;
+            $transaction->transaction_date = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
+            $transaction->reflection_date = date('Y-m-d H:i:s', strtotime($transactionData->valueDate));
+            $transaction->status_code = $transactionData->statusCode;
+            $transaction->description = $transactionData->description;
+            $transaction->sender_name = $transactionData->partnerName ?? null;
+            $bankNameModel = BankName::where('name', 'Gorgia')->first();
+            $transaction->bank_name_id = $bankNameModel ? $bankNameModel->id : null;
+            // Use current timestamp for created_at
+            $transaction->created_at = date('Y-m-d H:i:s');
+
+            // Try to save and catch any errors
+            try {
+                $transaction->save();
+                \Log::info('TBC Transaction saved successfully', [
+                    'movementId' => $transactionData->movementId,
+                    'amount' => $transactionData->amount->amount,
+                    'transaction_date' => $transactionDate,
+                    'reflection_date' => $reflectionDate,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('TBC Transaction save error', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'transaction_data' => json_encode($transactionData, JSON_UNESCAPED_UNICODE),
+                    'transaction_fields' => $transaction->toArray(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('TBC Transaction fatal error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'transaction_data' => json_encode($transactionData, JSON_UNESCAPED_UNICODE),
+            ]);
         }
-
-        if (
-            isset($transactionData->partnerTaxCode, $transactionData->partnerName) &&
-            trim($transactionData->partnerTaxCode) !== '' &&
-            trim($transactionData->partnerName) !== '' &&
-            (strpos($transactionData->description, 'თვის ხელფასი') === false)
-        ) {
-            \App\Models\Contragent::findOrCreateByInnAndName(
-                trim($transactionData->partnerTaxCode),
-                trim($transactionData->partnerName),
-                $bank ? $bank->id : null
-            );
-        }
-
-        $transaction = new Transaction();
-        $transaction->contragent_id = $transactionData->partnerTaxCode ?? $transactionData->taxpayerCode ?? null;
-        $bank = Bank::where('bank_code', 'TBC')->first();
-        $transaction->bank_id = $bank ? $bank->id : null;
-        $transaction->bank_statement_id = $transactionData->movementId;
-        $transaction->amount = $transactionData->amount->amount;
-        $transaction->transaction_date = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
-        $transaction->reflection_date = date('Y-m-d H:i:s', strtotime($transactionData->valueDate));
-        $transaction->status_code = $transactionData->statusCode;
-        $transaction->description = $transactionData->description;
-        $transaction->sender_name = $transactionData->partnerName ?? null;
-        $bankNameModel = BankName::where('name', 'Gorgia')->first();
-        $transaction->bank_name_id = $bankNameModel ? $bankNameModel->id : null;
-        $transaction->created_at = date('Y-m-d H:i:s', strtotime($transactionData->documentDate));
-        $transaction->save();
     }
 
     public function responseAsObject($response)
