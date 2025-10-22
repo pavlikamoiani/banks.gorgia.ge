@@ -45,7 +45,6 @@ class BOGService
     {
         set_time_limit(600);
         $token = $this->getToken();
-        \Log::info('BOG token', ['token' => $token]);
 
         $account = $account ?: $this->getEnv('ACCOUNT');
         $currency = $currency ?: $this->getEnv('CURRENCY', 'GEL');
@@ -59,7 +58,6 @@ class BOGService
         }
 
         $url = $this->getEnv('BASE_URL') . "/documents/todayactivities/$account/$currency";
-        \Log::info('BOG todayActivities URL', ['url' => $url]);
 
         $maxRetries = 3;
         $retryDelay = 2;
@@ -68,9 +66,6 @@ class BOGService
             $response = \Http::withToken($token)
                 ->timeout(30)
                 ->get($url);
-
-            \Log::info('BOG API status', ['status' => $response->status()]);
-            \Log::info('BOG API raw response', ['body' => $response->body()]);
 
             if ($response->status() === 401) {
                 \Log::error('BOG token unauthorized, clearing cache and retrying');
@@ -169,13 +164,6 @@ class BOGService
                 $transaction->description = $item['EntryComment'] ?? $item['EntryCommentEn'] ?? null;
                 $transaction->status_code = $item['EntryType'] ?? null;
                 $transaction->save();
-
-                \Log::info('Saved BOG transaction', [
-                    'id' => $transaction->id,
-                    'bank_statement_id' => $transaction->bank_statement_id,
-                    'transaction_date' => $transaction->transaction_date,
-                    'bank_id' => $transaction->bank_id
-                ]);
             }
         }
     }
@@ -195,14 +183,9 @@ class BOGService
             $orderByDate ? 'true' : 'false'
         );
 
-        \Log::info('BOG statement URL', ['url' => $url]);
-
         $response = \Http::timeout(30)
             ->withToken($token)
             ->get($url);
-
-        \Log::info('BOG statement status', ['status' => $response->status()]);
-        \Log::info('BOG statement response', ['body' => $response->body()]);
 
         if (!$response->ok()) {
             \Log::error('Failed to retrieve BOG statement', ['response' => $response->body()]);
@@ -226,14 +209,10 @@ class BOGService
             $orderByDate ? 'true' : 'false'
         );
 
-        \Log::info('BOG statement page URL', ['url' => $url]);
 
         $response = \Http::timeout(30)
             ->withToken($token)
             ->get($url);
-
-        \Log::info('BOG statement page status', ['status' => $response->status()]);
-        \Log::info('BOG statement page response', ['body' => $response->body()]);
 
         if (!$response->ok()) {
             \Log::error('Failed to retrieve BOG statement page', ['response' => $response->body()]);

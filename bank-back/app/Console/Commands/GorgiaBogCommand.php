@@ -15,7 +15,6 @@ class GorgiaBogCommand extends Command
 
     public function handle()
     {
-        Log::info('GorgiaBogCommand: handle started');
 
         $bog = new BOGService('gorgia');
         try {

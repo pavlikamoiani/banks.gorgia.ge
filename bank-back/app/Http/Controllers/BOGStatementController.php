@@ -154,12 +154,6 @@ class BOGStatementController extends Controller
                 $activities = $data ?? [];
             }
 
-            Log::info('BOG activities', [
-                'account' => $acc,
-                'activities' => $activities,
-                'count' => count($activities)
-            ]);
-
             $bog->saveStatementToDb($activities);
 
             $statements = Transaction::whereDate('transaction_date', '>=', $startDate)
@@ -182,8 +176,6 @@ class BOGStatementController extends Controller
 
             $allResults = $allResults->merge($result);
         }
-
-        Log::info('BOG statements for frontend', ['result' => $allResults]);
 
         if ($allResults->isEmpty()) {
             return response()->json(['status' => 'error', 'message' => 'No statements found', 'data' => []], 404);

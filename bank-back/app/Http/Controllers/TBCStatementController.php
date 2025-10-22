@@ -21,10 +21,6 @@ class TBCStatementController extends Controller
             $response = $repository->getTransactionsResponse(0, 700);
             $responseObj = $repository->responseAsObject($response);
 
-            // Log the raw response for debugging
-            \Log::debug('TBC API raw response:', ['response' => $response]);
-            \Log::debug('TBC API parsed object:', ['responseObj' => $responseObj]);
-
             // Check for error in response
             if (!isset($responseObj->Body) || !isset($responseObj->Body->GetAccountMovementsResponseIo)) {
                 return response()->json([

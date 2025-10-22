@@ -52,7 +52,6 @@ class TransactionRepository extends BaseRepository
 
         do {
             $response = $this->getTransactionsResponse($page, $limit);
-            Log::debug('TBC SOAP RAW RESPONSE (page loop): ' . substr($response, 0, 500) . '...');
             $responseAsObject = $this->responseAsObject($response);
 
             if (!isset($responseAsObject->Body)) {
@@ -61,7 +60,6 @@ class TransactionRepository extends BaseRepository
             }
 
             $totalCount = $responseAsObject->Body->GetAccountMovementsResponseIo->result->totalCount ?? 0;
-            Log::info("TBC transactions totalCount: {$totalCount}, page: {$page}");
 
             $movements = $responseAsObject->Body->GetAccountMovementsResponseIo->accountMovement;
             if (!is_array($movements) && !is_null($movements)) {
@@ -223,12 +221,6 @@ class TransactionRepository extends BaseRepository
         if (curl_errno($ch)) {
             $errorMsg = curl_error($ch);
             $errorCode = curl_errno($ch);
-            Log::error('cURL error: ' . $errorMsg);
-            Log::error('cURL error code: ' . $errorCode);
-            Log::error('cURL info: ' . json_encode(curl_getinfo($ch)));
-            Log::error('Certificate path used: ' . $certPath);
-            Log::error('Key path used: ' . $keyPath);
-            Log::error('SSL password used: ' . $sslPass);
 
             // Log PEM block only, warn if "Bag Attributes" found
             if (file_exists($certPath)) {
@@ -240,7 +232,6 @@ class TransactionRepository extends BaseRepository
                 $pemEnd = strpos($certContent, '-----END CERTIFICATE-----');
                 if ($pemStart !== false && $pemEnd !== false) {
                     $pemBlock = substr($certContent, $pemStart, $pemEnd - $pemStart + strlen('-----END CERTIFICATE-----'));
-                    Log::error('Certificate PEM block: ' . substr($pemBlock, 0, 200));
                 }
             }
             if (file_exists($keyPath)) {
@@ -252,19 +243,14 @@ class TransactionRepository extends BaseRepository
                 $pemEnd = strpos($keyContent, '-----END PRIVATE KEY-----');
                 if ($pemStart !== false && $pemEnd !== false) {
                     $pemBlock = substr($keyContent, $pemStart, $pemEnd - $pemStart + strlen('-----END PRIVATE KEY-----'));
-                    Log::error('Key PEM block: ' . substr($pemBlock, 0, 200));
                 }
             }
-            Log::error('BankNameId: ' . $this->bankNameId);
-            Log::error('Endpoint URL: ' . $this->baseUrl);
         }
         curl_close($ch);
 
-        Log::debug($this->getTransactionsByLastTimeBody($page, $limit));
         if (isset($errorMsg)) {
             Log::error($errorMsg);
         }
-        Log::debug('TBC SOAP response: ' . substr($response, 0, 1000));
 
         return $response;
     }
