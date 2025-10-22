@@ -204,7 +204,8 @@ const Header = () => {
 					</nav>
 				</div>
 
-				<div className="header-center">
+				<div className="header-right">
+					{/* TBC Password Button */}
 					{user && user.role === "super_admin" && (
 						<div
 							className={`tbc-pw-btn${tbcPwInfo.days_left !== null && tbcPwInfo.days_left <= 3 ? " critical" : ""}`}
@@ -221,9 +222,7 @@ const Header = () => {
 							</span>
 						</div>
 					)}
-				</div>
 
-				<div className="header-right">
 					{/* Language Switcher */}
 					<div ref={langDropdownRef} className="lang-switcher">
 						<button

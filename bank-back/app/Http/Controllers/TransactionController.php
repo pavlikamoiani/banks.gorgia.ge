@@ -82,7 +82,12 @@ class TransactionController extends Controller
         }
 
         if ($request->filled('contragent')) {
-            $query->where('sender_name', 'like', '%' . $request->query('contragent') . '%');
+            $contragent = $request->query('contragent');
+            $query->where(function ($q) use ($contragent) {
+                $q->where('sender_name', 'like', '%' . $contragent . '%')
+                    ->orWhere('contragent_id', 'like', '%' . $contragent . '%')
+                    ->orWhere('bank_statement_id', 'like', '%' . $contragent . '%');
+            });
         }
 
         if ($request->filled('amount')) {

@@ -18,9 +18,9 @@ class Kernel extends ConsoleKernel
         // $schedule->job(new \App\Jobs\UpdateYesterdayData)->dailyAt('04:00');
 
         $schedule->job(new \App\Console\Commands\GorgiaBogCommand)->everyFiveMinutes();
-        $schedule->job(new \App\Console\Commands\GorgiaTbcCommand)->everyFiveMinutes();
-        $schedule->job(new \App\Console\Commands\AntaBogCommand)->everyFiveMinutes();
-        $schedule->job(new \App\Console\Commands\AntaTbcCommand)->everyFiveMinutes();
+        $schedule->job(new \App\Console\Commands\GorgiaTbcCommand)->everyEightMinutes();
+        $schedule->job(new \App\Console\Commands\AntaBogCommand)->everyTenMinutes();
+        $schedule->job(new \App\Console\Commands\AntaTbcCommand)->everyFifteenMinutes();
     }
 
     /**
