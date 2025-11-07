@@ -11,96 +11,35 @@ class TransactionController extends Controller
 {
     public function index(Request $request)
     {
-        set_time_limit(600);
-
         $user = $request->user();
+
         $bankCode = $request->query('bank_code');
         $bankName = $request->query('bank');
-
         $page = (int) $request->query('page', 1);
         $pageSize = (int) $request->query('pageSize', 25);
         $offset = ($page - 1) * $pageSize;
 
-        if (!$request->filled('startDate') && !$request->filled('endDate')) {
-            $query = Transaction::query();
-        } else {
-            $query = Transaction::query();
-        }
-
-        $route = $request->route() ? $request->route()->uri() : '';
-        if (strpos($route, 'anta-transactions') !== false || ($user && $user->bank === 'anta')) {
-            $query->where('bank_id', 2);
-        } elseif (strpos($route, 'gorgia-transactions') !== false || ($user && $user->bank === 'gorgia')) {
-            $query->where('bank_id', 1);
-        }
-
-        $isTbc = false;
+        $query = Transaction::select([
+            'id',
+            'sender_name',
+            'contragent_id',
+            'bank_statement_id',
+            'amount',
+            'bank_type',
+            'status_code',
+            'description',
+            'transaction_date',
+            'created_at'
+        ]);
 
         if ($bankCode) {
-            $bank = Bank::where('bank_code', $bankCode)->first();
-            if ($bank) {
-                $query->where('bank_type', $bank->id);
-                $isTbc = ($bankCode === 'TBC');
-            }
-        } elseif ($request->filled('bank')) {
-            $bankCodeMap = [
-                'TBC Bank' => 'TBC',
-                'Bank of Georgia' => 'BOG',
-                'სს "თბს ბანკი"' => 'TBC',
-                'სს "საქართველოს ბანკი"' => 'BOG',
-            ];
-            $bankCodeFromName = $bankCodeMap[$bankName] ?? null;
-            if ($bankCodeFromName === 'TBC' || $bankName === 'TBC') {
-                $bank = Bank::where('bank_code', 'TBC')->first();
-                if ($bank) {
-                    $query->where('bank_type', $bank->id);
-                    $isTbc = true;
-                }
-            } else {
-                $bank = Bank::where('bank_code', $bankCodeFromName)->first();
-                if (!$bank && $bankName) {
-                    $bank = Bank::where('name', $bankName)->orWhere('bank_code', $bankName)->first();
-                }
-                if ($bank) {
-                    $query->where('bank_type', $bank->id);
-                }
-            }
+            $bank = Bank::select('id')->where('bank_code', $bankCode)->first();
+            if ($bank) $query->where('bank_type', $bank->id);
         }
 
-        if (!$bankCode && !$request->filled('bank')) {
-            $tbcBank = Bank::where('bank_code', 'TBC')->first();
-            if ($tbcBank) {
-                $query->where(function ($q) use ($tbcBank) {
-                    $q->where('bank_type', '!=', $tbcBank->id)
-                        ->orWhere(function ($subQ) use ($tbcBank) {
-                            $subQ->where('bank_type', $tbcBank->id)->where('status_code', 3);
-                        });
-                });
-            }
-        } elseif ($isTbc) {
-            $query->where('status_code', 3);
-        }
-
-        if ($request->filled('contragent')) {
-            $contragent = $request->query('contragent');
-            $query->where(function ($q) use ($contragent) {
-                $q->where('sender_name', 'like', '%' . $contragent . '%')
-                    ->orWhere('contragent_id', 'like', '%' . $contragent . '%')
-                    ->orWhere('bank_statement_id', 'like', '%' . $contragent . '%');
-            });
-        }
-
-        if ($request->filled('amount')) {
-            $amount = $request->query('amount');
-            $query->where('amount', $amount);
-        }
-
-        if ($request->filled('transferDate')) {
-            $query->whereDate('transaction_date', $request->query('transferDate'));
-        }
-
-        if ($request->filled('purpose')) {
-            $query->where('description', 'like', '%' . $request->query('purpose') . '%');
+        if ($bankName) {
+            $bank = Bank::select('id')->where('name', $bankName)->orWhere('bank_code', $bankName)->first();
+            if ($bank) $query->where('bank_type', $bank->id);
         }
 
         if ($request->filled('startDate')) {
@@ -110,118 +49,64 @@ class TransactionController extends Controller
             $query->whereDate('transaction_date', '<=', $request->query('endDate'));
         }
 
-        if ($request->query('installmentOnly') === 'true') {
-            $query->where(function ($q) {
-                $q->where('description', 'like', '%განვსაქონლის%')
-                    ->orWhere('description', 'like', '%განაწილება%');
+        if ($request->filled('amount')) {
+            $query->where('amount', $request->query('amount'));
+        }
+
+        if ($request->filled('purpose')) {
+            $query->where('description', 'like', '%' . $request->query('purpose') . '%');
+        }
+
+        if ($request->filled('contragent')) {
+            $c = $request->query('contragent');
+            $query->where(function ($q) use ($c) {
+                $q->where('sender_name', 'like', "%$c%")
+                    ->orWhere('contragent_id', 'like', "%$c%")
+                    ->orWhere('bank_statement_id', 'like', "%$c%");
             });
         }
 
-        if ($request->query('transfersOnly') === 'true') {
-            $query->where('sender_name', 'like', '%შპს გორგია%');
+        $sortKey = $request->query('sortKey', 'transaction_date');
+        $sortDir = $request->query('sortDirection', 'desc');
+        $sortMap = [
+            'contragent' => 'sender_name',
+            'bank' => 'bank_type',
+            'amount' => 'amount',
+            'transferDate' => 'transaction_date',
+            'purpose' => 'description',
+            'syncDate' => 'created_at'
+        ];
+        $query->orderBy($sortMap[$sortKey] ?? 'transaction_date', $sortDir);
+
+        $lastId = $request->query('lastId');
+        if ($lastId) {
+            $query->where('id', '>', $lastId);
         }
 
-        if ($user && $user->role !== 'super_admin') {
-            $visibleContragents = \App\Models\Contragent::whereJsonContains('visible_for_roles', $user->role)
-                ->pluck('identification_code')->toArray();
+        $cacheKey = md5('transactions_count_' . serialize($request->all()));
+        $total = cache()->remember($cacheKey, 60, function () use ($query) {
+            try {
+                return (clone $query)->count();
+            } catch (\Throwable $e) {
+                return 0;
+            }
+        });
 
-            $roleSettings = json_decode(optional(\App\Models\Setting::where('key', 'payment_type_visibility')->first())->value, true) ?? [];
-            $userVisiblePaymentTypes = $roleSettings[$user->role] ?? [];
-
-            $query->where(function ($q) use ($visibleContragents, $userVisiblePaymentTypes) {
-                $q->whereIn('contragent_id', $visibleContragents);
-
-                if (in_array('terminal', $userVisiblePaymentTypes)) {
-                    $q->orWhere(function ($sq) {
-                        $sq->where(function ($innerQ) {
-                            $innerQ->where('sender_name', 'like', '%TBCBank_ის%')
-                                ->orWhere('sender_name', 'like', '%Wallet/domestic/%')
-                                ->orWhere('sender_name', 'like', '%ECOM/POS%')
-                                ->orWhereNull('sender_name')
-                                ->orWhere('sender_name', '');
-                        });
-                    });
-                }
-
-                if (in_array('enrollments', $userVisiblePaymentTypes)) {
-                    $q->orWhere(function ($sq) {
-                        $sq->where(function ($innerQ) {
-                            $innerQ->where(function ($notTerminalQ) {
-                                $notTerminalQ
-                                    ->where(function ($subQ) {
-                                        $subQ->where('sender_name', 'not like', '%TBCBank_ის%')
-                                            ->where('sender_name', 'not like', '%Wallet/domestic/%')
-                                            ->where('sender_name', 'not like', '%ECOM/POS%')
-                                            ->whereRaw('(sender_name IS NOT NULL AND sender_name != "")')
-                                            ->where('sender_name', 'not like', '%შპს გორგია%');
-                                    });
-                            });
-                        });
-                    });
-                }
-
-                if (in_array('transfers', $userVisiblePaymentTypes)) {
-                    $q->orWhere(function ($sq) {
-                        $sq->where(function ($innerQ) {
-                            $innerQ->where(function ($notTerminalQ) {
-                                $notTerminalQ
-                                    ->where(function ($subQ) {
-                                        $subQ->where('sender_name', 'not like', '%TBCBank_ის%')
-                                            ->where('sender_name', 'not like', '%Wallet/domestic/%')
-                                            ->where('sender_name', 'not like', '%ECOM/POS%')
-                                            ->whereRaw('(sender_name IS NOT NULL AND sender_name != "")')
-                                            ->where('sender_name', 'like', '%შპს გორგია%');
-                                    });
-                            });
-                        });
-                    });
-                }
-
-                if (in_array('VIP', $userVisiblePaymentTypes)) {
-                    $q->orWhere(function ($sq) {
-                        $sq->where('description', 'like', '%ტენდ.%');
-                    });
-                }
-            });
-
-            $query->where('description', 'not like', '%თვის ხელფასი%');
-        }
-
-        $total = $query->count();
-
-        $sortKey = $request->query('sortKey');
-        $sortDirection = $request->query('sortDirection', 'desc');
-
-        if ($sortKey) {
-            $sortMap = [
-                'contragent' => 'sender_name',
-                'bank' => 'bank_type',
-                'amount' => 'amount',
-                'transferDate' => 'transaction_date',
-                'purpose' => 'description',
-                'syncDate' => 'created_at'
-            ];
-            $dbSortKey = $sortMap[$sortKey] ?? $sortKey;
-            $query->orderBy($dbSortKey, $sortDirection);
-        } else {
-            $query->orderBy('transaction_date', 'desc');
-        }
-
-        $results = $query
-            ->limit($pageSize)
-            ->offset($offset)
-            ->get();
+        $results = $query->limit($pageSize)->get();
 
         $data = $results->map(function ($item) {
-            $arr = $item->toArray();
-            $arr['bank_name'] = $item->bank_name ?? null;
-            if (isset($arr['transaction_date'])) {
-                $arr['transaction_date'] = date('Y-m-d H:i:s', strtotime($arr['transaction_date']));
-            }
-            if (isset($arr['created_at'])) {
-                $arr['created_at'] = date('Y-m-d H:i:s', strtotime($arr['created_at']));
-            }
-            return $arr;
+            return [
+                'id' => $item->id,
+                'sender_name' => $item->sender_name,
+                'contragent_id' => $item->contragent_id,
+                'bank_statement_id' => $item->bank_statement_id,
+                'amount' => $item->amount,
+                'bank_type' => $item->bank_type,
+                'status_code' => $item->status_code,
+                'description' => $item->description,
+                'transaction_date' => optional($item->transaction_date)->format('Y-m-d H:i:s'),
+                'created_at' => optional($item->created_at)->format('Y-m-d H:i:s'),
+            ];
         });
 
         return response()->json([
@@ -230,10 +115,12 @@ class TransactionController extends Controller
                 'total' => $total,
                 'page' => $page,
                 'pageSize' => $pageSize,
-                'totalPages' => ceil($total / $pageSize)
+                'totalPages' => ceil($total / $pageSize),
+                'lastId' => $data->last()->id ?? null
             ]
         ]);
     }
+
 
     public function todayActivities(Request $request)
     {
